@@ -1,10 +1,11 @@
 # Windows ML
 
 [![Status: Generally Available](https://img.shields.io/badge/status-Generally%20Available-brightgreen)](https://blogs.windows.com/windowsdeveloper/2025/09/23/windows-ml-is-generally-available-empowering-developers-to-scale-local-ai-across-windows-devices/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 [![NuGet: Microsoft.Windows.AI.MachineLearning](https://img.shields.io/nuget/v/Microsoft.Windows.AI.MachineLearning?label=Microsoft.Windows.AI.MachineLearning)](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning)
 [![NuGet: Microsoft.WindowsAppSDK.ML](https://img.shields.io/nuget/v/Microsoft.WindowsAppSDK.ML?label=Microsoft.WindowsAppSDK.ML)](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML)
 [![NuGet: Microsoft.ML.OnnxRuntimeGenAI.WinML](https://img.shields.io/nuget/v/Microsoft.ML.OnnxRuntimeGenAI.WinML?label=Microsoft.ML.OnnxRuntimeGenAI.WinML)](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.WinML)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Windows ML is the unified and high-performance local AI inferencing framework for Windows, powered by [ONNX Runtime](https://onnxruntime.ai/). With Windows ML, you can run AI models locally and accelerate inference on NPUs, GPUs, and CPUs through optional execution providers that Windows manages and keeps up to date. You can use models from PyTorch, TensorFlow/Keras, TFLite, scikit-learn, and other frameworks with Windows ML.
 
