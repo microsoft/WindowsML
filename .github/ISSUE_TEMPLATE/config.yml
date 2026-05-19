@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Windows ML documentation
+    url: https://learn.microsoft.com/windows/ai/new-windows-ml/overview
+    about: Official Windows ML docs — overview, get-started guides, and API reference.
+  - name: Windows App SDK issues
+    url: https://github.com/microsoft/WindowsAppSDK/issues
+    about: For Windows App SDK / Windows ML runtime or API issues that span beyond these samples.
+  - name: ONNX Runtime issues
+    url: https://github.com/microsoft/onnxruntime/issues
+    about: For ONNX Runtime issues (model loading, operators, kernels) that aren't Windows ML–specific.

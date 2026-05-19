@@ -1,0 +1,94 @@
+name: Bug report
+description: Report a problem with a sample in this repo.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug! Please fill in the sections below so we can reproduce the issue.
+
+        > For Windows ML **runtime/API** issues that aren't specific to a sample in this repo, please file in the [WindowsAppSDK repo](https://github.com/microsoft/WindowsAppSDK/issues) instead.
+  - type: input
+    id: sample
+    attributes:
+      label: Which sample?
+      description: e.g. `Samples/cs/CSharpConsoleDesktop`, `Samples/cpp/CppResnetBuildDemo`
+      placeholder: Samples/<language>/<sample>
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands, configuration, or actions to reproduce the problem.
+      placeholder: |
+        1. Open `Samples/WindowsML-Samples.sln` in Visual Studio 2022
+        2. Set `<sample>` as the startup project
+        3. Build with configuration `Release|x64`
+        4. Run with arguments `...`
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include full error messages, exception traces, and any console output.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      description: Run `winver` or `[Environment]::OSVersion` in PowerShell.
+      placeholder: Windows 11 24H2 (build 26100.xxxx)
+    validations:
+      required: true
+  - type: dropdown
+    id: arch
+    attributes:
+      label: Architecture
+      options:
+        - x64
+        - ARM64
+        - x86
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware (CPU / GPU / NPU)
+      placeholder: e.g. Snapdragon X Elite, Intel Core Ultra 7 with Intel AI Boost NPU, NVIDIA RTX 4070
+    validations:
+      required: false
+  - type: input
+    id: ep
+    attributes:
+      label: Execution provider
+      description: Which EP (or EP selection policy) were you using?
+      placeholder: e.g. PREFER_NPU, QNNExecutionProvider, OpenVINOExecutionProvider, DmlExecutionProvider
+    validations:
+      required: false
+  - type: input
+    id: nuget
+    attributes:
+      label: Windows ML / Windows App SDK package version
+      placeholder: e.g. Microsoft.Windows.AI.MachineLearning 2.1.1
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnostic logs (optional)
+      description: |
+        For runtime issues, traces captured with `Samples/capture-logs` are extremely helpful.
+        See [Capturing Windows ML logs](https://learn.microsoft.com/windows/ai/new-windows-ml/logs).
+      placeholder: Attach or paste relevant log snippets.
+    validations:
+      required: false

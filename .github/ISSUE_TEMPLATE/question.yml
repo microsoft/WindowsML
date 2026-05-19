@@ -1,0 +1,29 @@
+name: Question
+description: Ask a question about a sample or how to use Windows ML.
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For general Windows ML questions, please also check the [official documentation](https://learn.microsoft.com/windows/ai/new-windows-ml/overview) first.
+  - type: textarea
+    id: question
+    attributes:
+      label: What's your question?
+    validations:
+      required: true
+  - type: input
+    id: sample
+    attributes:
+      label: Related sample (if any)
+      placeholder: Samples/<language>/<sample>
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Anything you've already tried, links to docs you've read, etc.
+    validations:
+      required: false

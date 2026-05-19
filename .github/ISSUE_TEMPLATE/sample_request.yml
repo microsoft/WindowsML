@@ -1,0 +1,41 @@
+name: Sample request
+description: Suggest a new sample or an addition to an existing sample.
+title: "[Sample]: "
+labels: ["enhancement", "sample-request"]
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: What scenario should the sample cover?
+      description: Describe the developer scenario, model, or API surface you'd like to see demonstrated.
+      placeholder: e.g. "A WinUI 3 sample that runs Whisper.cpp via Windows ML with NPU acceleration."
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Preferred language(s)
+      multiple: true
+      options:
+        - C#
+        - C++ (MSBuild)
+        - C++ (CMake)
+        - C++ ABI
+        - Python
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why is this useful?
+      description: What problem does this help developers solve? Are there related blog posts, customer requests, or docs gaps this would address?
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Any model links, references, or implementation hints.
+    validations:
+      required: false
