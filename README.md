@@ -28,7 +28,7 @@ Windows ML is Microsoft's recommended local AI inferencing framework for Windows
 Windows ML works hand-in-hand with two Microsoft-built tools that handle the steps around inference:
 
 - **[Foundry Toolkit for VS Code](https://code.visualstudio.com/docs/intelligentapps/overview)** — convert, quantize, optimize, and evaluate ONNX models inside VS Code before shipping.
-- **[Windows ML CLI](https://aka.ms/winmlcli)** *(preview)* — command-line workflows for model prep, EP selection, and quick local testing on real hardware.
+- **[Windows ML CLI](https://aka.ms/winmlcli)** *(preview)* — a unified, agent-ready toolchain for model prep, optimization, and benchmarking, with agent skills for AI and agent-driven workflows.
 
 Both ship from Microsoft and are designed to feed directly into Windows ML.
 
@@ -165,7 +165,7 @@ For full setup walk-throughs, see [Get started with Windows ML](https://learn.mi
 ## Related Microsoft repos & tools
 
 - **[Windows ML documentation](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/overview)** — official docs ([aka.ms/TryWinML](https://aka.ms/TryWinML))
-- **[Windows ML CLI](https://aka.ms/winmlcli)** *(preview)* — command-line tool for model prep and Windows ML workflows
+- **[Windows ML CLI](https://aka.ms/winmlcli)** *(preview)* — a unified, agent-ready toolchain for model prep, optimization, and benchmarking, with agent skills for AI and agent-driven workflows
 - **[AI Toolkit / Foundry Toolkit for VS Code](https://code.visualstudio.com/docs/intelligentapps/overview)** — convert, quantize, optimize, evaluate models, all inside VS Code
 - **[AI Dev Gallery](https://aka.ms/ai-dev-gallery)** — interactive Microsoft Store app to discover and experiment with local AI scenarios on your PC
 - **[Windows App SDK](https://github.com/microsoft/WindowsAppSDK)** — the platform that ships Windows ML
