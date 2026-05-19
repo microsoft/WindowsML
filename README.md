@@ -34,7 +34,7 @@ Both ship from Microsoft and are designed to feed directly into Windows ML.
 
 ## Hello, Windows ML
 
-The shortest possible Windows ML program in C#: discover execution providers from the Windows ML catalog, register them, and run an ONNX model with the runtime picking the best available device (NPU → GPU → CPU).
+The shortest possible Windows ML program in C#: discover and register execution providers, then run an ONNX model — and choose a policy to control which hardware runs it.
 
 ```csharp
 using Microsoft.Windows.AI.MachineLearning;
@@ -53,9 +53,17 @@ foreach (var provider in catalog.FindAllProviders())
 var envOptions = new EnvironmentCreationOptions { logId = "HelloWindowsML" };
 using var ortEnv = OrtEnv.CreateInstanceWithOptions(ref envOptions);
 
-// 3. Let Windows ML pick the best execution provider for this device.
+// 3. Pick an execution provider policy.
 using var sessionOptions = new SessionOptions();
 sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.PREFER_NPU);
+
+// Other policies you can try:
+// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.DEFAULT);
+// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.PREFER_GPU);
+// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.PREFER_CPU);
+// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.MAX_PERFORMANCE);
+// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.MAX_EFFICIENCY);
+// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.MIN_OVERALL_POWER);
 
 // 4. Load your ONNX model and run inference.
 using var session = new InferenceSession("model.onnx", sessionOptions);
