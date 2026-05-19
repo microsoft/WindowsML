@@ -22,6 +22,15 @@ Windows ML is Microsoft's recommended local AI inferencing framework for Windows
 - **One runtime, many apps** — optionally use Windows ML as a shared system component, so your app stays small and all apps on the device share the same up-to-date runtime, rather than every app bundling its own copy.
 - **Best-in-class performance** — Windows ML delivers to-the-metal performance on NPUs and GPUs, on par with dedicated SDKs like TensorRT for RTX or Qualcomm's AI Engine Direct. Performance results vary by hardware configuration and model — see [Accelerate AI models](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/accelerate-ai-models) for hardware-specific guidance.
 
+## Companion tools
+
+Windows ML works hand-in-hand with two Microsoft-built tools that handle the steps around inference:
+
+- **[Foundry Toolkit for VS Code](https://code.visualstudio.com/docs/intelligentapps/overview)** — convert, quantize, optimize, and evaluate ONNX models inside VS Code before shipping.
+- **[Windows ML CLI](https://aka.ms/winmlcli)** *(preview)* — command-line workflows for model prep, EP selection, and quick local testing on real hardware.
+
+Both ship from Microsoft and are designed to feed directly into Windows ML.
+
 ## Hello, Windows ML
 
 The shortest possible Windows ML program in C#: discover execution providers from the Windows ML catalog, register them, and run an ONNX model with the runtime picking the best available device (NPU → GPU → CPU).
@@ -147,6 +156,7 @@ For full setup walk-throughs, see [Get started with Windows ML](https://learn.mi
 ## Related Microsoft repos & tools
 
 - **[Windows ML documentation](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/overview)** — official docs ([aka.ms/TryWinML](https://aka.ms/TryWinML))
+- **[Windows ML CLI](https://aka.ms/winmlcli)** *(preview)* — command-line tool for model prep and Windows ML workflows
 - **[AI Toolkit / Foundry Toolkit for VS Code](https://code.visualstudio.com/docs/intelligentapps/overview)** — convert, quantize, optimize, evaluate models, all inside VS Code
 - **[AI Dev Gallery](https://aka.ms/ai-dev-gallery)** — interactive Microsoft Store app to discover and experiment with local AI scenarios on your PC
 - **[Windows App SDK](https://github.com/microsoft/WindowsAppSDK)** — the platform that ships Windows ML
