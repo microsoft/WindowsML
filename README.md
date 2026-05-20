@@ -7,7 +7,7 @@
 [![NuGet: Microsoft.WindowsAppSDK.ML](https://img.shields.io/nuget/v/Microsoft.WindowsAppSDK.ML?label=Microsoft.WindowsAppSDK.ML)](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML)
 [![NuGet: Microsoft.ML.OnnxRuntimeGenAI.WinML](https://img.shields.io/nuget/v/Microsoft.ML.OnnxRuntimeGenAI.WinML?label=Microsoft.ML.OnnxRuntimeGenAI.WinML)](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.WinML)
 
-Windows ML is the unified and high-performance local AI inferencing framework for Windows, powered by [ONNX Runtime](https://onnxruntime.ai/). With Windows ML, you can run AI models locally and accelerate inference on NPUs, GPUs, and CPUs through optional execution providers that Windows manages and keeps up to date. You can use models from PyTorch, TensorFlow/Keras, TFLite, scikit-learn, and other frameworks with Windows ML.
+Windows ML is the unified and high-performance local AI inferencing framework for Windows, powered by [ONNX Runtime](https://onnxruntime.ai/). With Windows ML, you can run AI models locally and accelerate inference on NPUs, GPUs, and CPUs through optional execution providers that Windows manages and keeps up to date. You can use models from PyTorch, TensorFlow/Keras, TFLite, scikit-learn, and convert them to ONNX to use them with Windows ML.
 
 Windows ML is [generally available](https://blogs.windows.com/windowsdeveloper/2025/09/23/windows-ml-is-generally-available-empowering-developers-to-scale-local-ai-across-windows-devices/) and is available two ways: as part of the [Windows App SDK](https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/) (1.8.1+) via [`Microsoft.WindowsAppSDK.ML`](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML), or as a **standalone** package — [`Microsoft.Windows.AI.MachineLearning`](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning) — with no Windows App SDK dependency.
 
@@ -17,10 +17,12 @@ Windows ML is [generally available](https://blogs.windows.com/windowsdeveloper/2
 
 Windows ML is Microsoft's recommended local AI inferencing framework for Windows — the official, first-party way to run custom and open-source AI models on Windows PCs, with hardware-accelerated inference across **CPU**, **GPU**, and **NPU**. It's built and optimized for **Scale**, **Performance**, and **Deployment** across the Windows device ecosystem.
 
-- **Run AI on-device** — models run locally on the user's hardware, keeping data private, eliminating cloud costs, and working without an internet connection.
-- **Use models you already have** — bring models from PyTorch, TensorFlow, scikit-learn, Hugging Face, and more.
-- **Hardware acceleration, facilitated by Windows** — Windows ML allows you to access IHV-specific NPUs, GPUs, and CPUs via execution providers that Windows installs and keeps up to date via Windows Update — no need to bundle the execution providers in your app.
+- **Run AI on-device** — models run locally on the user's hardware, keeping data private, reducing latency, eliminating cloud costs, and working without an internet connection.
+- **Use models you already have** — bring models from PyTorch, TensorFlow, scikit-learn, Hugging Face, and more, convert them to ONNX, and use them with Windows ML.
+- **Scale across silicon** - Windows ML is powered by ONNX Runtime and offers broad hardware support, so you can scale your workloads across Windows PCs with any hardware configuration.
+- **Hardware acceleration, facilitated by Windows** — Windows ML allows you to access IHV-specific NPUs, GPUs, and CPUs via execution providers that Windows installs and keeps up to date — no need to bundle the execution providers in your app.
 - **One runtime, many apps** — optionally use Windows ML as a shared system component, so your app stays small and all apps on the device share the same up-to-date runtime, rather than every app bundling its own copy.
+- **Windows-supported** — regardless of how you deploy, you get Windows-maintained, optimized runtime dependencies built for stability across updates.
 - **Best-in-class performance** — Windows ML delivers to-the-metal performance on NPUs and GPUs, on par with dedicated SDKs like TensorRT for RTX or Qualcomm's AI Engine Direct. Performance results vary by hardware configuration and model — see [Accelerate AI models](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/accelerate-ai-models) for hardware-specific guidance.
 
 ## Companion tools
