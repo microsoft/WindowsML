@@ -25,6 +25,8 @@ Windows ML is Microsoft's recommended local AI inferencing framework for Windows
 - **Windows-supported** — regardless of how you deploy, you get Windows-maintained, optimized runtime dependencies built for stability across updates.
 - **Best-in-class performance** — Windows ML delivers to-the-metal performance on NPUs and GPUs, on par with dedicated SDKs like TensorRT for RTX or Qualcomm's AI Engine Direct. Performance results vary by hardware configuration and model — see [Accelerate AI models](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/accelerate-ai-models) for hardware-specific guidance.
 
+To learn about the benefits of using Windows ML compared to ONNX Runtime directly, see the [Windows ML docs](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/overview#why-use-windows-ml-instead-of-microsoft-ort).
+
 ## Companion tools
 
 Windows ML works hand-in-hand with two Microsoft-built tools that handle the steps around inference:
