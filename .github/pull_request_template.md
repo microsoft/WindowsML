@@ -17,7 +17,7 @@ Please fill in the sections below so reviewers can land your change quickly.
 
 ## Checklist
 
-- [ ] I built `Samples/WindowsML-Samples.sln` locally with Visual Studio 2022
+- [ ] I built `Samples/WindowsML-Samples.sln` locally with Visual Studio 2022 or Visual Studio 2026
 - [ ] I ran the affected sample(s) end-to-end on Windows 11 (x64 and/or ARM64)
 - [ ] C++ changes follow the repo `.clang-format` (ran `Samples/format-code.ps1` if available)
 - [ ] I updated the relevant per-sample `README.md`
