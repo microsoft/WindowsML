@@ -89,6 +89,8 @@ body:
       description: |
         For runtime issues, traces captured with `Samples/capture-logs` are extremely helpful.
         See [Capturing Windows ML logs](https://learn.microsoft.com/windows/ai/new-windows-ml/logs).
+        
+        **For EP acquisition/download failures**, see [Execution Provider Errors](https://learn.microsoft.com/windows/ai/new-windows-ml/execution-provider-errors).
       placeholder: Attach or paste relevant log snippets.
     validations:
       required: false
