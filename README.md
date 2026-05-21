@@ -15,7 +15,7 @@ Windows ML is [generally available](https://blogs.windows.com/windowsdeveloper/2
 
 ## Why Windows ML
 
-Windows ML is Microsoft's recommended local AI inferencing framework for Windows — the official, Windows-native way to run custom and open-source AI models on Windows PCs, with hardware-accelerated inference across **CPU**, **GPU**, and **NPU**. It's built and optimized for **Scale**, **Performance**, and **Deployment** across the Windows device ecosystem.
+Windows ML is Microsoft's recommended local AI inferencing framework for Windows — the official, Windows-native way to run custom and open-source AI models on Windows PCs, with hardware-accelerated inference across **CPU**, **GPU**, and **NPU**. It's built and optimized for **Scale**, **Performance**, and **Deployment** across the Windows ecosystem.
 
 - **Run AI on-device** — models run locally on the user's hardware, keeping data private, reducing latency, eliminating cloud costs, and working without an internet connection.
 - **Use models you already have** — bring models from PyTorch, TensorFlow, scikit-learn, Hugging Face, and more, convert them to ONNX, and use them with Windows ML.
