@@ -134,9 +134,9 @@ Open [`Samples/WindowsML-Samples.sln`](Samples/WindowsML-Samples.sln) in Visual 
 
 | Package | Use it for | Latest |
 |---|---|---|
-| [`Microsoft.WindowsAppSDK.ML`](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML) | Windows ML via the Windows App SDK (recommended for packaged / WinUI apps) | Ships in Windows App SDK 1.8.1+ |
+| [`Microsoft.WindowsAppSDK.ML`](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML) | Windows ML via the Windows App SDK (recommended for packaged / WinUI apps) | 2.1.1 (ships in Windows App SDK 2.1+) |
 | [`Microsoft.Windows.AI.MachineLearning`](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning) | **Standalone** Windows ML — no Windows App SDK dependency | 2.1.1 |
-| [`Microsoft.ML.OnnxRuntimeGenAI.WinML`](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.WinML) | Generative AI (Phi, Llama, Mistral, Gemma, DeepSeek…) on top of Windows ML | 0.13.2 |
+| [`Microsoft.ML.OnnxRuntimeGenAI.WinML`](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.WinML) | Generative AI (Phi, Llama, Mistral, Gemma, DeepSeek…) on top of Windows ML | 0.14.0 |
 
 Namespace: `Microsoft.Windows.AI.MachineLearning`. Execution providers are distributed and updated through Windows Update.
 
