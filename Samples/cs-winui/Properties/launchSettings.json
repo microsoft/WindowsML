@@ -1,7 +1,0 @@
-{
-  "profiles": {
-    "WindowsMLSample (Package)": {
-      "commandName": "MsixPackage"
-    }
-  }
-}
