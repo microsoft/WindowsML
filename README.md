@@ -74,32 +74,30 @@ using var session = new InferenceSession("model.onnx", sessionOptions);
 using var results = session.Run(inputs);
 ```
 
-For the full working example (image preprocessing, EP selection by name vs. policy, model compilation), see [CSharpConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs/CSharpConsoleDesktop). C++ developers, start with [CppConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop). Python developers, see [SqueezeNetPython](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/python).
+For the full working example (image preprocessing, EP selection by name vs. policy, model compilation), see [CSharpConsoleDesktop](Samples/cs/CSharpConsoleDesktop/). C++ developers, start with [CppConsoleDesktop](Samples/cpp/CppConsoleDesktop/). Python developers, see [SqueezeNetPython](Samples/python/SqueezeNetPython/).
 
 ## Samples
 
-Windows ML samples can be found in the **[WindowsAppSDK-Samples](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML)** repository, alongside the rest of the Windows App SDK samples. They show how to use Windows ML in C#, C++, and Python, including console, GUI, GenAI, and self-contained / framework-dependent deployment variants.
+Browse all samples in the [**`Samples/`**](Samples/) folder. They show how to use Windows ML in C#, C++, and Python — including console and generative-AI scenarios — all built against [`Microsoft.Windows.AI.MachineLearning`](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning).
 
-➡️ **Browse all samples:** [microsoft/WindowsAppSDK-Samples / Samples / WindowsML](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML)
+➡️ **Browse all samples:** [`Samples/`](Samples/)
+
+Additional Windows ML samples built on top of the Windows App SDK (including WinUI 3, WPF, and WinForms image-classification UIs) are available in the [**WindowsAppSDK-Samples**](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML) repository.
 
 ### C++ (MSBuild)
 
 | Sample | What it shows |
 |---|---|
-| [CppConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop) | Basic console app — EP discovery, command-line options, model compilation |
+| [CppConsoleDesktop](Samples/cpp/CppConsoleDesktop/) | Basic console app — EP discovery, command-line options, model compilation |
+| [CppConsoleDesktop.GenAI](Samples/cpp/CppConsoleDesktop.GenAI/) | Local LLM inference with ONNX Runtime GenAI |
 | [CppConsoleDesktop.FrameworkDependent](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop.FrameworkDependent) | Framework-dependent deployment (shared runtime, smallest footprint) |
 | [CppConsoleDesktop.SelfContained](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop.SelfContained) | Self-contained deployment (no runtime dependency) |
-| [CppConsoleDesktop.GenAI](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop.GenAI) | Local LLM inference with ONNX Runtime GenAI |
-| [CppConsoleDll](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDll) | Using Windows ML from a shared library |
-| [CppResnetBuildDemo](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppResnetBuildDemo) | ResNet image classification end-to-end (model conversion, EP compilation) |
 
 ### C++ (CMake)
 
 | Sample | What it shows |
 |---|---|
-| [ResNetConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp-cmake/ResNetConsoleDesktop) | CMake-based ResNet sample (framework-dependent) |
-| [ResNetConsoleDesktop.SelfContained](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp-cmake/ResNetConsoleDesktop.SelfContained) | CMake-based ResNet sample (self-contained) |
-| [WinMLEpCatalog](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cmake/WinMLEpCatalog) | Enumerate execution providers using the EP catalog C API |
+| [WinMLEpCatalog](Samples/cpp-cmake/WinMLEpCatalog/) | Enumerate execution providers using the EP catalog C API |
 
 ### C++ ABI
 
@@ -111,18 +109,17 @@ Windows ML samples can be found in the **[WindowsAppSDK-Samples](https://github.
 
 | Sample | What it shows |
 |---|---|
-| [CSharpConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs/CSharpConsoleDesktop) | Basic C# console app |
-| [ResnetBuildDemoCS](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs/ResnetBuildDemoCS) | ResNet image classification with EP selection policy and model compilation |
-| [HelloPhi](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs/HelloPhi) | Local Phi-family LLM inference with ONNX Runtime GenAI (works with Phi-3, Phi-3.5, and other GenAI-compatible ONNX models) |
+| [CSharpConsoleDesktop](Samples/cs/CSharpConsoleDesktop/) | Basic C# console app |
+| [HelloPhi](Samples/cs/HelloPhi/) | Local Phi-family LLM inference with ONNX Runtime GenAI (works with Phi-3, Phi-3.5, and other GenAI-compatible ONNX models) |
+| [cs-winui](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs-winui) | WinUI 3 image classification UI |
 | [cs-wpf](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs-wpf) | WPF image classification UI |
 | [cs-winforms](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs-winforms) | Windows Forms image classification UI |
-| [cs-winui](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs-winui) | WinUI 3 image classification UI |
 
 ### Python
 
 | Sample | What it shows |
 |---|---|
-| [SqueezeNetPython](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/python) | Image classification using the Windows ML Python bindings |
+| [SqueezeNetPython](Samples/python/SqueezeNetPython/) | Image classification using the [`windowsml`](https://pypi.org/project/windowsml/) PyPI package |
 
 ### Diagnostics
 
@@ -134,8 +131,8 @@ Windows ML samples can be found in the **[WindowsAppSDK-Samples](https://github.
 
 | Package | Use it for | Latest |
 |---|---|---|
+| [`Microsoft.Windows.AI.MachineLearning`](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning) | Windows ML without a Windows App SDK dependency | 2.1.1 |
 | [`Microsoft.WindowsAppSDK.ML`](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML) | Windows ML via the Windows App SDK (recommended for packaged / WinUI apps) | Ships in Windows App SDK 1.8.1+ |
-| [`Microsoft.Windows.AI.MachineLearning`](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning) | **Standalone** Windows ML — no Windows App SDK dependency | 2.1.1 |
 | [`Microsoft.ML.OnnxRuntimeGenAI.WinML`](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.WinML) | Generative AI (Phi, Llama, Mistral, Gemma, DeepSeek…) on top of Windows ML | 0.13.2 |
 
 Namespace: `Microsoft.Windows.AI.MachineLearning`. Execution providers are distributed and updated through Windows Update.
@@ -156,9 +153,9 @@ Namespace: `Microsoft.Windows.AI.MachineLearning`. Execution providers are distr
 
 ## Get started
 
-1. Head over to the [WindowsAppSDK-Samples WindowsML folder](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML).
-2. Open `WindowsML-Samples.sln` in **Visual Studio 2022** (with the C++ and .NET desktop workloads), pick a sample, set it as the startup project, and run.
-3. For Python, see [SqueezeNetPython](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/python).
+1. Open `Samples/WindowsML-Samples.sln` in **Visual Studio 2022** (with the C++ and .NET desktop workloads), pick a sample, set it as the startup project, and run.
+2. For Python, see [SqueezeNetPython](Samples/python/SqueezeNetPython/).
+3. For CMake, see [WinMLEpCatalog](Samples/cpp-cmake/WinMLEpCatalog/).
 
 For full setup walk-throughs, see [Get started with Windows ML](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/get-started).
 

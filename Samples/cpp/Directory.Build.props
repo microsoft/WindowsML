@@ -1,0 +1,41 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
+
+  <!-- Security settings for Control Flow Guard (CFG) and other mitigations -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>%(AdditionalOptions) /Qspectre</AdditionalOptions>
+      <!-- /GS Enable Control Flow Guard -->
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <!-- Setting this to be compatible with CFG -->
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <!-- dynamicbase is required for enabling CFG -->
+      <AdditionalOptions>%(AdditionalOptions) /dynamicbase</AdditionalOptions>
+      <!-- /GS Enable Control Flow Guard -->
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <CETCompat Condition="'$(Platform)'!='ARM64'">true</CETCompat>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <!-- Central NuGet package versions for C++ WindowsML samples -->
+    <WindowsAIMachineLearningVersion>2.1.1</WindowsAIMachineLearningVersion>
+    <OnnxRuntimeGenAIWinMLVersion>0.14.0</OnnxRuntimeGenAIWinMLVersion>
+    <CppWinRTVersion>2.0.240405.15</CppWinRTVersion>
+    <WindowsSDKBuildToolsVersion>10.0.26100.4654</WindowsSDKBuildToolsVersion>
+    <WindowsImplementationLibraryVersion>1.0.240803.1</WindowsImplementationLibraryVersion>
+    <WindowsAbiWinRTVersion>2.0.210330.2</WindowsAbiWinRTVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- C++ specific settings only -->
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platforms>x64;ARM64</Platforms>
+
+    <!-- packages.config restore for C++ projects -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

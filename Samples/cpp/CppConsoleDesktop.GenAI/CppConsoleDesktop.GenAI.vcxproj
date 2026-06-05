@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- When building centrally, this will define a single nuget package location for all samples -->
+    <NugetPackageDirectory Condition="'$(NugetPackageDirectory)'==''">..\..\packages</NugetPackageDirectory>
+  </PropertyGroup>
+  <!-- Enable WinML header include path -->
+  <PropertyGroup>
+    <WinMLEnableDefaultOrtHeaderIncludePath>true</WinMLEnableDefaultOrtHeaderIncludePath>
+  </PropertyGroup>
+  <Import Project="$(NugetPackageDirectory)\Microsoft.ML.OnnxRuntimeGenAI.WinML.0.14.0\build\native\Microsoft.ML.OnnxRuntimeGenAI.WinML.props" Condition="Exists('$(NugetPackageDirectory)\Microsoft.ML.OnnxRuntimeGenAI.WinML.0.14.0\build\native\Microsoft.ML.OnnxRuntimeGenAI.WinML.props')" />
+  <Import Project="$(NugetPackageDirectory)\Microsoft.Windows.AI.MachineLearning.2.1.1\build\native\Microsoft.Windows.AI.MachineLearning.props" Condition="Exists('$(NugetPackageDirectory)\Microsoft.Windows.AI.MachineLearning.2.1.1\build\native\Microsoft.Windows.AI.MachineLearning.props')" />
+  <Import Project="$(NugetPackageDirectory)\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.props" Condition="Exists('$(NugetPackageDirectory)\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.props')" />
+  <Import Project="$(NugetPackageDirectory)\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(NugetPackageDirectory)\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64" Configuration="Debug" Platform="x64" />
+    <ProjectConfiguration Include="Release|x64" Configuration="Release" Platform="x64" />
+    <ProjectConfiguration Include="Debug|ARM64" Configuration="Debug" Platform="ARM64" />
+    <ProjectConfiguration Include="Release|ARM64" Configuration="Release" Platform="ARM64" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{7394B294-DE36-4E7B-B737-D3607D36E662}</ProjectGuid>
+    <RootNamespace>CppConsoleDesktop.GenAI</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsPackageType>None</WindowsPackageType>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <PreprocessorDefinitions>_CONSOLE%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <WarningLevel>Level4</WarningLevel>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="app.manifest" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="timing.cpp" />
+    <ClCompile Include="program.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GenAIPerformanceConfigurator.h" />
+  </ItemGroup>
+  <!-- Copy OpenVINO configuration files to output -->
+  <Target Name="CopyOpenVinoConfigFiles" AfterTargets="Build">
+    <Copy SourceFiles="$(ProjectDir)..\..\Shared\openvino_perf.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(ProjectDir)..\..\Shared\openvino_efficiency.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(NugetPackageDirectory)\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('$(NugetPackageDirectory)\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="$(NugetPackageDirectory)\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('$(NugetPackageDirectory)\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="$(NugetPackageDirectory)\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.targets" Condition="Exists('$(NugetPackageDirectory)\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.targets')" />
+    <Import Project="$(NugetPackageDirectory)\Microsoft.Windows.AI.MachineLearning.2.1.1\build\native\Microsoft.Windows.AI.MachineLearning.targets" Condition="Exists('$(NugetPackageDirectory)\Microsoft.Windows.AI.MachineLearning.2.1.1\build\native\Microsoft.Windows.AI.MachineLearning.targets')" />
+    <Import Project="$(NugetPackageDirectory)\Microsoft.ML.OnnxRuntimeGenAI.WinML.0.14.0\build\native\Microsoft.ML.OnnxRuntimeGenAI.WinML.targets" Condition="Exists('$(NugetPackageDirectory)\Microsoft.ML.OnnxRuntimeGenAI.WinML.0.14.0\build\native\Microsoft.ML.OnnxRuntimeGenAI.WinML.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.props'))" />
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.targets'))" />
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.Windows.AI.MachineLearning.2.1.1\build\native\Microsoft.Windows.AI.MachineLearning.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.Windows.AI.MachineLearning.2.1.1\build\native\Microsoft.Windows.AI.MachineLearning.props'))" />
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.Windows.AI.MachineLearning.2.1.1\build\native\Microsoft.Windows.AI.MachineLearning.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.Windows.AI.MachineLearning.2.1.1\build\native\Microsoft.Windows.AI.MachineLearning.targets'))" />
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.ML.OnnxRuntimeGenAI.WinML.0.14.0\build\native\Microsoft.ML.OnnxRuntimeGenAI.WinML.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.ML.OnnxRuntimeGenAI.WinML.0.14.0\build\native\Microsoft.ML.OnnxRuntimeGenAI.WinML.props'))" />
+    <Error Condition="!Exists('$(NugetPackageDirectory)\Microsoft.ML.OnnxRuntimeGenAI.WinML.0.14.0\build\native\Microsoft.ML.OnnxRuntimeGenAI.WinML.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetPackageDirectory)\Microsoft.ML.OnnxRuntimeGenAI.WinML.0.14.0\build\native\Microsoft.ML.OnnxRuntimeGenAI.WinML.targets'))" />
+  </Target>
+</Project>
