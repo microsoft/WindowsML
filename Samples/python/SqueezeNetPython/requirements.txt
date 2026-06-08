@@ -1,3 +1,4 @@
+--find-links ../../localpythonwheels
 pillow
 numpy
 windowsml[with-ort]==2.1.1
