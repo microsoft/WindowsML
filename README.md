@@ -3,13 +3,7 @@
 [![Status: Generally Available](https://img.shields.io/badge/status-Generally%20Available-brightgreen)](https://blogs.windows.com/windowsdeveloper/2025/09/23/windows-ml-is-generally-available-empowering-developers-to-scale-local-ai-across-windows-devices/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[![NuGet: Microsoft.Windows.AI.MachineLearning](https://img.shields.io/nuget/v/Microsoft.Windows.AI.MachineLearning?label=Microsoft.Windows.AI.MachineLearning)](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning)
-[![NuGet: Microsoft.WindowsAppSDK.ML](https://img.shields.io/nuget/v/Microsoft.WindowsAppSDK.ML?label=Microsoft.WindowsAppSDK.ML)](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML)
-[![NuGet: Microsoft.ML.OnnxRuntimeGenAI.WinML](https://img.shields.io/nuget/v/Microsoft.ML.OnnxRuntimeGenAI.WinML?label=Microsoft.ML.OnnxRuntimeGenAI.WinML)](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.WinML)
-
 Windows ML is the unified and high-performance local AI inferencing framework for Windows, powered by [ONNX Runtime](https://onnxruntime.ai/). With Windows ML, you can run AI models locally and accelerate inference on NPUs, GPUs, and CPUs through optional execution providers that Windows manages and keeps up to date. You can use models from PyTorch, TensorFlow/Keras, TFLite, scikit-learn, and convert them to ONNX to use them with Windows ML.
-
-Windows ML is [generally available](https://blogs.windows.com/windowsdeveloper/2025/09/23/windows-ml-is-generally-available-empowering-developers-to-scale-local-ai-across-windows-devices/) and is available two ways: as part of the [Windows App SDK](https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/) (1.8.1+) via [`Microsoft.WindowsAppSDK.ML`](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML), or as a **standalone** package — [`Microsoft.Windows.AI.MachineLearning`](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning) — with no Windows App SDK dependency.
 
 <img src="assets/windows-ml.png" alt="Windows ML architecture" width="720">
 
@@ -27,155 +21,25 @@ Windows ML is Microsoft's recommended local AI inferencing framework for Windows
 
 To learn about the benefits of using Windows ML compared to ONNX Runtime directly, see the [Windows ML docs](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/overview#why-use-windows-ml-instead-of-microsoft-ort).
 
-## Companion tools
-
-Windows ML works hand-in-hand with two Microsoft-built tools that handle the steps around inference:
-
-- **[Foundry Toolkit for VS Code](https://code.visualstudio.com/docs/intelligentapps/overview)** — convert, quantize, optimize, and evaluate ONNX models inside VS Code before shipping.
-- **[Windows ML CLI](https://aka.ms/winmlcli)** *(preview)* — a unified, agent-ready toolchain for model prep, optimization, and benchmarking, with agent skills for AI and agent-driven workflows.
-
-Both ship from Microsoft and are designed to feed directly into Windows ML.
-
-## Hello, Windows ML
-
-The shortest possible Windows ML program in C#: discover and register execution providers, then run an ONNX model — and choose a policy to control which hardware runs it.
-
-```csharp
-using Microsoft.Windows.AI.MachineLearning;
-using Microsoft.ML.OnnxRuntime;
-
-// 1. Discover execution providers from the Windows ML EP catalog.
-//    Windows installs and keeps these up to date — your app doesn't bundle them.
-var catalog = ExecutionProviderCatalog.GetDefault();
-foreach (var provider in catalog.FindAllProviders())
-{
-    await provider.EnsureReadyAsync();
-    provider.TryRegister();
-}
-
-// 2. Create an ONNX Runtime environment.
-var envOptions = new EnvironmentCreationOptions { logId = "HelloWindowsML" };
-using var ortEnv = OrtEnv.CreateInstanceWithOptions(ref envOptions);
-
-// 3. Pick an execution provider policy.
-using var sessionOptions = new SessionOptions();
-sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.PREFER_NPU);
-
-// Other policies you can try:
-// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.DEFAULT);
-// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.PREFER_GPU);
-// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.PREFER_CPU);
-// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.MAX_PERFORMANCE);
-// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.MAX_EFFICIENCY);
-// sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.MIN_OVERALL_POWER);
-
-// 4. Load your ONNX model and run inference.
-using var session = new InferenceSession("model.onnx", sessionOptions);
-using var results = session.Run(inputs);
-```
-
-For the full working example (image preprocessing, EP selection by name vs. policy, model compilation), see [CSharpConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs/CSharpConsoleDesktop). C++ developers, start with [CppConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop). Python developers, see [SqueezeNetPython](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/python).
-
-## Samples
-
-Windows ML samples can be found in the **[WindowsAppSDK-Samples](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML)** repository, alongside the rest of the Windows App SDK samples. They show how to use Windows ML in C#, C++, and Python, including console, GUI, GenAI, and self-contained / framework-dependent deployment variants.
-
-➡️ **Browse all samples:** [microsoft/WindowsAppSDK-Samples / Samples / WindowsML](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML)
-
-### C++ (MSBuild)
-
-| Sample | What it shows |
-|---|---|
-| [CppConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop) | Basic console app — EP discovery, command-line options, model compilation |
-| [CppConsoleDesktop.FrameworkDependent](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop.FrameworkDependent) | Framework-dependent deployment (shared runtime, smallest footprint) |
-| [CppConsoleDesktop.SelfContained](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop.SelfContained) | Self-contained deployment (no runtime dependency) |
-| [CppConsoleDesktop.GenAI](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDesktop.GenAI) | Local LLM inference with ONNX Runtime GenAI |
-| [CppConsoleDll](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppConsoleDll) | Using Windows ML from a shared library |
-| [CppResnetBuildDemo](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp/CppResnetBuildDemo) | ResNet image classification end-to-end (model conversion, EP compilation) |
-
-### C++ (CMake)
-
-| Sample | What it shows |
-|---|---|
-| [ResNetConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp-cmake/ResNetConsoleDesktop) | CMake-based ResNet sample (framework-dependent) |
-| [ResNetConsoleDesktop.SelfContained](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp-cmake/ResNetConsoleDesktop.SelfContained) | CMake-based ResNet sample (self-contained) |
-| [WinMLEpCatalog](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cmake/WinMLEpCatalog) | Enumerate execution providers using the EP catalog C API |
-
-### C++ ABI
-
-| Sample | What it shows |
-|---|---|
-| [CppAbiEPEnumerationSample](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cpp-abi) | Direct ABI implementation using raw COM interfaces — no projections |
-
-### C# (.NET)
-
-| Sample | What it shows |
-|---|---|
-| [CSharpConsoleDesktop](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs/CSharpConsoleDesktop) | Basic C# console app |
-| [ResnetBuildDemoCS](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs/ResnetBuildDemoCS) | ResNet image classification with EP selection policy and model compilation |
-| [HelloPhi](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs/HelloPhi) | Local Phi-family LLM inference with ONNX Runtime GenAI (works with Phi-3, Phi-3.5, and other GenAI-compatible ONNX models) |
-| [cs-wpf](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs-wpf) | WPF image classification UI |
-| [cs-winforms](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs-winforms) | Windows Forms image classification UI |
-| [cs-winui](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/cs-winui) | WinUI 3 image classification UI |
-
-### Python
-
-| Sample | What it shows |
-|---|---|
-| [SqueezeNetPython](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/python) | Image classification using the Windows ML Python bindings |
-
-### Diagnostics
-
-| Resource | Description |
-|---|---|
-| [capture-logs](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/capture-logs) | PowerShell + WPR/WPA profiles for capturing Windows ML diagnostic traces. See [Capturing Windows ML logs](https://learn.microsoft.com/windows/ai/new-windows-ml/logs). |
-
 ## NuGet packages
 
-| Package | Use it for | Latest |
-|---|---|---|
-| [`Microsoft.WindowsAppSDK.ML`](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML) | Windows ML via the Windows App SDK (recommended for packaged / WinUI apps) | Ships in Windows App SDK 1.8.1+ |
-| [`Microsoft.Windows.AI.MachineLearning`](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning) | **Standalone** Windows ML — no Windows App SDK dependency | 2.1.1 |
-| [`Microsoft.ML.OnnxRuntimeGenAI.WinML`](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.WinML) | Generative AI (Phi, Llama, Mistral, Gemma, DeepSeek…) on top of Windows ML | 0.13.2 |
-
-Namespace: `Microsoft.Windows.AI.MachineLearning`. Execution providers are distributed and updated through Windows Update.
-
-## Supported platforms
-
-| | |
+| Package | Use it for |
 |---|---|
-| **Operating systems** | Windows 11, Windows 10 (19H1+), Windows Server 2019+, Windows 365 (Cloud PC) |
-| **Architectures** | x64, ARM64 |
-| **Languages** | C#, C++/WinRT, C, C++, Python (3.10–3.13) |
-| **Packaging** | Unpackaged, Packaged (MSIX) |
-| **Deployment** | Self-contained, framework-dependent |
-
-> **Note:** CPU and GPU (via DirectML) work on all supported Windows versions. Hardware-optimized execution providers for NPUs and specific GPUs require **Windows 11 24H2 (build 26100)** or later. See [Windows ML execution providers](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/supported-execution-providers).
->
-> **DirectML is in sustained engineering.** DirectML continues to be supported, but new feature development has moved to Windows ML for Windows-based ONNX Runtime deployments. For new projects, prefer the vendor-specific GPU and NPU execution providers that Windows ML installs and maintains. See [DirectML Overview](https://learn.microsoft.com/en-us/windows/ai/directml/dml).
+| [![NuGet: Microsoft.WindowsAppSDK.ML](https://img.shields.io/nuget/v/Microsoft.WindowsAppSDK.ML?label=Microsoft.WindowsAppSDK.ML)](https://www.nuget.org/packages/Microsoft.WindowsAppSDK.ML) | Recommended way to use Windows ML (supports both framework-dependent and self-contained) |
+| [![NuGet: Microsoft.Windows.AI.MachineLearning](https://img.shields.io/nuget/v/Microsoft.Windows.AI.MachineLearning?label=Microsoft.Windows.AI.MachineLearning)](https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning) | Alternative way to use Windows ML (only self-contained, no Windows App SDK dependency) |
+| [![NuGet: Microsoft.ML.OnnxRuntimeGenAI.WinML](https://img.shields.io/nuget/v/Microsoft.ML.OnnxRuntimeGenAI.WinML?label=Microsoft.ML.OnnxRuntimeGenAI.WinML)](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.WinML) | Generative AI (Phi, Llama, Mistral, Gemma, DeepSeek…) on top of Windows ML |
 
 ## Get started
 
-1. Head over to the [WindowsAppSDK-Samples WindowsML folder](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML).
-2. Open `WindowsML-Samples.sln` in **Visual Studio 2022** (with the C++ and .NET desktop workloads), pick a sample, set it as the startup project, and run.
-3. For Python, see [SqueezeNetPython](https://github.com/microsoft/WindowsAppSDK-Samples/tree/main/Samples/WindowsML/python).
+To get started with Windows ML, [see our documentation on Microsoft Learn](https://learn.microsoft.com/windows/ai/new-windows-ml/get-started).
 
-For full setup walk-throughs, see [Get started with Windows ML](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/get-started).
+## Samples
+
+Windows ML code samples can be found [on our documentation on Microsoft Learn](https://learn.microsoft.com/windows/ai/new-windows-ml/samples).
 
 ## Filing issues & feedback
 
 **Found a bug, have a question, or want to suggest a sample?** [Open an issue in this repo](../../issues) — we triage them directly. For broader Windows ML platform discussions or runtime/API issues that span beyond the samples, you can also use the [Windows App SDK repo](https://github.com/microsoft/WindowsAppSDK/issues).
-
-## Related Microsoft repos & tools
-
-- **[Windows ML documentation](https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/overview)** — official docs ([aka.ms/TryWinML](https://aka.ms/TryWinML))
-- **[Windows ML CLI](https://aka.ms/winmlcli)** *(preview)* — a unified, agent-ready toolchain for model prep, optimization, and benchmarking, with agent skills for AI and agent-driven workflows
-- **[AI Toolkit / Foundry Toolkit for VS Code](https://code.visualstudio.com/docs/intelligentapps/overview)** — convert, quantize, optimize, evaluate models, all inside VS Code
-- **[AI Dev Gallery](https://aka.ms/ai-dev-gallery)** — interactive Microsoft Store app to discover and experiment with local AI scenarios on your PC
-- **[Windows App SDK](https://github.com/microsoft/WindowsAppSDK)** — the platform that ships Windows ML
-- **[WindowsAppSDK-Samples](https://github.com/microsoft/WindowsAppSDK-Samples)** — broader Windows App SDK samples
-- **[ONNX Runtime](https://github.com/microsoft/onnxruntime)** — the runtime Windows ML is built on
-- **[ONNX Runtime GenAI](https://github.com/microsoft/onnxruntime-genai)** — generative AI extensions for ONNX Runtime
 
 ## Learn more
 
