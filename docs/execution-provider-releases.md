@@ -15,7 +15,7 @@ The following execution providers are available to developers using [Microsoft.W
 | [OpenVINO (Intel)](#openvino-intel) | MSIX: `1.8.80.0`<br>OpenVINO: `1.4.1`<br>Released: `2026 6D` | MSIX: `1.8.84.0`<br>OpenVINO: `1.6.1`<br>Insiders: `2026 7C`<br>GA: `2026 8D` |
 | [QNN (Qualcomm)](#qnn-qualcomm) | MSIX: `2.2451.48.0`<br>QAIRT: `2.45.41`<br>Released: `2026 7D` | MSIX: `2.2480.49.0`<br>QAIRT: `2.48.40`<br>Insiders: `2026 7C`<br>GA: `2026 8D` |
 | [VitisAI (AMD)](#vitisai-amd) | MSIX: `1.8.68.0`<br>EP: 6059<br>Released: `2026 7D` | MSIX: `1.8.72.0`<br>EP: 1276<br>Insiders: `2026 7C`<br>GA: `2026 8D` |
-| [WebGPU (Microsoft)](#webgpu-experimental) | MSIX: `0.2.1.0` |  |
+| [WebGPU (Microsoft)](#webgpu-experimental) | MSIX: `0.3.0.0`<br>WebGPU EP: [`0.3.0`](https://github.com/microsoft/onnxruntime/releases/tag/plugin-ep-webgpu%2Fv0.3.0)<br>Released: `2026 8D` |  |
 
 ## Windows ML 1.8.x
 
@@ -107,4 +107,6 @@ For release notes of each QNN QAIRT SDK version, see [Qualcomm AI Runtime (QAIRT
 
 | Version | Compatible with | Windows Update release | Release notes |
 | --- | --- | --- | --- |
-| 0.2.1.0 | Windows ML 2.x | | |
+| 0.3.0.0 | Windows ML 2.x | 2026 8D | WebGPU EP: [`0.3.0`](https://github.com/microsoft/onnxruntime/releases/tag/plugin-ep-webgpu%2Fv0.3.0) |
+| 0.2.1.0 | Windows ML 2.x | | WebGPU EP: [`0.2.1`](https://github.com/microsoft/onnxruntime/releases/tag/plugin-ep-webgpu%2Fv0.2.1) |
+| 0.1.0.0 | Windows ML 2.x | | WebGPU EP: [`0.1.0`](https://github.com/microsoft/onnxruntime/releases/tag/plugin-ep-webgpu%2Fv0.1.0) |
