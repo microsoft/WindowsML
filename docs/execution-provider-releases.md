@@ -15,7 +15,7 @@ The following execution providers are available to developers using [Microsoft.W
 | [OpenVINO (Intel)](#openvino-intel) | MSIX: `1.8.84.0`<br>OpenVINO: `1.6.1`<br>Released: `2026 8D` |  |
 | [QNN (Qualcomm)](#qnn-qualcomm) | MSIX: `2.2480.49.0`<br>QAIRT: `2.48.40`<br>Released: `2026 8D` | MSIX: `2.2490.52.0`<br>QAIRT: `2.49.40`<br>Insiders: `2026 8C`<br>GA: `2026 9D` |
 | [VitisAI (AMD)](#vitisai-amd) | MSIX: `1.8.72.0`<br>EP: 1276<br>Released: `2026 8D` | MSIX: `1.8.75.0`<br>EP: 1605<br>Insiders: `2026 8C`<br>GA: `2026 9D` |
-| [WebGPU (Microsoft)](#webgpu-experimental) | MSIX: `0.3.0.0`<br>WebGPU EP: [`0.3.0`](https://github.com/microsoft/onnxruntime/releases/tag/plugin-ep-webgpu%2Fv0.3.0)<br>Released: `2026 8D` |  |
+| [WebGPU (Microsoft)](#webgpu-microsoft) | MSIX: `0.3.0.0`<br>WebGPU EP: [`0.3.0`](https://github.com/microsoft/onnxruntime/releases/tag/plugin-ep-webgpu%2Fv0.3.0)<br>Released: `2026 8D` |  |
 
 ## Windows ML 1.8.x
 
