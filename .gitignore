@@ -208,6 +208,28 @@ PublishScripts/
 *.nuget.props
 *.nuget.targets
 
+# Windows ML Runtime, Task, and Server sample outputs and acquired models
+Samples/Runtime/out/
+Samples/Runtime/models/
+Samples/Runtime/profiles/
+Samples/Runtime/localpackages/*.nupkg
+Samples/Runtime/localpackages/*.whl
+Samples/Tasks/models/
+Samples/Tasks/localpackages/*.nupkg
+Samples/Server/models/
+Samples/Server/localpackages/*.nupkg
+Samples/Runtime/language/llm-chat/.export-venv/
+Samples/Runtime/compile-and-deploy/model-compilation/artifact.onnx
+Samples/Runtime/compile-and-deploy/model-compilation/weights.bin
+Samples/Runtime/**/*.engine
+Samples/Runtime/artifact*.onnx
+Samples/Runtime/*.bin
+Samples/Runtime/**/super-resolution-*.png
+
+# Model-compilation artifacts when the executable is launched from repo root
+/artifact.onnx
+/weights.bin
+
 # Microsoft Azure Build Output
 csx/
 *.build.csdef

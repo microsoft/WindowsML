@@ -37,6 +37,19 @@ To get started with Windows ML, [see our documentation on Microsoft Learn](https
 
 Windows ML code samples can be found [on our documentation on Microsoft Learn](https://learn.microsoft.com/windows/ai/new-windows-ml/samples).
 
+This repository also contains samples for the native Windows ML Runtime API, the
+higher-level Task APIs, and the Windows ML Server. See [`Samples`](Samples/).
+
+## Documentation
+
+[`docs`](docs/) contains guides, tutorials, and the API reference for the
+Windows ML Runtime API, the Task APIs, and the Windows ML Server.
+
+## Tools
+
+[`Tools`](Tools/) contains developer tools that support the samples, such as
+[building llama.cpp backends](Tools/llama/README.md).
+
 ## Filing issues & feedback
 
 **Found a bug, have a question, or want to suggest a sample?** [Open an issue in this repo](../../issues) — we triage them directly. For broader Windows ML platform discussions or runtime/API issues that span beyond the samples, you can also use the [Windows App SDK repo](https://github.com/microsoft/WindowsAppSDK/issues).

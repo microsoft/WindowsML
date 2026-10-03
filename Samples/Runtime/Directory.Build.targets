@@ -1,0 +1,57 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Project>
+  <PropertyGroup Condition="'$(WinMLRuntimeLocalLibDir)' != ''">
+    <_WinMLResolvedLocalLibDir>$(WinMLRuntimeLocalLibDir)</_WinMLResolvedLocalLibDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup Condition="'$(_WinMLResolvedLocalLibDir)' != ''">
+    <Link>
+      <AdditionalLibraryDirectories>$(_WinMLResolvedLocalLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <Target Name="CopyLocalWinMLRuntime"
+          AfterTargets="Build"
+          Condition="'$(WinMLRuntimeLocalNativeDir)' != ''">
+    <ItemGroup>
+      <_LocalWinMLRuntime Include="$(WinMLRuntimeLocalNativeDir)\Microsoft.Windows.AI.MachineLearning.dll" />
+      <_LocalWinMLRuntime Include="$(WinMLRuntimeLocalNativeDir)\onnxruntime.dll" />
+      <_LocalWinMLRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLRuntimeCore.dll" />
+      <_LocalWinMLRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLTokenizer.dll" />
+      <_MissingLocalWinMLRuntime Include="@(_LocalWinMLRuntime)"
+                                 Condition="!Exists('%(Identity)')" />
+    </ItemGroup>
+    <Error Condition="'@(_MissingLocalWinMLRuntime)' != ''"
+           Text="Incomplete local Windows ML Runtime payload. Missing: @(_MissingLocalWinMLRuntime->'%(Filename)%(Extension)', ', ')." />
+    <Copy SourceFiles="@(_LocalWinMLRuntime)" DestinationFolder="$(OutDir)" />
+  </Target>
+
+  <Target Name="_RemoveWinMLLlamaRuntimePayload">
+    <ItemGroup>
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLRuntimeLlama.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLggml-base.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLggml.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLllama.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLmtmd.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLLlamaCoreManifest.json" />
+    </ItemGroup>
+    <Delete Files="@(_DisabledWinMLLlamaRuntime)" />
+    <RemoveDir Directories="$(OutDir)LlamaBackends"
+               Condition="Exists('$(OutDir)LlamaBackends')" />
+  </Target>
+
+  <!-- Clean GGUF backend files copied beside the sample executable. -->
+  <Target Name="CleanWinMLLlamaRuntime"
+          BeforeTargets="Clean"
+          DependsOnTargets="_RemoveWinMLLlamaRuntimePayload" />
+
+  <!--
+    Start Debugging (F5) runs each sample from its output directory so generated
+    outputs resolve beside the executable. Model acquisition is a separate step
+    through check_artifacts.ps1; builds never download models or install tools.
+  -->
+  <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+</Project>

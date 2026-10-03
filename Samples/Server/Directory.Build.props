@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Project>
+  <!-- C++ settings shared by the host and client projects. The C# client is an
+       ordinary .NET SDK project and does not use them. -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj'">
+    <LanguageStandard>stdcpp20</LanguageStandard>
+    <LanguageStandard_C>stdc17</LanguageStandard_C>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <PlatformToolset Condition="'$(PlatformToolset)' == '' And '$(MSBuildToolsVersion)' >= '18.0'">v145</PlatformToolset>
+    <PlatformToolset Condition="'$(PlatformToolset)' == ''">v143</PlatformToolset>
+    <TargetFramework>native</TargetFramework>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <OutDir>$(MSBuildThisFileDirectory)out\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj'">
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ConformanceMode>true</ConformanceMode>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>
