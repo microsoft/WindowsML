@@ -1,0 +1,46 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Solution>
+  <Project Path="get-started\image-classification\image-classification.vcxproj" />
+  <Project Path="vision\super-resolution\webcam-super-resolution.vcxproj" />
+  <Project Path="speech\whisper\whisper-speech-to-text.vcxproj" />
+  <Project Path="language\hello-language-model\hello-language-model.vcxproj" />
+  <Project Path="language\llm-chat\llm-chat.vcxproj" />
+  <Project Path="language\speech-to-language-model\speech-to-language-model.vcxproj" />
+  <Project Path="compile-and-deploy\model-compilation\model-compilation.vcxproj" />
+  <Project Path="interop\managed-shared-context\managed-shared-context.vcxproj" />
+  <Folder Name="/Documentation/">
+    <File Path="README.md" />
+    <File Path="..\..\docs\Runtime\artifacts.md" />
+    <File Path="..\..\docs\Runtime\backends.md" />
+    <File Path="..\..\docs\Runtime\gguf-models.md" />
+    <File Path="..\..\docs\Runtime\python-samples.md" />
+    <File Path="..\..\docs\Runtime\providers.md" />
+    <File Path="..\..\docs\Runtime\tutorials\README.md" />
+    <File Path="..\..\docs\Runtime\tutorials\01-first-inference.md" />
+    <File Path="..\..\docs\Runtime\tutorials\02-tensors-and-media.md" />
+    <File Path="..\..\docs\Runtime\tutorials\03-language-models.md" />
+    <File Path="..\..\docs\Runtime\tutorials\04-speech-to-language.md" />
+    <File Path="..\..\docs\Runtime\tutorials\05-accelerators.md" />
+    <File Path="..\..\docs\Runtime\tutorials\06-compile-and-deploy.md" />
+    <File Path="..\..\docs\Runtime\tutorials\07-gguf-language-models.md" />
+  </Folder>
+  <Folder Name="/Scripts/">
+    <File Path="check_artifacts.ps1" />
+    <File Path="build.ps1" />
+    <File Path="run_hello_language_model.ps1" />
+    <File Path="run_image_classification.ps1" />
+    <File Path="run_llm_chat.ps1" />
+    <File Path="run_model_compilation.ps1" />
+    <File Path="run_managed_shared_context.ps1" />
+    <File Path="run_speech_to_language_model.ps1" />
+    <File Path="run_super_resolution.ps1" />
+    <File Path="run_whisper.ps1" />
+    <File Path="scripts\prepare_sesr.ps1" />
+    <File Path="scripts\prepare_whisper_models.ps1" />
+    <File Path="scripts\resolve_onnx_python.ps1" />
+  </Folder>
+  <Folder Name="/Tools/llama/">
+    <File Path="..\..\Tools\llama\Build-LlamaBackend.ps1" />
+    <File Path="..\..\Tools\llama\README.md" />
+  </Folder>
+</Solution>

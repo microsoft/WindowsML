@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Shared package versions for every sample catalog. Projects may override
+  WinMLRuntimePackageVersion and WinMLLibLlamaPackageVersion from the command
+  line while the repository keeps one default for each.
+
+  Microsoft.Windows.AI.MachineLearning.LibLlama.Core depends on exactly the
+  Microsoft.Windows.AI.MachineLearning version it was built with, so the two
+  versions must come from the same Windows ML release.
+-->
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <WinMLRuntimePackageVersion Condition="'$(WinMLRuntimePackageVersion)' == ''">2.7.2021-experimental</WinMLRuntimePackageVersion>
+    <WinMLLibLlamaPackageVersion Condition="'$(WinMLLibLlamaPackageVersion)' == ''">0.5.0.2022-experimental</WinMLLibLlamaPackageVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Windows.AI.MachineLearning" Version="$(WinMLRuntimePackageVersion)" />
+    <PackageVersion Include="Microsoft.Windows.AI.MachineLearning.LibLlama.Core" Version="$(WinMLLibLlamaPackageVersion)" />
+    <PackageVersion Include="Microsoft.Windows.ImplementationLibrary" Version="1.0.240803.1" />
+    <PackageVersion Include="OpenAI" Version="2.14.0" />
+  </ItemGroup>
+</Project>

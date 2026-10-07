@@ -1,0 +1,23 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Solution>
+  <Project Path="language\text-generation\task-text-generation.vcxproj" />
+  <Project Path="language\chat-completion\task-chat-completion.vcxproj" />
+  <Project Path="speech\automatic-speech-recognition\task-automatic-speech-recognition.vcxproj" />
+  <Project Path="composition\speech-to-text-generation\task-speech-to-text-generation.vcxproj" />
+  <Folder Name="/Documentation/">
+    <File Path="README.md" />
+    <File Path="language\text-generation\README.md" />
+    <File Path="language\chat-completion\README.md" />
+    <File Path="speech\automatic-speech-recognition\README.md" />
+    <File Path="composition\speech-to-text-generation\README.md" />
+  </Folder>
+  <Folder Name="/Scripts/">
+    <File Path="check_artifacts.ps1" />
+    <File Path="build.ps1" />
+    <File Path="run_text_generation.ps1" />
+    <File Path="run_chat_completion.ps1" />
+    <File Path="run_automatic_speech_recognition.ps1" />
+    <File Path="run_speech_to_text_generation.ps1" />
+    <File Path="scripts\verify_python_environment.py" />
+  </Folder>
+</Solution>

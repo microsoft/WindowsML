@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Project>
+  <ItemDefinitionGroup Condition="'$(WinMLRuntimeLocalLibDir)' != ''">
+    <Link>
+      <AdditionalLibraryDirectories>$(WinMLRuntimeLocalLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <Target Name="CopyLocalWinMLTaskRuntime"
+          AfterTargets="Build"
+          Condition="'$(WinMLRuntimeLocalNativeDir)' != ''">
+    <ItemGroup>
+      <_LocalWinMLTaskRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLRuntimeCore.dll" />
+      <_LocalWinMLTaskRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLTokenizer.dll" />
+      <_LocalWinMLTaskRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLTasks.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_LocalWinMLTaskRuntime)" DestinationFolder="$(OutDir)" />
+  </Target>
+  <Target Name="_RemoveLocalWinMLTaskRuntimePayload">
+    <ItemGroup>
+      <_LocalWinMLTaskRuntimePayload Include="$(OutDir)WinMLRuntimeCore.dll" />
+      <_LocalWinMLTaskRuntimePayload Include="$(OutDir)WinMLTokenizer.dll" />
+      <_LocalWinMLTaskRuntimePayload Include="$(OutDir)WinMLTasks.dll" />
+    </ItemGroup>
+    <Delete Files="@(_LocalWinMLTaskRuntimePayload)" />
+  </Target>
+  <Target Name="RemoveLocalWinMLTaskRuntimeForPackageBuild"
+          BeforeTargets="PrepareForBuild"
+          DependsOnTargets="_RemoveLocalWinMLTaskRuntimePayload"
+          Condition="'$(WinMLTaskPackageOnly)' == 'true'" />
+  <Target Name="_RemoveWinMLLlamaRuntimePayload">
+    <ItemGroup>
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLRuntimeLlama.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLggml-base.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLggml.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLllama.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLmtmd.dll" />
+      <_DisabledWinMLLlamaRuntime Include="$(OutDir)WinMLLlamaCoreManifest.json" />
+    </ItemGroup>
+    <Delete Files="@(_DisabledWinMLLlamaRuntime)" />
+    <RemoveDir Directories="$(OutDir)LlamaBackends"
+               Condition="Exists('$(OutDir)LlamaBackends')" />
+  </Target>
+  <Target Name="CleanWinMLLlamaRuntime"
+          BeforeTargets="Clean"
+          DependsOnTargets="_RemoveWinMLLlamaRuntimePayload" />
+  <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+</Project>

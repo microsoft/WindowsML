@@ -1,0 +1,28 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="host\in-process\server-in-process.vcxproj" />
+  <Project Path="host\executable\server-executable.vcxproj" />
+  <Project Path="client\cpp\server-client-cpp.vcxproj" />
+  <Project Path="client\csharp\ServerClient.CSharp.csproj" />
+  <Folder Name="/Documentation/">
+    <File Path="README.md" />
+    <File Path="host\in-process\README.md" />
+    <File Path="host\executable\README.md" />
+    <File Path="client\README.md" />
+  </Folder>
+  <Folder Name="/Python/">
+    <File Path="client\python\main.py" />
+  </Folder>
+  <Folder Name="/Scripts/">
+    <File Path="check_artifacts.ps1" />
+    <File Path="build.ps1" />
+    <File Path="run_in_process_server.ps1" />
+    <File Path="run_server_executable.ps1" />
+    <File Path="scripts\invoke_sample.ps1" />
+    <File Path="scripts\client_command.ps1" />
+  </Folder>
+</Solution>
