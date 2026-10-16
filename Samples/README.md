@@ -21,6 +21,12 @@ through ONNX Runtime and GGUF models through llama.cpp.
 > change. Report issues and share feedback through
 > [GitHub Issues](https://github.com/microsoft/WindowsML/issues).
 
+## Optional model MSIX sample
+
+- [`OptionalMsixMinimal`](OptionalMsixMinimal/): a standalone Windows Forms sample
+  demonstrating optional model MSIX packaging, installation, ONNX inference, and
+  optional-package removal.
+
 ## Windows App SDK samples
 
 Additional Windows ML samples for the Windows App SDK can be found in the **WindowsAppSDK-Samples** repository, alongside the rest of the Windows App SDK samples:

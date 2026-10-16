@@ -1,0 +1,23 @@
+{
+  "models": [
+    {
+      "id": "optional-msix-demo",
+      "name": "optional-msix-demo",
+      "version": "1.0.0.0",
+      "publisher": "CN=OptionalMsixMinimal",
+      "executionProviders": [
+        { "name": "CPUExecutionProvider" }
+      ],
+      "license": "REPLACE_WITH_MODEL_LICENSE",
+      "licenseUri": "https://example.invalid/replace-with-model-license",
+      "uri": "https://example.invalid/replace-with-model-information",
+      "packages": [
+        {
+          "packageFamilyName": "OptionalMsixMinimal.Optional_REPLACE_WITH_PUBLISHER_ID",
+          "uri": "https://example.invalid/replace-with-signed-Optional.msix",
+          "sha256": "REPLACE_WITH_SHA256_OF_SIGNED_OPTIONAL_MSIX"
+        }
+      ]
+    }
+  ]
+}

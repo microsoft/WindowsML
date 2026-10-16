@@ -1,0 +1,1 @@
+This small file is installed only when you want the optional content.
