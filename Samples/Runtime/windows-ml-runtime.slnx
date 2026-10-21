@@ -11,6 +11,7 @@
   <Project Path="compile-and-deploy\model-compilation\model-compilation.vcxproj" />
   <Project Path="interop\managed-shared-context\managed-shared-context.vcxproj" />
   <Project Path="interop\onnx-runtime-winmlcgep\onnx-runtime-winmlcgep.vcxproj" />
+  <Project Path="interop\llama-upstream-api\llama-upstream-api.vcxproj" />
   <Folder Name="/Documentation/">
     <File Path="README.md" />
     <File Path="..\..\docs\Runtime\artifacts.md" />

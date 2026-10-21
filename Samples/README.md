@@ -10,7 +10,7 @@ application picks.
 
 - [`Runtime`](Runtime/): C++ and Python samples organized by scenario, covering
   getting started, vision, speech, language, model compilation, and ONNX Runtime
-  interoperability.
+  and llama.cpp interoperability.
 - [`Tasks`](Tasks/): higher-level Task API samples. Models-backed Task samples give a
   Task published weights, an exported model described as a composition, or a
   GGUF file loaded explicitly with llama.cpp, for text generation, speech

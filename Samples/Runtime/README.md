@@ -57,6 +57,7 @@ samples.
 | Compile and deploy | [Model compilation](compile-and-deploy/model-compilation/) | C++, Python | Compile a model for a target, then reload and run the compiled artifact. |
 | Interop | [Managed shared context](interop/managed-shared-context/) | C++ | Run two ONNX Runtime stages in one Runtime-managed provider context. |
 | Interop | [ONNX Runtime CG execution provider](interop/onnx-runtime-winmlcgep/) | C++ | Use ONNX Runtime directly with the Windows ML CG EP and an application-owned compilation cache. |
+| Interop | [llama.cpp upstream API](interop/llama-upstream-api/) | C++ | Call llama.cpp's own API against the llama.cpp build that Windows ML ships, with no Windows ML API. |
 
 ## Quick start
 
