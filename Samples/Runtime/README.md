@@ -52,6 +52,7 @@ Every sample has a C++ version, and most also have a Python version that uses
 | Composition | [Speech to LanguageModel](language/speech-to-language-model/) | C++, Python | Send a Whisper transcript to an ONNX or GGUF language model. |
 | Compile and deploy | [Model compilation](compile-and-deploy/model-compilation/) | C++, Python | Compile a model for a target, then reload and run the compiled artifact. |
 | Interop | [Managed shared context](interop/managed-shared-context/) | C++ | Run two ONNX Runtime stages in one Runtime-managed provider context. |
+| Interop | [llama.cpp upstream API](interop/llama-upstream-api/) | C++ | Call llama.cpp's own API against the llama.cpp build that Windows ML ships, with no Windows ML API. |
 
 ## Quick start
 
