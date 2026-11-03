@@ -1,0 +1,17 @@
+// Copyright (C) Microsoft Corporation. All rights reserved.
+//
+// APIs this sample adds to the ones that ..\..\..\..\Runtime\shared\csharp\NativeMethods.txt
+// generates for the shared helpers. Interfaces obtained through QueryInterface
+// are listed explicitly.
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.WinMLCreateTasks
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTasks
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationTaskFactory
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLModelTextGenerationConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeResult
+
+// The explicit llama.cpp route.
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLLlamaModelLoader
+
+// The model's chat template formats the prompt as one user turn.
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStructuredConversationFormatter

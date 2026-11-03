@@ -42,5 +42,14 @@ The included SqueezeNet model is quantized, and some providers decline its
 quantized operators. ONNX Runtime then runs those operators on the CPU, and
 `-Diagnostics` shows where each node runs.
 
+The [C# version](csharp/README.md) calls the same Runtime interfaces through
+bindings that CsWin32 generates from the package's Win32 metadata. It takes the
+same options and prints the same predictions:
+
+```powershell
+.\build.ps1 -Sample image-classification-csharp -Configuration Release -PackageOnly
+.\run_image_classification.ps1 -Language csharp -Device cpu
+```
+
 For a guided code walkthrough, see
 [Tutorial 1: your first Runtime inference](../../../../docs/Runtime/tutorials/01-first-inference.md).

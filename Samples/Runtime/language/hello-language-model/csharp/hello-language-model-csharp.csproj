@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Copyright (C) Microsoft Corporation. All rights reserved.
+    Hello LanguageModel - Windows ML Runtime API from C#
+  -->
+  <PropertyGroup>
+    <AssemblyName>hello-language-model-csharp</AssemblyName>
+    <RootNamespace>HelloLanguageModel</RootNamespace>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shared\csharp\WinMLSamples.CSharp.props" />
+
+  <!--
+    The llama.cpp engine modules for GGUF models, the same payload the C++
+    sample references. The runtime identifier copies them next to the
+    executable, where the Runtime loads them from.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning.LibLlama.Core" />
+  </ItemGroup>
+</Project>

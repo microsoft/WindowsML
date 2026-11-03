@@ -28,8 +28,8 @@ param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
     [ValidateSet("all", "text-generation", "chat-completion", "automatic-speech-recognition", "speech-to-text-generation",
-                 "model-text-generation", "composed-text-generation", "llama-text-generation",
-                 "model-speech-recognition", "decision")]
+                 "model-text-generation", "model-text-generation-csharp", "composed-text-generation",
+                 "llama-text-generation", "model-speech-recognition", "decision")]
     [string]$Sample = "all",
     [string]$RuntimePackageVersion,
     [string]$LibLlamaPackageVersion,
@@ -64,6 +64,7 @@ $projects = [ordered]@{
     "automatic-speech-recognition" = "speech\automatic-speech-recognition\task-automatic-speech-recognition.vcxproj"
     "speech-to-text-generation" = "composition\speech-to-text-generation\task-speech-to-text-generation.vcxproj"
     "model-text-generation" = "model-backed\text-generation\task-model-text-generation.vcxproj"
+    "model-text-generation-csharp" = "model-backed\text-generation\csharp\task-model-text-generation-csharp.csproj"
     "composed-text-generation" = "model-backed\composed-text-generation\task-composed-text-generation.vcxproj"
     "llama-text-generation" = "model-backed\llama-text-generation\task-llama-text-generation.vcxproj"
     "model-speech-recognition" = "model-backed\automatic-speech-recognition\task-model-speech-recognition.vcxproj"

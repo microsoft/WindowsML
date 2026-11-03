@@ -3,7 +3,8 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)Directory.Build.props.user"
           Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.props.user')" />
-  <PropertyGroup>
+  <!-- Native C++ project settings. C# samples import Runtime\shared\csharp\WinMLSamples.CSharp.props. -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' != '.csproj'">
     <LanguageStandard>stdcpp20</LanguageStandard>
     <LanguageStandard_C>stdc17</LanguageStandard_C>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>

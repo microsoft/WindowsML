@@ -32,9 +32,9 @@ streaming, cancellation, token counts and finish reasons work the same way.
 
 | Sample | Pattern | Languages | What it shows |
 | --- | --- | --- | --- |
-| [Text generation](text-generation/) | Bring your own weights | C++, Python | A checkpoint folder or a GGUF file, no tokenizer argument, a streamed chat reply and an optional program cache. |
+| [Text generation](text-generation/) | Bring your own weights | C++, [C#](text-generation/csharp/), Python | A checkpoint folder or a GGUF file, no tokenizer argument, a streamed chat reply and an optional program cache. The C# version also covers the llama.cpp pattern behind `--llama`. |
 | [Composed text generation](composed-text-generation/) | Bring your own model | C++, Python | `SetTokenizer`, then a `UNIFIED` composition of an exported ONNX decoder with an explicit state pair. |
-| [llama.cpp text generation](llama-text-generation/) | llama.cpp | C++, Python | The llama.cpp loader, and speculative decoding with a draft model loaded the same way. |
+| [llama.cpp text generation](llama-text-generation/) | llama.cpp | C++, [C#](text-generation/csharp/), Python | The llama.cpp loader, and speculative decoding with a draft model loaded the same way. |
 | [Speech recognition](automatic-speech-recognition/) | Bring your own weights | C++, Python | A Whisper checkpoint folder with its tokenizer, streamed into a transcript, with an optional language. |
 | [Typed decisions](decision/) | Bring your own weights | C++, Python | A choice question answered with probabilities, confidence and a recommendation. No tokenizer argument, and an optional program cache. |
 
@@ -134,6 +134,18 @@ The executables are under `out\<platform>\<configuration>\<project-name>`:
 | `task-llama-text-generation` | `<model.gguf> [prompt] [max-new-tokens] [--draft-model <draft.gguf>] [--device cpu or gpu]` |
 | `task-model-speech-recognition` | `<model-folder> <tokenizer.json> <input.wav> [--language <tag>] [--mode transcribe or translate]` |
 | `task-decision` | `<model-folder> [state] [--program-cache <directory> [--cache-weights]]` |
+
+## Run the C# sample
+
+The [C# text generation sample](text-generation/csharp/) needs the .NET 8 SDK.
+It runs the model provider route by default and the llama.cpp route with
+`--llama`. Build it, then pass `-Language csharp` to either run script:
+
+```powershell
+.\build.ps1 -Sample model-text-generation-csharp -PackageOnly
+.\run_model_text_generation.ps1 -Language csharp -Format gguf
+.\run_llama_text_generation.ps1 -Language csharp -DraftModel <draft.gguf>
+```
 
 ## Run the Python samples
 

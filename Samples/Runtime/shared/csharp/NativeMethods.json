@@ -1,0 +1,14 @@
+{
+  "$schema": "https://aka.ms/CsWin32.schema.json",
+  "public": false,
+  "allowMarshaling": false,
+  "comInterop": {
+    "preserveSigMethods": [
+      "IWinMLOrtStageDiagnostics.GetRequestedProviderName",
+      "IWinMLOrtStageDiagnostics.GetSelectedProviderName",
+      "IDXCoreAdapterList.GetAdapter",
+      "IDXCoreAdapter.GetProperty",
+      "IDXCoreAdapter.GetPropertySize"
+    ]
+  }
+}

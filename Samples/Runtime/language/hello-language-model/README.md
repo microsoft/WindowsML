@@ -49,6 +49,18 @@ errors from model execution errors.
 For the progression from this one-stage sample to the split ONNX pipeline, see
 [Tutorial 3: language models](../../../../docs/Runtime/tutorials/03-language-models.md).
 
+## C#
+
+[`csharp\`](csharp/README.md) is a C# version of this sample that calls the
+same Runtime, tokenizer, and stateful-stage APIs through bindings that CsWin32
+generates from the package's Win32 metadata. It covers both backends and
+prints the same greedy reply:
+
+```powershell
+.\build.ps1 -Sample hello-language-model-csharp -PackageOnly
+.\run_hello_language_model.ps1 -Language csharp -Backend llama -Device cpu
+```
+
 ## Python
 
 [`main.py`](main.py) runs the same ONNX/ORT or GGUF model through
