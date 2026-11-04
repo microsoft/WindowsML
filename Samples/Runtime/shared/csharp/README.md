@@ -20,7 +20,8 @@ helpers in this folder into each sample.
 | `StageDiagnostics.cs` | Enables and prints `IWinMLStageExecutionDiagnostics` and `IWinMLOrtStageDiagnostics` for a stage. |
 | `SampleAssets.cs` | Finds files under the catalog's `models` directory. |
 
-The Runtime metadata projects `[in] IUnknown*` parameters, such as the adapter
-that `IWinMLRuntime::CreateExecutionTargetFromAdapter` takes, as `IUnknown`
-values. `ComObjects.AsUnknownArgument` converts an interface pointer into the
+With `allowMarshaling: false`, CsWin32 generates `[in] IUnknown*` parameters
+that the Runtime metadata takes from the Windows SDK metadata, such as the
+adapter that `IWinMLRuntime::CreateExecutionTargetFromAdapter` takes, as
+`IUnknown` values. `ComObjects.AsUnknownArgument` converts an interface pointer into the
 value those methods expect.
