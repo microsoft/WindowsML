@@ -49,6 +49,11 @@ internal sealed unsafe class ComObjects : IDisposable
     // the interface pointer passes exactly the pointer the native method expects.
     public static IUnknown AsUnknownArgument(void* instance)
     {
+        if (sizeof(IUnknown) != sizeof(void*))
+        {
+            throw new PlatformNotSupportedException("The generated IUnknown is not a single interface pointer.");
+        }
+
         return *(IUnknown*)&instance;
     }
 

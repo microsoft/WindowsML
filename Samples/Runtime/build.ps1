@@ -5,8 +5,9 @@
 Restores and builds one or all Windows ML Runtime sample projects.
 
 .DESCRIPTION
-Builds the selected C++ or C# project through MSBuild. Builds never download
-models; use check_artifacts.ps1 or a run script to prepare assets separately.
+Builds the selected C++ projects through MSBuild and C# projects through the
+.NET SDK. Builds never download models; use check_artifacts.ps1 or a run
+script to prepare assets separately.
 PackageOnly clears any local include, library, or native payload overrides.
 
 .PARAMETER Platform
@@ -16,10 +17,11 @@ Target architecture: x64 or ARM64. Defaults to the host architecture.
 Build configuration: Debug or Release. Defaults to Release.
 
 .PARAMETER Sample
-The project to build, or all for every C++ and C# Runtime sample. The C#
-samples (image-classification-csharp and hello-language-model-csharp) need the
-.NET 8 SDK or later and generate their bindings from the Win32 metadata in the
-Runtime package.
+The project to build, or all for every C++ and C# Runtime sample. C++
+projects need Visual Studio with Desktop development with C++. The C# samples
+(image-classification-csharp and hello-language-model-csharp) build after them
+with the .NET 8 SDK or later; -Sample all skips them with a warning when the
+SDK is missing.
 
 .PARAMETER RuntimePackageVersion
 Overrides the centrally pinned Microsoft.Windows.AI.MachineLearning version.
@@ -86,7 +88,6 @@ function Find-MSBuild {
     throw "MSBuild was not found. Install Visual Studio with Desktop development with C++."
 }
 
-$msbuild = Find-MSBuild
 $sampleProjects = [ordered]@{
     "image-classification" = "get-started\image-classification\image-classification.vcxproj"
     "image-classification-csharp" = "get-started\image-classification\csharp\image-classification-csharp.csproj"
@@ -100,6 +101,19 @@ $sampleProjects = [ordered]@{
     "managed-shared-context" = "interop\managed-shared-context\managed-shared-context.vcxproj"
 }
 $projects = if ($Sample -eq "all") { @($sampleProjects.Values) } else { @($sampleProjects[$Sample]) }
+# C++ projects build first. C# projects need the .NET SDK: when it is missing,
+# -Sample all skips them with a warning, and naming one fails.
+$cppProjects = @($projects | Where-Object { -not $_.EndsWith(".csproj") })
+$csharpProjects = @($projects | Where-Object { $_.EndsWith(".csproj") })
+if ($csharpProjects.Count -gt 0 -and -not (Get-Command dotnet.exe -ErrorAction SilentlyContinue)) {
+    if ($Sample -ne "all") {
+        throw "The .NET SDK was not found. Install the .NET 8 SDK or later to build the C# samples."
+    }
+
+    Write-Warning "The .NET SDK was not found, so the C# samples are skipped. Install the .NET 8 SDK or later to build them."
+    $csharpProjects = @()
+}
+$msbuild = if ($cppProjects.Count -gt 0) { Find-MSBuild } else { $null }
 
 $restoreArgs = @(
     "/t:Restore",
@@ -114,13 +128,25 @@ $buildArgs = @(
     "/m",
     "/v:minimal"
 )
+# C# samples build with the .NET SDK, as Samples\Server\build.ps1 does.
+$dotnetArgs = @(
+    "-c", $Configuration,
+    "/p:Platform=$Platform",
+    "--nologo",
+    "-v:minimal"
+)
+if ($Rebuild) {
+    $dotnetArgs += "--no-incremental"
+}
 if ($RuntimePackageVersion) {
     $restoreArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
     $buildArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
+    $dotnetArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
 }
 if ($LibLlamaPackageVersion) {
     $restoreArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
     $buildArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
+    $dotnetArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
 }
 if ($NuGetPackagesDir) {
     New-Item -ItemType Directory -Force -Path $NuGetPackagesDir | Out-Null
@@ -136,6 +162,7 @@ if ($NuGetPackagesDir) {
         "/p:RestoreAdditionalProjectFallbackFolders="
     )
     $buildArgs += "/p:RestorePackagesPath=$resolvedPackagesDir"
+    $dotnetArgs += @("--packages", $resolvedPackagesDir)
 }
 if ($PackageOnly) {
     $packageOnlyArgs = @(
@@ -145,6 +172,7 @@ if ($PackageOnly) {
     )
     $restoreArgs += $packageOnlyArgs
     $buildArgs += $packageOnlyArgs
+    $dotnetArgs += $packageOnlyArgs
 }
 
 Write-Host "Building Windows ML Runtime samples" -ForegroundColor Cyan
@@ -165,7 +193,7 @@ if ($PackageOnly) {
     Write-Host "Runtime source: NuGet package only"
 }
 
-foreach ($relativeProject in $projects) {
+foreach ($relativeProject in $cppProjects) {
     $project = Join-Path $PSScriptRoot $relativeProject
     Write-Host "`nRestoring $relativeProject" -ForegroundColor Yellow
     & $msbuild $project @restoreArgs
@@ -175,6 +203,15 @@ foreach ($relativeProject in $projects) {
 
     Write-Host "Building $relativeProject" -ForegroundColor Yellow
     & $msbuild $project @buildArgs
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
+}
+
+foreach ($relativeProject in $csharpProjects) {
+    $project = Join-Path $PSScriptRoot $relativeProject
+    Write-Host "`nBuilding $relativeProject" -ForegroundColor Yellow
+    & dotnet build $project @dotnetArgs
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }

@@ -108,7 +108,11 @@ internal static unsafe class ExecutionTargets
 
             if (allowed.Count > 0)
             {
-                DXCoreHardwareID id = GetProperty<DXCoreHardwareID>(adapter, DXCoreAdapterProperty.HardwareID);
+                if (!TryGetProperty(adapter, DXCoreAdapterProperty.HardwareID, out DXCoreHardwareID id))
+                {
+                    continue;
+                }
+
                 if (!allowed.Contains((id.vendorID, id.deviceID)))
                 {
                     excludedByProvider = true;
@@ -145,11 +149,20 @@ internal static unsafe class ExecutionTargets
         return best;
     }
 
+    // Returns the default value when the adapter does not report the property.
     private static T GetProperty<T>(IDXCoreAdapter* adapter, DXCoreAdapterProperty property)
         where T : unmanaged
     {
-        T value = default;
-        return adapter->GetProperty(property, (nuint)sizeof(T), &value).Succeeded ? value : default;
+        return TryGetProperty(adapter, property, out T value) ? value : default;
+    }
+
+    private static bool TryGetProperty<T>(IDXCoreAdapter* adapter, DXCoreAdapterProperty property, out T value)
+        where T : unmanaged
+    {
+        T result = default;
+        bool succeeded = adapter->GetProperty(property, (nuint)sizeof(T), &result).Succeeded;
+        value = result;
+        return succeeded;
     }
 
     private static string GetDescription(IDXCoreAdapter* adapter)
