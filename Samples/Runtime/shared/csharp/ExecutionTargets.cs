@@ -67,7 +67,7 @@ internal static unsafe class ExecutionTargets
             ? Win32.DXCORE_HARDWARE_TYPE_ATTRIBUTE_NPU
             : Win32.DXCORE_ADAPTER_ATTRIBUTE_D3D12_GRAPHICS;
         IDXCoreAdapter* adapter = FindAdapter(attribute, device.Policy, allowed, objects);
-        return objects.Add(runtime->CreateExecutionTargetFromAdapter(ComObjects.AsUnknownArgument(adapter)));
+        return objects.Add(runtime->CreateExecutionTargetFromAdapter((IUnknown*)adapter));
     }
 
     private static IDXCoreAdapter* FindAdapter(

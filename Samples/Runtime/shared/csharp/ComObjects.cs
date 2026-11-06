@@ -43,21 +43,6 @@ internal sealed unsafe class ComObjects : IDisposable
         return ((IUnknown*)source)->QueryInterface(&iid, (void**)&result).Succeeded ? Add(result) : null;
     }
 
-    // With allowMarshaling false, CsWin32 generates [in] IUnknown* parameters
-    // that the Runtime metadata takes from Windows.Win32.winmd, such as the
-    // adapter of IWinMLRuntime::CreateExecutionTargetFromAdapter, as IUnknown
-    // values. IUnknown holds only its vtable pointer, so a value whose bits are
-    // the interface pointer passes exactly the pointer the native method expects.
-    public static IUnknown AsUnknownArgument(void* instance)
-    {
-        if (sizeof(IUnknown) != sizeof(void*))
-        {
-            throw new PlatformNotSupportedException("The generated IUnknown is not a single interface pointer.");
-        }
-
-        return *(IUnknown*)&instance;
-    }
-
     public void Dispose()
     {
         while (_objects.Count > 0)
