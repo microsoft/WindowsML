@@ -48,7 +48,8 @@ Windows ML Runtime API, the Task APIs, and the Windows ML Server.
 ## Tools
 
 [`Tools`](Tools/) contains developer tools that support the samples, such as
-[building llama.cpp backends](Tools/llama/README.md).
+[building llama.cpp backends](Tools/llama/README.md) and
+[capturing Windows ML logs](Tools/capture-logs/README.md).
 
 ## Filing issues & feedback
 
