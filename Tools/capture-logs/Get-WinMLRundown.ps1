@@ -195,7 +195,7 @@ $RundownSections = @{
     }
     EpDeviceUsage = @{
         Title    = "EP Device Usage"
-        Distinct = @("Session ID", "Execution Provider", "Device Type", "Assigned Nodes")
+        Distinct = @("Session ID", "Execution Provider", "Device Type", "Hardware Vendor", "Assigned Nodes")
         Layouts  = @(
             @{
                 # Schema 0 (ONNX Runtime 1.27) has no epVersion field
@@ -418,6 +418,9 @@ function Export-TraceTable {
 
     Write-Host "Exporting ETL to CSV files using $WpaExporterPath..."
     & $WpaExporterPath -i $EtlFilePath -profile $WpaProfilePath -outputFolder $OutputFolder | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "wpaexporter.exe failed with exit code $LASTEXITCODE. Check that '$EtlFilePath' is a valid ETL file and '$WpaProfilePath' is a valid WPA profile."
+    }
 
     return @(Get-ChildItem -Path $OutputFolder -Filter "Generic_Events_*.csv")
 }
@@ -635,7 +638,12 @@ function Write-RundownLog {
         $lines.Add("")
     }
 
-    Set-Content -Path $Path -Value $lines -Encoding UTF8
+    try {
+        Set-Content -Path $Path -Value $lines -Encoding UTF8 -ErrorAction Stop
+    }
+    catch {
+        throw "Failed to write ${Path}: $($_.Exception.Message)"
+    }
 }
 
 if (-not (Test-Path $OutputFolder)) {
