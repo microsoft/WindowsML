@@ -39,6 +39,7 @@ _EXECUTION_PROVIDER_ALIASES = {
     "nvtensorrtrtx": "NvTensorRTRTXExecutionProvider",
     "openvino": "OpenVINOExecutionProvider",
     "qnn": "QNNExecutionProvider",
+    "trtrtx": "NvTensorRTRTXExecutionProvider",
     "vitisai": "VitisAIExecutionProvider",
 }
 
