@@ -5,9 +5,11 @@
 Exports ORT language artifacts for Hello LanguageModel and LLM chat.
 
 .DESCRIPTION
-Creates an isolated Python 3.11 environment and runs export_llm.py. The export
-contains model.onnx for unified mode; emb.onnx, decoder.onnx, and head.onnx for
-split mode; tokenizer assets; and related Task sample artifacts.
+Creates an isolated Python 3.11 environment and runs export_llm.py. On an ARM64
+PC the environment uses x64 Python under emulation, because PyPI publishes
+PyTorch for x64 Windows only. The export contains model.onnx for unified mode;
+emb.onnx, decoder.onnx, and head.onnx for split mode; tokenizer assets; and
+related Task sample artifacts.
 
 .PARAMETER Model
 Hugging Face model ID or local compatible dense decoder. Defaults to
@@ -83,12 +85,19 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 if (-not $env:LOCALAPPDATA) {
     throw "LOCALAPPDATA is required to create the LLM export environment."
 }
-$venvDir =
-    Join-Path $env:LOCALAPPDATA "WinMLSampleTools\llm-export-py311-v1"
+# PyPI publishes PyTorch for x64 Windows only, so an ARM64 PC exports with x64
+# Python under emulation, in an environment of its own.
+$pythonRequest = "3.11"
+$venvName = "llm-export-py311-v1"
+if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+    $pythonRequest = "cpython-3.11-windows-x86_64-none"
+    $venvName = "llm-export-py311-x64-v1"
+}
+$venvDir = Join-Path $env:LOCALAPPDATA "WinMLSampleTools\$venvName"
 if (-not (Test-Path "$venvDir\Scripts\python.exe")) {
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $venvDir) | Out-Null
     Write-Host "Creating Python 3.11 environment..." -ForegroundColor Cyan
-    & uv venv --python 3.11 $venvDir
+    & uv venv --python $pythonRequest $venvDir
     if ($LASTEXITCODE -ne 0) { throw "Failed to create venv (uv will download Python 3.11 if needed)" }
 } else {
     Write-Host "Using existing environment: $venvDir" -ForegroundColor Green
