@@ -77,14 +77,21 @@ STDAPI WinMLCreateTokenizerFromFile(
 );
 ```
 
-Creates a tokenizer from a tokenizer configuration file.
+Creates a tokenizer from a model's tokenizer files.
 
 | Parameter | Description |
 |---|---|
-| `configFilePath` | Path to `tokenizer.json`. |
+| `configFilePath` | Path to a Hugging Face checkpoint folder, its `tokenizer.json`, its `tokenizer_config.json`, or a `.gguf` file. |
 | `tokenizer` | Receives the created tokenizer interface. |
 
-**Returns:** `S_OK` on success. Returns `E_POINTER` when `configFilePath` or `tokenizer` is null. File and tokenizer-format failures are returned as `HRESULT`s from initialization.
+A `tokenizer.json` or `tokenizer_config.json` is read with the other file beside
+it. A `.gguf` file's byte-level BPE or SentencePiece vocabulary is read from the
+file's metadata and served without llama.cpp; the chat template is the file's
+`tokenizer.chat_template`. Other GGUF vocabularies, and files whose chat template
+names a built-in llama.cpp format, are served by the llama.cpp backend when its
+payload is deployed.
+
+**Returns:** `S_OK` on success. Returns `E_POINTER` when `configFilePath` or `tokenizer` is null, `HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)` when the tokenizer files are not found, `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)` for a GGUF vocabulary that cannot be represented without llama.cpp when llama.cpp is not available, and `HRESULT_FROM_WIN32(ERROR_INVALID_DATA)` for malformed GGUF tokenizer metadata. Other file and tokenizer-format failures are returned as `HRESULT`s from initialization.
 
 ---
 

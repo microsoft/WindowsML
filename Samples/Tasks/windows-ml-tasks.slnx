@@ -4,12 +4,23 @@
   <Project Path="language\chat-completion\task-chat-completion.vcxproj" />
   <Project Path="speech\automatic-speech-recognition\task-automatic-speech-recognition.vcxproj" />
   <Project Path="composition\speech-to-text-generation\task-speech-to-text-generation.vcxproj" />
+  <Project Path="model-backed\text-generation\task-model-text-generation.vcxproj" />
+  <Project Path="model-backed\composed-text-generation\task-composed-text-generation.vcxproj" />
+  <Project Path="model-backed\llama-text-generation\task-llama-text-generation.vcxproj" />
+  <Project Path="model-backed\automatic-speech-recognition\task-model-speech-recognition.vcxproj" />
+  <Project Path="model-backed\decision\task-decision.vcxproj" />
   <Folder Name="/Documentation/">
     <File Path="README.md" />
     <File Path="language\text-generation\README.md" />
     <File Path="language\chat-completion\README.md" />
     <File Path="speech\automatic-speech-recognition\README.md" />
     <File Path="composition\speech-to-text-generation\README.md" />
+    <File Path="model-backed\README.md" />
+    <File Path="model-backed\text-generation\README.md" />
+    <File Path="model-backed\composed-text-generation\README.md" />
+    <File Path="model-backed\llama-text-generation\README.md" />
+    <File Path="model-backed\automatic-speech-recognition\README.md" />
+    <File Path="model-backed\decision\README.md" />
   </Folder>
   <Folder Name="/Scripts/">
     <File Path="check_artifacts.ps1" />
@@ -18,6 +29,11 @@
     <File Path="run_chat_completion.ps1" />
     <File Path="run_automatic_speech_recognition.ps1" />
     <File Path="run_speech_to_text_generation.ps1" />
+    <File Path="run_model_text_generation.ps1" />
+    <File Path="run_composed_text_generation.ps1" />
+    <File Path="run_llama_text_generation.ps1" />
+    <File Path="run_model_speech_recognition.ps1" />
+    <File Path="run_decision.ps1" />
     <File Path="scripts\verify_python_environment.py" />
   </Folder>
 </Solution>

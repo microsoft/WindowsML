@@ -2,9 +2,11 @@
 
 # GGUF language models
 
-Windows ML Runtime loads GGUF decoder models through the llama.cpp backend. The
-same language helper and Runtime pipeline flow are used for ONNX Runtime and
-llama.cpp.
+Windows ML Runtime pipelines run GGUF decoder models through the llama.cpp
+backend. The same language helper and Runtime pipeline flow are used for ONNX
+Runtime and llama.cpp. llama.cpp is reached by an explicit choice: a GGUF model
+in a pipeline that the application builds, or a GGUF model that the application
+loads with the llama.cpp loader for a Task.
 
 ## Supported samples
 
@@ -18,6 +20,35 @@ These Runtime samples accept GGUF:
 
 GGUF uses the `unified` language-model layout only. The `split` layout uses
 `emb.onnx`, `decoder.onnx`, and `head.onnx` through ONNX Runtime.
+
+## GGUF files in Models-backed Tasks
+
+A text generation Task that is given a GGUF model with `SetModel` serves it
+according to how the application loaded it, and never switches engines:
+
+- Loaded with `IWinMLRuntime::LoadModelFromFile` or `LoadModelFromPath`
+  (Python `Runtime.load_model`), Windows ML plans the model into CGC programs
+  for the GPU target (see [The CGC backend](backends.md#the-cgc-backend)). A
+  file whose architecture or weight types Windows ML does not plan fails
+  `SetModel` with `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)`.
+- Loaded with `IWinMLLlamaModelLoader::LoadModelFromFile` (Python
+  `Runtime.load_llama_model`), each session runs the model on llama.cpp, with
+  the payload described below. A draft model loaded the same way enables
+  speculative decoding.
+
+See [Models-backed Tasks](../../Samples/Tasks/model-backed/README.md) and
+[`IWinMLLlamaModelLoader`](../api-reference/IWinMLLlamaModelLoader.md).
+
+## llama.cpp version
+
+The `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` package and the
+`windowsml-llama-core` wheel of Windows ML 2.9 carry llama.cpp build 11847. A
+GGUF file loads when that build supports its architecture and tensor types.
+Files that use the `W3_G32` tensor type of earlier Windows ML releases no longer
+load; requantize them with a standard llama.cpp type. A GPU backend must match
+the llama.cpp build and backend API version of the Core package, so rebuild
+backends after you update it; see
+[Package matching](../../Tools/llama/README.md#package-matching).
 
 ## Acquire the GGUF model
 
@@ -78,13 +109,11 @@ python.exe .\language\hello-language-model\main.py --backend llama --device cpu
 ```
 
 To install local wheels, copy them into [`localpackages`](../../Samples/Runtime/localpackages/README.md#python-wheels)
-and pin their version:
+and pin their version to the Runtime package version that the samples use
+(see [Matching wheel version](../../Samples/Runtime/localpackages/README.md#matching-wheel-version)):
 
 ```powershell
-python.exe -m pip install --pre --find-links .\localpackages "windowsml-llama-core==<windowsml-version>" numpy
-
-# For example, for Runtime package 2.7.2021-experimental:
-python.exe -m pip install --pre --find-links .\localpackages "windowsml-llama-core==2.7.2021a0" numpy
+python.exe -m pip install --find-links .\localpackages "windowsml-llama-core==$windowsmlVersion" numpy
 ```
 
 Remove the llama.cpp backend when that environment no longer needs it:
@@ -101,9 +130,9 @@ A backend that you built into the environment isn't tracked by pip. Delete its
 Windows ML doesn't ship or redistribute GPU vendor runtimes.
 To run GGUF models on a GPU, build the matching ggml backend
 with [`Build-LlamaBackend.ps1`](../../Tools/llama/README.md) and place it in
-`LlamaBackends\<family>` beside the application. The tool's README walks
-through the CUDA backend for NVIDIA GPUs and also covers other families, such as
-Vulkan.
+`LlamaBackends\<family>` beside the application, or under the `windowsml\lib`
+directory of a Python environment. The tool's README walks through the CUDA
+backend for NVIDIA GPUs and also covers other families, such as Vulkan.
 
 For CUDA, you build `ggml-cuda.dll` against your own installation of the NVIDIA
 CUDA Toolkit. The CUDA Toolkit, cuBLAS, and the other NVIDIA runtime libraries

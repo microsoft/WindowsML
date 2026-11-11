@@ -121,6 +121,145 @@
             Path        = 'gguf\qwen2.5-0.5b-instruct-q4_k_m.gguf'
             TimeoutSeconds = 1800
         }
+
+        'qwen-checkpoint-config' = @{
+            DisplayName = 'Qwen2.5 0.5B Instruct model configuration'
+            Purpose     = 'Describes the model architecture.'
+            SourceUrl   = 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/7ae557604adf67be50417f59c2c2f167def9a775/config.json'
+            ProvenanceUrl = 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct'
+            SizeBytes   = 659
+            Sha256      = '18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45'
+            Path        = 'qwen2.5-0.5b-instruct\config.json'
+        }
+        'qwen-checkpoint-weights' = @{
+            DisplayName = 'Qwen2.5 0.5B Instruct weights (safetensors)'
+            Purpose     = 'Supplies the model weights.'
+            SourceUrl   = 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/7ae557604adf67be50417f59c2c2f167def9a775/model.safetensors'
+            ProvenanceUrl = 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct'
+            SizeBytes   = 988097824
+            Sha256      = 'fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe'
+            Path        = 'qwen2.5-0.5b-instruct\model.safetensors'
+            TimeoutSeconds = 1800
+        }
+        'qwen-checkpoint-tokenizer' = @{
+            DisplayName = 'Qwen2.5 0.5B Instruct tokenizer'
+            Purpose     = 'Converts between text and token IDs.'
+            SourceUrl   = 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/7ae557604adf67be50417f59c2c2f167def9a775/tokenizer.json'
+            ProvenanceUrl = 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct'
+            SizeBytes   = 7031645
+            Sha256      = 'c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539'
+            Path        = 'qwen2.5-0.5b-instruct\tokenizer.json'
+        }
+        'qwen-checkpoint-tokenizer-config' = @{
+            DisplayName = 'Qwen2.5 0.5B Instruct tokenizer configuration'
+            Purpose     = 'Supplies the special tokens and chat template.'
+            SourceUrl   = 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/7ae557604adf67be50417f59c2c2f167def9a775/tokenizer_config.json'
+            ProvenanceUrl = 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct'
+            SizeBytes   = 7305
+            Sha256      = '5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583'
+            Path        = 'qwen2.5-0.5b-instruct\tokenizer_config.json'
+        }
+        'whisper-tiny-config' = @{
+            DisplayName = 'Whisper tiny model configuration'
+            Purpose     = 'Describes the model architecture.'
+            SourceUrl   = 'https://huggingface.co/openai/whisper-tiny/resolve/169d4a4341b33bc18d8881c4b69c2e104e1cc0af/config.json'
+            ProvenanceUrl = 'https://huggingface.co/openai/whisper-tiny'
+            SizeBytes   = 1983
+            Sha256      = 'ffdccec4f3211f4c63310f2b7098f309fe70f3952cedc5e4d11e43f5b2379b98'
+            Path        = 'whisper-tiny\config.json'
+        }
+        'whisper-tiny-generation-config' = @{
+            DisplayName = 'Whisper tiny generation configuration'
+            Purpose     = 'Supplies the decoder start and language tokens.'
+            SourceUrl   = 'https://huggingface.co/openai/whisper-tiny/resolve/169d4a4341b33bc18d8881c4b69c2e104e1cc0af/generation_config.json'
+            ProvenanceUrl = 'https://huggingface.co/openai/whisper-tiny'
+            SizeBytes   = 3747
+            Sha256      = 'a5d5325911f16e74001a72fa13d6e208eee51548f994646de1f4b4cc8b35b512'
+            Path        = 'whisper-tiny\generation_config.json'
+        }
+        'whisper-tiny-weights' = @{
+            DisplayName = 'Whisper tiny weights (safetensors)'
+            Purpose     = 'Supplies the model weights.'
+            SourceUrl   = 'https://huggingface.co/openai/whisper-tiny/resolve/169d4a4341b33bc18d8881c4b69c2e104e1cc0af/model.safetensors'
+            ProvenanceUrl = 'https://huggingface.co/openai/whisper-tiny'
+            SizeBytes   = 151061672
+            Sha256      = '7ebd0e69e78190ffe1438491fa05cc1f5c1aa3a4c4db3bc1723adbb551ea2395'
+            Path        = 'whisper-tiny\model.safetensors'
+            TimeoutSeconds = 1800
+        }
+        'whisper-tiny-tokenizer' = @{
+            DisplayName = 'Whisper tiny tokenizer'
+            Purpose     = 'Converts between text and token IDs.'
+            SourceUrl   = 'https://huggingface.co/openai/whisper-tiny/resolve/169d4a4341b33bc18d8881c4b69c2e104e1cc0af/tokenizer.json'
+            ProvenanceUrl = 'https://huggingface.co/openai/whisper-tiny'
+            SizeBytes   = 2480466
+            Sha256      = '27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566'
+            Path        = 'whisper-tiny\tokenizer.json'
+        }
+        'whisper-tiny-tokenizer-config' = @{
+            DisplayName = 'Whisper tiny tokenizer configuration'
+            Purpose     = 'Supplies the special tokens.'
+            SourceUrl   = 'https://huggingface.co/openai/whisper-tiny/resolve/169d4a4341b33bc18d8881c4b69c2e104e1cc0af/tokenizer_config.json'
+            ProvenanceUrl = 'https://huggingface.co/openai/whisper-tiny'
+            SizeBytes   = 282683
+            Sha256      = '2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce'
+            Path        = 'whisper-tiny\tokenizer_config.json'
+        }
+        'laya-config' = @{
+            DisplayName = 'Laya model configuration'
+            Purpose     = 'Describes the model architecture.'
+            SourceUrl   = 'https://huggingface.co/convaiinnovations/laya/resolve/7b928d828b7b0e022f929d9bd2e44165aa270148/config.json'
+            ProvenanceUrl = 'https://huggingface.co/convaiinnovations/laya'
+            SizeBytes   = 160
+            Sha256      = '7add7c041b53f7091e65908553af79ab3f077946e5f2312d510ae13b17c7c134'
+            Path        = 'laya\config.json'
+        }
+        'laya-decision-config' = @{
+            DisplayName = 'Laya decision head configuration'
+            Purpose     = 'Supplies sequence budgets and calibration temperatures.'
+            SourceUrl   = 'https://huggingface.co/convaiinnovations/laya/resolve/7b928d828b7b0e022f929d9bd2e44165aa270148/rl_agent_config.json'
+            ProvenanceUrl = 'https://huggingface.co/convaiinnovations/laya'
+            SizeBytes   = 745
+            Sha256      = 'ae287b56bbcf5f8c4f4541ae9dfd00c914c4c48b940b8398c3058af37ba92bbd'
+            Path        = 'laya\rl_agent_config.json'
+        }
+        'laya-encoder-config' = @{
+            DisplayName = 'Laya encoder configuration'
+            Purpose     = 'Describes the encoder architecture.'
+            SourceUrl   = 'https://huggingface.co/convaiinnovations/laya/resolve/7b928d828b7b0e022f929d9bd2e44165aa270148/encoder/config.json'
+            ProvenanceUrl = 'https://huggingface.co/convaiinnovations/laya'
+            SizeBytes   = 2083
+            Sha256      = 'bf3ab80598fdccf414855a2ce80f22859e4492d06ca8a62ddd1cfb63972f8979'
+            Path        = 'laya\encoder\config.json'
+        }
+        'laya-weights' = @{
+            DisplayName = 'Laya weights (safetensors)'
+            Purpose     = 'Supplies the model weights.'
+            SourceUrl   = 'https://huggingface.co/convaiinnovations/laya/resolve/7b928d828b7b0e022f929d9bd2e44165aa270148/model.safetensors'
+            ProvenanceUrl = 'https://huggingface.co/convaiinnovations/laya'
+            SizeBytes   = 842609210
+            Sha256      = '891102d372688fc2a094dac56a384bc537b87c63f21f9f3dac0be2b7cbc8d86c'
+            Path        = 'laya\model.safetensors'
+            TimeoutSeconds = 1800
+        }
+        'laya-tokenizer' = @{
+            DisplayName = 'Laya tokenizer'
+            Purpose     = 'Converts text to token IDs.'
+            SourceUrl   = 'https://huggingface.co/convaiinnovations/laya/resolve/7b928d828b7b0e022f929d9bd2e44165aa270148/tokenizer/tokenizer.json'
+            ProvenanceUrl = 'https://huggingface.co/convaiinnovations/laya'
+            SizeBytes   = 3583228
+            Sha256      = '6c8aaa9a542084f2457eab775d4eeb51f92a70c0fd9de28d5edb0ddec3c08d30'
+            Path        = 'laya\tokenizer\tokenizer.json'
+        }
+        'laya-tokenizer-config' = @{
+            DisplayName = 'Laya tokenizer configuration'
+            Purpose     = 'Supplies the special tokens.'
+            SourceUrl   = 'https://huggingface.co/convaiinnovations/laya/resolve/7b928d828b7b0e022f929d9bd2e44165aa270148/tokenizer/tokenizer_config.json'
+            ProvenanceUrl = 'https://huggingface.co/convaiinnovations/laya'
+            SizeBytes   = 308
+            Sha256      = '50044de60daaa73df97d262e15a40d4faf0160e7d742df64b377877a1320dd12'
+            Path        = 'laya\tokenizer\tokenizer_config.json'
+        }
     }
 
     # Artifacts produced on your machine rather than downloaded. Each command
@@ -238,6 +377,42 @@
             Summary      = 'Composes the speech recognition and text generation Tasks with a quantized GGUF model.'
             Artifacts    = @('whisper-encoder', 'whisper-decoder', 'whisper-vocab', 'whisper-tokenizer', 'whisper-tokenizer-config', 'qwen-gguf')
             Preparations = @('whisper-runtime')
+        }
+        'task-model-text-generation' = @{
+            Title        = 'Text generation from a checkpoint folder'
+            Summary      = 'Streams a reply from published Qwen2.5 0.5B Instruct weights that Windows ML plans for the GPU.'
+            Artifacts    = @('qwen-checkpoint-config', 'qwen-checkpoint-weights', 'qwen-checkpoint-tokenizer', 'qwen-checkpoint-tokenizer-config')
+            Preparations = @()
+        }
+        'task-model-text-generation-gguf' = @{
+            Title        = 'Text generation from a GGUF file'
+            Summary      = 'Streams a reply from a Qwen2.5 0.5B Instruct GGUF file that Windows ML plans for the GPU.'
+            Artifacts    = @('qwen-gguf')
+            Preparations = @()
+        }
+        'task-composed-text-generation' = @{
+            Title        = 'Text generation from a composition'
+            Summary      = 'Describes the exported Qwen ONNX decoder as a composition and streams a reply.'
+            Artifacts    = @()
+            Preparations = @('qwen-onnx')
+        }
+        'task-llama-text-generation' = @{
+            Title        = 'Text generation through llama.cpp'
+            Summary      = 'Loads a GGUF file with the llama.cpp model loader and streams a reply.'
+            Artifacts    = @('qwen-gguf')
+            Preparations = @()
+        }
+        'task-model-speech-recognition' = @{
+            Title        = 'Speech recognition from a checkpoint folder'
+            Summary      = 'Transcribes a WAV file with published Whisper tiny weights.'
+            Artifacts    = @('whisper-tiny-config', 'whisper-tiny-generation-config', 'whisper-tiny-weights', 'whisper-tiny-tokenizer', 'whisper-tiny-tokenizer-config')
+            Preparations = @()
+        }
+        'task-decision' = @{
+            Title        = 'Typed decisions'
+            Summary      = 'Answers a choice question with the published Laya decision model.'
+            Artifacts    = @('laya-config', 'laya-decision-config', 'laya-encoder-config', 'laya-weights', 'laya-tokenizer', 'laya-tokenizer-config')
+            Preparations = @()
         }
         'server-in-process' = @{
             Title        = 'In-process server'

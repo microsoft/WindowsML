@@ -27,7 +27,9 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
-    [ValidateSet("all", "text-generation", "chat-completion", "automatic-speech-recognition", "speech-to-text-generation")]
+    [ValidateSet("all", "text-generation", "chat-completion", "automatic-speech-recognition", "speech-to-text-generation",
+                 "model-text-generation", "composed-text-generation", "llama-text-generation",
+                 "model-speech-recognition", "decision")]
     [string]$Sample = "all",
     [string]$RuntimePackageVersion,
     [string]$LibLlamaPackageVersion,
@@ -61,6 +63,11 @@ $projects = [ordered]@{
     "chat-completion" = "language\chat-completion\task-chat-completion.vcxproj"
     "automatic-speech-recognition" = "speech\automatic-speech-recognition\task-automatic-speech-recognition.vcxproj"
     "speech-to-text-generation" = "composition\speech-to-text-generation\task-speech-to-text-generation.vcxproj"
+    "model-text-generation" = "model-backed\text-generation\task-model-text-generation.vcxproj"
+    "composed-text-generation" = "model-backed\composed-text-generation\task-composed-text-generation.vcxproj"
+    "llama-text-generation" = "model-backed\llama-text-generation\task-llama-text-generation.vcxproj"
+    "model-speech-recognition" = "model-backed\automatic-speech-recognition\task-model-speech-recognition.vcxproj"
+    "decision" = "model-backed\decision\task-decision.vcxproj"
 }
 $selectedProjects = if ($Sample -eq "all") {
     $projects.Values

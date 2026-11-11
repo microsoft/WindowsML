@@ -40,10 +40,26 @@ Windows ML code samples can be found [on our documentation on Microsoft Learn](h
 This repository also contains samples for the native Windows ML Runtime API, the
 higher-level Task APIs, and the Windows ML Server. See [`Samples`](Samples/).
 
+| Samples | What they show |
+|---|---|
+| [Runtime](Samples/Runtime/) | Load ONNX and GGUF models, choose CPU, GPU, or NPU targets, build pipelines, and compile models, in C++ and Python. |
+| [Models-backed Tasks](Samples/Tasks/model-backed/) | Give a Task published weights, an exported model described as a composition, or a GGUF file loaded explicitly with llama.cpp, for text generation, speech recognition, and typed decisions. |
+| [Tasks](Samples/Tasks/) | Text generation, chat completion, speech recognition, and task composition over application-built pipelines. |
+| [Server](Samples/Server/) | Serve a local model through an OpenAI-compatible endpoint, with C++, C#, and Python clients. |
+
 ## Documentation
 
 [`docs`](docs/) contains guides, tutorials, and the API reference for the
 Windows ML Runtime API, the Task APIs, and the Windows ML Server.
+
+| Docs | Read |
+|---|---|
+| [Runtime overview](docs/Runtime/overview.md) | How the Runtime, Task, and Server APIs fit together. |
+| [Backends and model formats](docs/Runtime/backends.md) | ONNX Runtime, llama.cpp, and the CGC backend, and how a model given to a Task runs. |
+| [Task API](docs/Tasks/README.md) | Task lifecycle and the three ways to give a Task a model. |
+| [Tensor API](docs/Tensor/README.md) | Data, memory, and native integration. |
+| [Server](docs/Server/README.md) | Hosting and the HTTP contract. |
+| [API reference](docs/api-reference/README.md) | Interfaces, structures, and examples. |
 
 ## Tools
 

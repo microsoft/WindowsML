@@ -6,7 +6,7 @@
 
 **Typed multi-dimensional array for stage inputs and outputs.**
 
-Create tensors through factories obtained from [`IWinMLExecutionTarget`](IWinMLExecutionTarget.md), such as [`IWinMLRawTensorFactory`](IWinMLRawTensorFactory.md). Optional tensor capabilities are discovered with `QueryInterface`.
+Create tensors through factories obtained from [`IWinMLExecutionTarget`](IWinMLExecutionTarget.md), such as [`IWinMLRawTensorFactory`](IWinMLRawTensorFactory.md). Optional tensor capabilities are discovered with `QueryInterface`, such as [`IWinMLTensorSynchronization`](IWinMLTensorSynchronization.md) for ready fences and [`IWinMLTensorHostReadback`](IWinMLTensorHostReadback.md) for reading small device outputs on the host without a synchronous copy.
 
 ```
 IID: 22f5cf71-27be-4a1b-9087-1a36f7a230ad

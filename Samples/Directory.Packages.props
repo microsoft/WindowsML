@@ -8,13 +8,19 @@
 
   Microsoft.Windows.AI.MachineLearning.LibLlama.Core depends on exactly the
   Microsoft.Windows.AI.MachineLearning version it was built with, so the two
-  versions must come from the same Windows ML release.
+  versions must come from the same Windows ML release. The documentation
+  refers to these two defaults instead of restating them, and derives the
+  matching Python wheel version from WinMLRuntimePackageVersion.
+
+  Microsoft.Windows.AI.MachineLearning depends on exactly the Direct3D 12
+  Agility SDK package (Microsoft.Direct3D.D3D12) it was built with. NuGet
+  restores it as a transitive dependency.
 -->
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <WinMLRuntimePackageVersion Condition="'$(WinMLRuntimePackageVersion)' == ''">2.7.2021-experimental</WinMLRuntimePackageVersion>
-    <WinMLLibLlamaPackageVersion Condition="'$(WinMLLibLlamaPackageVersion)' == ''">0.5.0.2022-experimental</WinMLLibLlamaPackageVersion>
+    <WinMLRuntimePackageVersion Condition="'$(WinMLRuntimePackageVersion)' == ''">2.9.16-experimental</WinMLRuntimePackageVersion>
+    <WinMLLibLlamaPackageVersion Condition="'$(WinMLLibLlamaPackageVersion)' == ''">0.7.0.87-dev</WinMLLibLlamaPackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Windows.AI.MachineLearning" Version="$(WinMLRuntimePackageVersion)" />

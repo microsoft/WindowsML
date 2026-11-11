@@ -15,7 +15,10 @@ place anything here. To restore from a local package copy:
 2. Set or override `WinMLRuntimePackageVersion` (and
    `WinMLLibLlamaPackageVersion` for LibLlama) to the matching package
    versions.
-3. Keep any required dependency packages together with it.
+3. Keep any required dependency packages together with it. The Runtime package
+   depends on exactly one version of `Microsoft.Direct3D.D3D12`, the Direct3D 12
+   Agility SDK package; copy it too when restore can't reach a package feed that
+   has it.
 4. Validate the package signature and source before use.
 
 To select versions without editing `Directory.Packages.props`:
@@ -33,16 +36,31 @@ also copy `windowsml-llama-core` from the same build; it requires exactly the
 with the version pinned so pip doesn't select a `windowsml` release from PyPI:
 
 ```powershell
-python.exe -m pip install --pre --find-links .\localpackages "windowsml-llama-core==<windowsml-version>" numpy
-
-# For example, for Runtime package 2.7.2021-experimental:
-python.exe -m pip install --pre --find-links .\localpackages "windowsml-llama-core==2.7.2021a0" numpy
+python.exe -m pip install --find-links .\localpackages "windowsml-llama-core==<windowsml-version>" numpy
 ```
 
 The wheel version is the Runtime package version without its suffix, plus
 `.dev0` for dev builds or `a0` for experimental builds. The wheel
 version doesn't include the commit, so copy the wheels from the same pipeline run
 as the NuGet packages.
+
+### Matching wheel version
+
+The samples read the Runtime package version from `WinMLRuntimePackageVersion`
+in [`Directory.Packages.props`](../../Directory.Packages.props). To install the
+wheels that match it, derive the wheel version from that property instead of
+typing it:
+
+```powershell
+$runtimeVersion = (Select-Xml -Path ..\Directory.Packages.props -XPath '//WinMLRuntimePackageVersion').Node.InnerText
+$windowsmlVersion = $runtimeVersion -replace '-dev(-g[0-9a-f]+)?$', '.dev0' -replace '-experimental$', 'a0'
+python.exe -m pip install --find-links .\localpackages "windowsml-llama-core==$windowsmlVersion" numpy
+```
+
+Run it from `Samples\Runtime` or `Samples\Tasks`. Other sample READMEs use
+`$windowsmlVersion` in the same way. Because the command names an exact
+pre-release version, pip installs it without `--pre`, and the other
+dependencies keep their stable releases.
 
 pip still installs other dependencies, such as `comtypes`, from PyPI. Validate the wheel source before use.
 

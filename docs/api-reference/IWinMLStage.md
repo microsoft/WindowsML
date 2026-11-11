@@ -55,10 +55,21 @@ bind the output before Build so the runtime can establish fixed execution
 storage. After Build, caller CPU destinations may be replaced, but recorded
 device storage cannot.
 
+`Run` and `Submit` check every caller-bound output before any stage runs, and
+return `E_INVALIDARG` when a bound tensor's data type, rank, or a fixed dimension
+differs from the output descriptor. A dynamic dimension (`UINT64_MAX`) matches
+any extent. When the model does not declare an output's rank, only its data
+type is checked. Windows ML 2.7 ran such a binding and wrote reinterpreted
+bytes; bind a tensor of the declared type and shape.
+
 **Returns:** `S_OK` on success, `E_POINTER` for a null `tensor`, `E_INVALIDARG`
 for an out-of-range `index`, `HRESULT_FROM_WIN32(ERROR_BUSY)` during execution or
 binding mutation, or `E_NOT_VALID_STATE` when changing that output is no longer
 valid for the built pipeline.
+
+To bind caller-owned host memory to several inputs and outputs in one call
+without creating tensors, query the stage for
+[`IWinMLStageHostBuffers`](IWinMLStageHostBuffers.md).
 
 ---
 
@@ -123,9 +134,28 @@ HRESULT GetExecutionTarget(
 
 Returns the stage execution target after pipeline build.
 
+A stage built on an explicit target reports that target, with one exception: a
+GGUF model stage on a GPU target from `IWinMLRuntime::CreateExecutionTarget`
+that `Build` placed on another GPU reports a target for the adapter that holds
+its model. The target says which class of device was chosen, not whether all
+of the stage's work runs there. Enable
+[`IWinMLStageExecutionDiagnostics`](IWinMLStageExecutionDiagnostics.md) before
+Build to read where the stage's work runs.
+
 **Returns:** `S_OK` on success, `E_POINTER` for a null `target`,
 `E_NOT_VALID_STATE` before the stage is attached to a built pipeline, or
 `HRESULT_FROM_WIN32(ERROR_NOT_FOUND)` if no target is available.
+
+## Optional stage interfaces
+
+| Interface | Query on | Purpose |
+|---|---|---|
+| [`IWinMLStatefulStage`](IWinMLStatefulStage.md), [`IWinMLStatefulStageOptions`](IWinMLStatefulStageOptions.md) | Stateful model stages | Sequence capacity, position, rewind, and state pairs. |
+| [`IWinMLStageHostBuffers`](IWinMLStageHostBuffers.md) | Any stage | Bind caller-owned host memory to inputs and outputs in one call. |
+| [`IWinMLStageExecutionDiagnostics`](IWinMLStageExecutionDiagnostics.md) | Any stage | Placement coverage and work shares of the built stage. |
+| [`IWinMLCallerBoundStageOptions`](IWinMLCallerBoundStageOptions.md) | Model stages | Declare that the caller binds every input and output on the device. |
+| [`IWinMLLlamaStageOptions`](IWinMLLlamaModelLoader.md#iwinmlllamastageoptions) | llama.cpp stages | Thread counts and micro-batch size. |
+| [`IWinMLOrtStageOptions`](IWinMLOrtStageOptions.md), [`IWinMLOrtNamedBindings`](IWinMLOrtNamedBindings.md), [`IWinMLOrtStageDiagnostics`](IWinMLOrtStageDiagnostics.md) | ONNX Runtime stages | Provider options, named bindings, and provider diagnostics. |
 
 ### Example
 

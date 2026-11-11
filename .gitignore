@@ -214,8 +214,10 @@ Samples/Runtime/models/
 Samples/Runtime/profiles/
 Samples/Runtime/localpackages/*.nupkg
 Samples/Runtime/localpackages/*.whl
+Samples/Tasks/out/
 Samples/Tasks/models/
 Samples/Tasks/localpackages/*.nupkg
+Samples/Tasks/localpackages/*.whl
 Samples/Server/models/
 Samples/Server/localpackages/*.nupkg
 Samples/Runtime/language/llm-chat/.export-venv/

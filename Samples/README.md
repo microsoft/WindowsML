@@ -4,14 +4,18 @@
 
 The Windows ML Runtime API gives Windows applications one programming model for
 local AI on CPUs, GPUs, and NPUs. The same Runtime objects run ONNX models
-through ONNX Runtime and GGUF models through llama.cpp.
+through ONNX Runtime and GGUF models through llama.cpp, and Tasks can take
+published model weights directly and run them on the GPU target the
+application picks.
 
 - [`Runtime`](Runtime/): C++ and Python samples organized by scenario, covering
   getting started, vision, speech, language, model compilation, and ONNX Runtime
   interoperability.
-- [`Tasks`](Tasks/): higher-level Task API samples for text generation, chat
-  completion, automatic speech recognition, and task composition over
-  caller-owned Runtime objects.
+- [`Tasks`](Tasks/): higher-level Task API samples. Models-backed Task samples give a
+  Task published weights, an exported model described as a composition, or a
+  GGUF file loaded explicitly with llama.cpp, for text generation, speech
+  recognition, and typed decisions. Other samples cover chat completion,
+  speech recognition, and task composition over caller-owned Runtime objects.
 - [`Server`](Server/): host the Windows ML Server, which serves a language model
   to coding agents and other OpenAI-compatible clients on the same computer,
   with C++, C#, and Python clients.
