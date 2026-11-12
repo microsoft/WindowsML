@@ -122,7 +122,10 @@ these points in mind while you try it:
   the pipeline build fails.
 - `-Device gpu` without `-Ep` uses the Runtime's default GPU target, which can
   be WebGPU even when another GPU provider is installed. Use `-Ep` to choose a
-  provider.
+  provider. The default GPU target does not download WebGPU, so on a device
+  with no installed GPU provider the pipeline build fails with
+  `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)` (`0x80070032`). Use `-Ep webgpu`,
+  which acquires WebGPU and pins it.
 - `-Diagnostics` and `--verbose` keep detailed logging on while the model runs.
   Use them to check placement, not to measure speed.
 - Model compilation's in-memory modes (`--mode sink` and `--mode zerocopy`) can

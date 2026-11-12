@@ -210,13 +210,8 @@ inline HRESULT CreateExecutionTarget(_In_ IWinMLRuntime* runtime, const DeviceAr
 
     const char* providerName =
         device.epName.empty() ? nullptr : ResolveExecutionProviderName(device.epName.c_str());
-    if (providerName == nullptr || _stricmp(providerName, "WebGpuExecutionProvider") == 0)
+    if (providerName == nullptr)
     {
-        if (providerName != nullptr)
-        {
-            wprintf(L"WebGPU uses the Runtime-owned default GPU target.\n");
-        }
-
         *target = hardwareTarget.Detach();
         return S_OK;
     }

@@ -349,9 +349,9 @@ static HRESULT RunZeroCopyPath(IWinMLRuntime* runtime, IWinMLExecutionTarget* pi
 //
 // The compiler is a capability of the execution target: a CPU target, an NPU
 // target, or a GPU target pinned to an execution provider compiles with ONNX
-// Runtime. An unpinned GPU target, including a Runtime-owned provider reached
-// through the default GPU target, has no provider to compile with, so the
-// sample reports that combination before opening the model.
+// Runtime. An unpinned GPU target has no provider to compile with, and WebGPU
+// runs models but cannot compile them, so the sample treats --ep webgpu like an
+// unpinned GPU target and reports it before opening the model.
 static HRESULT ValidateCompilerBackend(const DeviceArgs& device)
 {
     const bool pinned = !device.epName.empty() &&
