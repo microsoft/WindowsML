@@ -1,0 +1,1194 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Window
+    x:Class="TaskStudio.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TaskStudio"
+    Title="Windows ML Task Studio">
+    <Grid x:Name="Shell" Background="{StaticResource StudioBackground}" RequestedTheme="Dark">
+        <Grid.Resources>
+            <Style x:Key="TaskTab" TargetType="ListBoxItem">
+                <Setter Property="Padding" Value="18,12" />
+                <Setter Property="UseSystemFocusVisuals" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Grid>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters><Setter Target="TabSurface.Background" Value="#1B222B" /></VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters><Setter Target="TabSurface.Background" Value="#26364B" /></VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled">
+                                            <VisualState.Setters><Setter Target="TabSurface.Opacity" Value="0.45" /></VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="SelectionStates">
+                                        <VisualState x:Name="Unselected" />
+                                        <VisualState x:Name="Selected">
+                                            <VisualState.Setters>
+                                                <Setter Target="TabSurface.Background" Value="#1D304B" />
+                                                <Setter Target="TabContent.Foreground" Value="#91C2FF" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="SelectedUnfocused">
+                                            <VisualState.Setters>
+                                                <Setter Target="TabSurface.Background" Value="#1D304B" />
+                                                <Setter Target="TabContent.Foreground" Value="#91C2FF" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Border x:Name="TabSurface" CornerRadius="7" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter x:Name="TabContent" Content="{TemplateBinding Content}" Foreground="{StaticResource StudioSecondary}"
+                                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="32" />
+        </Grid.RowDefinitions>
+        <Grid x:Name="StudioTitleBar" Background="{StaticResource StudioSidebar}" Padding="20,0,148,0">
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Grid Width="22" Height="22" ColumnSpacing="3" RowSpacing="3">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                    <Border Background="#2F81F7" CornerRadius="2" />
+                    <Border Grid.Column="1" Background="#48A0FF" CornerRadius="2" />
+                    <Border Grid.Row="1" Background="#1F6FEB" CornerRadius="2" />
+                    <Border Grid.Row="1" Grid.Column="1" Background="#6CB6FF" CornerRadius="2" />
+                </Grid>
+                <TextBlock Text="Windows ML" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                <TextBlock Text="/" Foreground="{StaticResource StudioMuted}" VerticalAlignment="Center" />
+                <TextBlock Text="Task Studio" FontSize="13" Foreground="{StaticResource StudioSecondary}" VerticalAlignment="Center" />
+                <Border Background="#20304A" CornerRadius="4" Padding="7,3" Margin="4,0,0,0">
+                    <TextBlock Text="EXPERIMENTAL" FontSize="9" CharacterSpacing="90" Foreground="#8ABEFF" />
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="SidebarColumn" Width="308" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Background="{StaticResource StudioSidebar}" BorderBrush="{StaticResource StudioBorder}" BorderThickness="0,1,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Padding="22,24,22,20" Spacing="22">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="YOUR WORKSPACE" Style="{StaticResource SectionLabel}" />
+                                <TextBlock Text="Make it local." FontSize="22" FontWeight="SemiBold" />
+                                <TextBlock Text="Choose a model. Start exploring." Style="{StaticResource HintText}" />
+                            </StackPanel>
+
+                            <Border BorderBrush="{StaticResource StudioBorder}" BorderThickness="1" CornerRadius="10" Background="#11171E" Padding="14">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <FontIcon Glyph="&#xE7F4;" FontSize="20" Foreground="#79B4FF" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="GPU" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                                        <Border Grid.Column="2" Background="#1C2C28" CornerRadius="4" Padding="7,3">
+                                            <TextBlock Text="CGC" FontSize="9" Foreground="#79D5A1" CharacterSpacing="60" />
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock x:Name="DeviceName" Text="Detecting available GPUs..." FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <ComboBox x:Name="DeviceSelector" DisplayMemberPath="Name" SelectionChanged="Device_Changed"
+                                              HorizontalAlignment="Stretch" IsEnabled="False" FontSize="11" AutomationProperties.Name="GPU execution device" />
+                                    <TextBlock x:Name="DeviceDetail" Text="NVIDIA preferred. No CPU fallback." FontSize="10" Foreground="{StaticResource StudioMuted}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <ContentControl x:Name="SetupPanel" HorizontalContentAlignment="Stretch">
+                                <StackPanel Spacing="14">
+                                    <Grid>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="MODEL" Style="{StaticResource SectionLabel}" VerticalAlignment="Center" />
+                                            <Button x:Name="ModelHelpButton" Click="ModelHelp_Click" Width="18" Height="18" Padding="0" CornerRadius="9"
+                                                    MinWidth="0" MinHeight="0" Background="#20304A" BorderThickness="0"
+                                                    AutomationProperties.AutomationId="ModelHelpButton" AutomationProperties.Name="What models can I load?"
+                                                    ToolTipService.ToolTip="What models can I load?">
+                                                <TextBlock Text="?" FontSize="11" FontWeight="SemiBold" Foreground="#8ABEFF" />
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock Text="SAFETENSORS / GGUF" FontSize="10" Foreground="{StaticResource StudioMuted}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <Grid ColumnSpacing="6">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <TextBox x:Name="ModelPath" AutomationProperties.AutomationId="ModelPath" AutomationProperties.Name="Text model directory or GGUF file"
+                                                 PlaceholderText="Model directory or .gguf file..." Style="{StaticResource StudioInput}"
+                                                 ToolTipService.ToolTip="{Binding Text, ElementName=ModelPath}" />
+                                        <Button Grid.Column="1" Click="BrowseModel_Click" Style="{StaticResource QuietButton}"
+                                                ToolTipService.ToolTip="Browse for a model directory with config.json and safetensors" AutomationProperties.Name="Browse model" Padding="10">
+                                            <FontIcon Glyph="&#xE8B7;" FontSize="15" />
+                                        </Button>
+                                        <Button Grid.Column="2" Click="BrowseGguf_Click" Style="{StaticResource QuietButton}"
+                                                ToolTipService.ToolTip="Browse for a single .gguf model file" AutomationProperties.Name="Browse GGUF file" Padding="10">
+                                            <FontIcon Glyph="&#xE8E5;" FontSize="15" />
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock Text="TOKENIZER" Style="{StaticResource SectionLabel}" Margin="0,2,0,-4" />
+                                    <Grid ColumnSpacing="6">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <TextBox x:Name="TokenizerPath" AutomationProperties.AutomationId="TokenizerPath" AutomationProperties.Name="Tokenizer configuration"
+                                                 PlaceholderText="tokenizer_config.json (optional for GGUF)" Style="{StaticResource StudioInput}"
+                                                 ToolTipService.ToolTip="{Binding Text, ElementName=TokenizerPath}" />
+                                        <Button Grid.Column="1" Click="BrowseTokenizer_Click" Style="{StaticResource QuietButton}"
+                                                ToolTipService.ToolTip="Browse for the matching tokenizer configuration" AutomationProperties.Name="Browse tokenizer" Padding="10">
+                                            <FontIcon Glyph="&#xE8A5;" FontSize="15" />
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock Text="Use the tokenizer from the same model. A GGUF file uses its own tokenizer when this is empty. Files stay on your device." Style="{StaticResource HintText}" />
+                                    <Grid ColumnSpacing="12" Margin="0,2,0,0">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="132" /></Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center" Spacing="4">
+                                            <TextBlock Text="Context window" FontSize="12" />
+                                            <TextBlock Text="Prompt + response tokens" FontSize="10" Foreground="{StaticResource StudioMuted}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <ComboBox x:Name="ContextLength" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Stretch" FontSize="12"
+                                                  AutomationProperties.AutomationId="ContextLength" AutomationProperties.Name="Context tokens"
+                                                  ToolTipService.ToolTip="Model default keeps the model's own sequence length. A smaller window uses less GPU memory.">
+                                            <ComboBoxItem Content="Model default" />
+                                            <ComboBoxItem Content="512" Tag="512" />
+                                            <ComboBoxItem Content="1,024" Tag="1024" />
+                                            <ComboBoxItem Content="2,048" Tag="2048" />
+                                            <ComboBoxItem Content="4,096" Tag="4096" />
+                                            <ComboBoxItem Content="8,192" Tag="8192" />
+                                            <ComboBoxItem Content="16,384" Tag="16384" />
+                                            <ComboBoxItem Content="32,768" Tag="32768" />
+                                            <ComboBoxItem Content="65,536" Tag="65536" />
+                                            <ComboBoxItem Content="131,072" Tag="131072" />
+                                            <ComboBoxItem Content="262,144" Tag="262144" />
+                                        </ComboBox>
+                                    </Grid>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="132" /></Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center" Spacing="4">
+                                            <TextBlock Text="Speculative decoding" FontSize="12" />
+                                            <TextBlock Text="Faster decoding, same output" FontSize="10" Foreground="{StaticResource StudioMuted}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <ComboBox x:Name="SpeculativeMethod" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Stretch" FontSize="12"
+                                                  SelectionChanged="SpeculativeMethod_SelectionChanged"
+                                                  AutomationProperties.AutomationId="SpeculativeMethod" AutomationProperties.Name="Speculative decoding method"
+                                                  ToolTipService.ToolTip="Drafts several tokens and verifies them in one step. The model still chooses every token, so greedy output stays the same.">
+                                            <ComboBoxItem Content="Off" Tag="off" />
+                                            <ComboBoxItem Content="Prompt lookup" Tag="lookup"
+                                                          ToolTipService.ToolTip="Drafts by copying earlier text from the prompt and reply. No extra model." />
+                                            <ComboBoxItem Content="Draft layers" Tag="layers"
+                                                          ToolTipService.ToolTip="Uses the multi-token prediction (MTP) layers the model carries, such as Qwen3.5." />
+                                            <ComboBoxItem Content="Drafter model" Tag="companion"
+                                                          ToolTipService.ToolTip="Uses a drafter trained for this model, such as a DFlash draft model." />
+                                        </ComboBox>
+                                    </Grid>
+                                    <Grid x:Name="DrafterRow" ColumnSpacing="6" Visibility="Collapsed">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <TextBox x:Name="DrafterPath" AutomationProperties.AutomationId="DrafterPath" AutomationProperties.Name="Drafter model"
+                                                 PlaceholderText="Drafter folder (or .gguf for a GGUF model)" Style="{StaticResource StudioInput}"
+                                                 ToolTipService.ToolTip="{Binding Text, ElementName=DrafterPath}" />
+                                        <Button Grid.Column="1" Click="BrowseDrafter_Click" Style="{StaticResource QuietButton}"
+                                                ToolTipService.ToolTip="Browse for the drafter trained for this model" AutomationProperties.Name="Browse drafter" Padding="10">
+                                            <FontIcon Glyph="&#xE8B7;" FontSize="15" />
+                                        </Button>
+                                    </Grid>
+                                    <Button x:Name="LoadButton" AutomationProperties.AutomationId="LoadButton" Content="Create task sessions"
+                                            Click="Load_Click" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch"
+                                            Background="{StaticResource StudioAccent}" Foreground="White"
+                                            CornerRadius="7" FontWeight="SemiBold" FontSize="13" Padding="12,11" />
+                                </StackPanel>
+                            </ContentControl>
+
+                            <Border x:Name="LoadedModelCard" Visibility="Collapsed" BorderBrush="#2C4E46" BorderThickness="1"
+                                    Background="#15241F" CornerRadius="9" Padding="14">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="CONNECTED MODEL" Style="{StaticResource SectionLabel}" Foreground="#79D5A1" />
+                                    <TextBlock x:Name="LoadedModelName" TextWrapping="Wrap" FontSize="13" FontWeight="SemiBold" />
+                                    <TextBlock Text="Text Generation + Chat Completion" FontSize="11" Foreground="{StaticResource StudioSecondary}" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="SpeculativeHint" FontSize="11" Foreground="{StaticResource StudioSecondary}" TextWrapping="Wrap"
+                                               Visibility="Collapsed" AutomationProperties.AutomationId="SpeculativeHint" />
+                                </StackPanel>
+                            </Border>
+                            <Button x:Name="UnloadButton" Content="Release sessions" Click="Unload_Click" Visibility="Collapsed"
+                                    IsEnabled="False" Style="{StaticResource QuietButton}" HorizontalAlignment="Stretch" />
+                            <Border Height="1" Background="{StaticResource StudioBorder}" />
+                            <ContentControl x:Name="SamplingPanel" HorizontalContentAlignment="Stretch">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Text="GENERATION" Style="{StaticResource SectionLabel}" />
+                                    <TextBlock x:Name="GenerationDefaultsSource" Text="Task API defaults / 256-token app limit"
+                                               Style="{StaticResource HintText}" />
+                                    <Grid>
+                                        <TextBlock Text="Temperature" FontSize="12" />
+                                        <TextBlock x:Name="TemperatureValue" Text="0.00" FontFamily="Cascadia Code,Consolas" FontSize="12"
+                                                   Foreground="#79B4FF" HorizontalAlignment="Right" />
+                                    </Grid>
+                                    <Slider x:Name="Temperature" Minimum="0" Maximum="2" StepFrequency="0.01" Value="0"
+                                            ValueChanged="Temperature_Changed" AutomationProperties.Name="Temperature" Margin="0,-8,0,-6" />
+                                    <Grid>
+                                        <TextBlock Text="Precise" FontSize="10" Foreground="{StaticResource StudioMuted}" />
+                                        <TextBlock Text="Creative" FontSize="10" Foreground="{StaticResource StudioMuted}" HorizontalAlignment="Right" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="Max new tokens" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="{x:Bind FormatSampling(MaxTokens.Value), Mode=OneWay}" HorizontalAlignment="Right"
+                                                   FontFamily="Consolas" Foreground="#79B4FF" FontSize="12" />
+                                    </Grid>
+                                    <Slider x:Name="MaxTokens" Value="256" Minimum="1" Maximum="32768" StepFrequency="1"
+                                            AutomationProperties.Name="Maximum new tokens" Margin="0,-8,0,-6" />
+                                    <TextBlock Text="Temperature 0 uses greedy decoding." Style="{StaticResource HintText}" />
+                                    <Expander Header="Advanced generation" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                        <StackPanel Spacing="12">
+                                            <TextBlock Text="Applies to Chat and Completion on the next request. Restore defaults returns to the selected model's settings." Style="{StaticResource HintText}" />
+                                            <Grid>
+                                                <TextBlock Text="Top-k" FontSize="12" />
+                                                <TextBlock Text="{x:Bind FormatSampling(TopK.Value), Mode=OneWay}" HorizontalAlignment="Right" FontFamily="Consolas" Foreground="#79B4FF" FontSize="12" />
+                                            </Grid>
+                                            <Slider x:Name="TopK" Value="0" Minimum="0" Maximum="200" StepFrequency="1"
+                                                    AutomationProperties.Name="Top-k" Margin="0,-8,0,-6" />
+                                            <TextBlock Text="Keep the k most likely tokens. 0 = no limit." Style="{StaticResource HintText}" />
+                                            <Grid>
+                                                <TextBlock Text="Top-p" FontSize="12" />
+                                                <TextBlock Text="{x:Bind FormatSampling(TopP.Value), Mode=OneWay}" HorizontalAlignment="Right" FontFamily="Consolas" Foreground="#79B4FF" FontSize="12" />
+                                            </Grid>
+                                            <Slider x:Name="TopP" Value="1" Minimum="0.01" Maximum="1" StepFrequency="0.01"
+                                                    AutomationProperties.Name="Top-p" Margin="0,-8,0,-6" />
+                                            <TextBlock Text="Nucleus probability: greater than 0, up to 1. 1 = off." Style="{StaticResource HintText}" />
+                                            <Grid>
+                                                <TextBlock Text="Min-p" FontSize="12" />
+                                                <TextBlock Text="{x:Bind FormatSampling(MinP.Value), Mode=OneWay}" HorizontalAlignment="Right" FontFamily="Consolas" Foreground="#79B4FF" FontSize="12" />
+                                            </Grid>
+                                            <Slider x:Name="MinP" Value="0" Minimum="0" Maximum="1" StepFrequency="0.01"
+                                                    AutomationProperties.Name="Min-p" Margin="0,-8,0,-6" />
+                                            <TextBlock Text="Probability relative to the most likely token. 0 = off." Style="{StaticResource HintText}" />
+                                            <Grid>
+                                                <TextBlock Text="Repetition penalty" FontSize="12" />
+                                                <TextBlock Text="{x:Bind FormatSampling(RepetitionPenalty.Value), Mode=OneWay}" HorizontalAlignment="Right" FontFamily="Consolas" Foreground="#79B4FF" FontSize="12" />
+                                            </Grid>
+                                            <Slider x:Name="RepetitionPenalty" Value="1" Minimum="0.01" Maximum="2" StepFrequency="0.01"
+                                                    AutomationProperties.Name="Repetition penalty" Margin="0,-8,0,-6" />
+                                            <TextBlock Text="1 = off. Above 1 discourages repeated tokens." Style="{StaticResource HintText}" />
+                                            <Grid>
+                                                <TextBlock Text="Repetition window" FontSize="12" />
+                                                <TextBlock Text="{x:Bind FormatSampling(RepetitionWindow.Value), Mode=OneWay}" HorizontalAlignment="Right" FontFamily="Consolas" Foreground="#79B4FF" FontSize="12" />
+                                            </Grid>
+                                            <Slider x:Name="RepetitionWindow" Value="0" Minimum="0" Maximum="2048" StepFrequency="1"
+                                                    AutomationProperties.Name="Repetition window" Margin="0,-8,0,-6" />
+                                            <TextBlock Text="Number of recent tokens for the repetition penalty. 0 = full history." Style="{StaticResource HintText}" />
+                                            <Grid>
+                                                <TextBlock Text="Presence penalty" FontSize="12" />
+                                                <TextBlock Text="{x:Bind FormatSampling(PresencePenalty.Value), Mode=OneWay}" HorizontalAlignment="Right" FontFamily="Consolas" Foreground="#79B4FF" FontSize="12" />
+                                            </Grid>
+                                            <Slider x:Name="PresencePenalty" Value="0" Minimum="-2" Maximum="2" StepFrequency="0.01"
+                                                    AutomationProperties.Name="Presence penalty" Margin="0,-8,0,-6" />
+                                            <TextBlock Text="Positive values discourage tokens already present; negative values encourage them. 0 = off." Style="{StaticResource HintText}" />
+                                            <Grid>
+                                                <TextBlock Text="Frequency penalty" FontSize="12" />
+                                                <TextBlock Text="{x:Bind FormatSampling(FrequencyPenalty.Value), Mode=OneWay}" HorizontalAlignment="Right" FontFamily="Consolas" Foreground="#79B4FF" FontSize="12" />
+                                            </Grid>
+                                            <Slider x:Name="FrequencyPenalty" Value="0" Minimum="-2" Maximum="2" StepFrequency="0.01"
+                                                    AutomationProperties.Name="Frequency penalty" Margin="0,-8,0,-6" />
+                                            <TextBlock Text="Penalty proportional to token count. Negative values encourage repetition. 0 = off." Style="{StaticResource HintText}" />
+                                            <TextBlock Text="Seed" Style="{StaticResource SectionLabel}" />
+                                            <TextBox x:Name="SamplingSeed" Text="0" Style="{StaticResource StudioInput}" AutomationProperties.Name="Sampling seed" />
+                                            <TextBlock Text="Unsigned 64-bit integer. Controls random sampling when temperature is above 0." Style="{StaticResource HintText}" />
+                                            <TextBlock Text="Stop-token IDs" Style="{StaticResource SectionLabel}" />
+                                            <TextBox x:Name="StopTokenIds" PlaceholderText="e.g. 151645, 151643" AcceptsReturn="True" TextWrapping="Wrap"
+                                                     Style="{StaticResource StudioInput}" AutomationProperties.Name="Stop-token IDs" />
+                                            <TextBlock Text="Optional comma- or whitespace-separated IDs from this tokenizer. These are token IDs, not stop strings. Model EOS still applies." Style="{StaticResource HintText}" />
+                                            <Button Content="Restore model defaults" Click="ResetGeneration_Click"
+                                                    Style="{StaticResource QuietButton}" HorizontalAlignment="Stretch" />
+                                        </StackPanel>
+                                    </Expander>
+                                </StackPanel>
+                            </ContentControl>
+                            <StackPanel x:Name="SpeechSetupPanel" Visibility="Collapsed" Spacing="14">
+                                <TextBlock Text="SPEECH MODEL" Style="{StaticResource SectionLabel}" />
+                                <Grid ColumnSpacing="6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBox x:Name="SpeechModelPath" PlaceholderText="Speech model directory" Style="{StaticResource StudioInput}"
+                                             AutomationProperties.Name="Speech model path" />
+                                    <Button x:Name="SpeechBrowseModelButton" Grid.Column="1" Click="BrowseSpeechModel_Click" Style="{StaticResource QuietButton}"
+                                            AutomationProperties.Name="Browse speech model directory" Padding="10">
+                                        <FontIcon Glyph="&#xE8B7;" FontSize="15" />
+                                    </Button>
+                                </Grid>
+                                <TextBlock Text="TOKENIZER" Style="{StaticResource SectionLabel}" />
+                                <Grid ColumnSpacing="6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBox x:Name="SpeechTokenizerPath" PlaceholderText="tokenizer_config.json" Style="{StaticResource StudioInput}"
+                                             AutomationProperties.Name="Speech tokenizer configuration" />
+                                    <Button x:Name="SpeechBrowseTokenizerButton" Grid.Column="1" Click="BrowseSpeechTokenizer_Click" Style="{StaticResource QuietButton}"
+                                            AutomationProperties.Name="Browse speech tokenizer" Padding="10">
+                                        <FontIcon Glyph="&#xE8A5;" FontSize="15" />
+                                    </Button>
+                                </Grid>
+                                <TextBlock Text="LANGUAGE" Style="{StaticResource SectionLabel}" />
+                                <TextBox x:Name="SpeechLanguage" PlaceholderText="Automatic / model default" Style="{StaticResource StudioInput}"
+                                         AutomationProperties.Name="Speech language" />
+                                <TextBlock Text="Optional BCP 47 tag, such as en-US. Use a speech model recognized by the Runtime's installed provider." Style="{StaticResource HintText}" />
+                                <Button x:Name="SpeechLoadButton" Content="Create speech session" Click="SpeechLoad_Click"
+                                        Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" CornerRadius="7" Padding="12,11" />
+                                <Button x:Name="SpeechUnloadButton" Content="Release speech session" Click="SpeechUnload_Click"
+                                        Style="{StaticResource QuietButton}" HorizontalAlignment="Stretch" Visibility="Collapsed" />
+                                <Border Background="#152336" BorderBrush="#29415E" BorderThickness="1" CornerRadius="9" Padding="13">
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Text="TASK LAYER / ASR" Style="{StaticResource SectionLabel}" Foreground="#8ABEFF" />
+                                        <TextBlock Text="Audio acquisition is separate from recognition. No cloud speech service or OS dictation is used." Style="{StaticResource HintText}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            <StackPanel x:Name="DecisionSetupPanel" Visibility="Collapsed" Spacing="14">
+                                <Grid>
+                                    <TextBlock Text="DECISION MODEL" Style="{StaticResource SectionLabel}" />
+                                    <TextBlock Text="SAFETENSORS" FontSize="10" Foreground="{StaticResource StudioMuted}" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Grid ColumnSpacing="6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBox x:Name="DecisionModelPath" PlaceholderText="Typed-decision model directory" Style="{StaticResource StudioInput}"
+                                             AutomationProperties.AutomationId="DecisionModelPath" AutomationProperties.Name="Decision model directory" />
+                                    <Button x:Name="DecisionBrowseButton" Grid.Column="1" Click="BrowseDecisionModel_Click" Style="{StaticResource QuietButton}"
+                                            AutomationProperties.Name="Browse decision model directory" Padding="10">
+                                        <FontIcon Glyph="&#xE8B7;" FontSize="15" />
+                                    </Button>
+                                </Grid>
+                                <TextBlock Text="A Laya checkpoint (ModernBERT encoder with a decision head). The task loads its tokenizer from the model's tokenizer folder."
+                                           Style="{StaticResource HintText}" />
+                                <Button x:Name="DecisionLoadButton" Content="Create decision session" Click="DecisionLoad_Click"
+                                        AutomationProperties.AutomationId="DecisionLoadButton"
+                                        Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" CornerRadius="7" Padding="12,11" />
+                                <Button x:Name="DecisionUnloadButton" Content="Release decision session" Click="DecisionUnload_Click"
+                                        Style="{StaticResource QuietButton}" HorizontalAlignment="Stretch" Visibility="Collapsed" />
+                                <Border Background="#152336" BorderBrush="#29415E" BorderThickness="1" CornerRadius="9" Padding="13">
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Text="TASK LAYER / DECISION" Style="{StaticResource SectionLabel}" Foreground="#8ABEFF" />
+                                        <TextBlock Text="Typed questions in, calibrated probabilities out. One evaluation per question; nothing is generated." Style="{StaticResource HintText}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <Border Grid.Row="1" BorderBrush="{StaticResource StudioBorder}" BorderThickness="0,1,0,0" Padding="22,16">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <StackPanel Spacing="7">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE72E;" FontSize="12" Foreground="{StaticResource StudioMuted}" />
+                                    <TextBlock Text="Local files. Local inference." FontSize="11" Foreground="{StaticResource StudioSecondary}" />
+                                </StackPanel>
+                                <TextBlock Text="Windows ML Runtime  /  Task API" FontSize="10" Foreground="{StaticResource StudioMuted}" />
+                            </StackPanel>
+                            <Button x:Name="SettingsButton" Grid.Column="1" Click="Settings_Click" Style="{StaticResource QuietButton}" Padding="9"
+                                    VerticalAlignment="Center" AutomationProperties.AutomationId="SettingsButton" AutomationProperties.Name="Settings"
+                                    ToolTipService.ToolTip="Settings">
+                                <FontIcon Glyph="&#xE713;" FontSize="15" />
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="70" />
+                    <RowDefinition Height="38" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid Padding="28,0" BorderBrush="{StaticResource StudioBorder}" BorderThickness="0,1,0,1">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <ListBox x:Name="TaskMode" AutomationProperties.AutomationId="TaskMode" SelectedIndex="0"
+                             SelectionChanged="Mode_Changed" Background="Transparent" BorderThickness="0"
+                             VerticalAlignment="Center" Padding="0" SelectionMode="Single">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="8" /></ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBoxItem Style="{StaticResource TaskTab}" AutomationProperties.Name="Chat">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE8BD;" FontSize="15" />
+                                <TextBlock Text="Chat" FontSize="13" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Style="{StaticResource TaskTab}" AutomationProperties.Name="Completion">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE943;" FontSize="15" />
+                                <TextBlock Text="Completion" FontSize="13" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Style="{StaticResource TaskTab}" AutomationProperties.Name="Speech">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE720;" FontSize="15" />
+                                <TextBlock Text="Speech" FontSize="13" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Style="{StaticResource TaskTab}" AutomationProperties.Name="Decide">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE9D5;" FontSize="15" />
+                                <TextBlock Text="Decide" FontSize="13" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Style="{StaticResource TaskTab}" AutomationProperties.Name="Perf">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xEC4A;" FontSize="15" />
+                                <TextBlock Text="Perf" FontSize="13" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </ListBoxItem>
+                    </ListBox>
+                    <Button x:Name="ClearButton" AutomationProperties.AutomationId="ClearButton" Grid.Column="2" Click="Clear_Click"
+                            Style="{StaticResource QuietButton}" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE710;" FontSize="12" />
+                            <TextBlock Text="New session" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <Grid Grid.Row="1" Padding="30,0" Background="#12171D">
+                    <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                        <Ellipse x:Name="StatusDot" Width="6" Height="6" Fill="#7F8C9C" />
+                        <TextBlock x:Name="SessionStatus" Text="No model connected" FontSize="11" Foreground="{StaticResource StudioSecondary}" />
+                        <ProgressRing x:Name="BusyRing" Width="14" Height="14" IsActive="False" Visibility="Collapsed" />
+                    </StackPanel>
+                    <TextBlock x:Name="BackendLabel" Text="CGC / GPU" FontFamily="Consolas" FontSize="10" Foreground="{StaticResource StudioMuted}"
+                               VerticalAlignment="Center" HorizontalAlignment="Right" />
+                </Grid>
+                <InfoBar x:Name="StatusBar" Grid.Row="2" IsOpen="False" IsClosable="True" Margin="24,12,24,0" />
+
+                <Grid x:Name="TextOutput" Grid.Row="3">
+                    <ScrollViewer x:Name="WelcomeScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center">
+                        <Grid x:Name="WelcomePanel" Padding="36,32" MaxWidth="800" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <StackPanel x:Name="WelcomeStack" Spacing="22" VerticalAlignment="Center">
+                                <Border x:Name="WelcomeIcon" Width="60" Height="60" CornerRadius="17" HorizontalAlignment="Center" BorderBrush="#3B608D" BorderThickness="1">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#244F8C" Offset="0" />
+                                            <GradientStop Color="#172A43" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <FontIcon Glyph="&#xE945;" FontSize="27" Foreground="#A5CEFF" />
+                                </Border>
+                                <StackPanel Spacing="12">
+                                    <TextBlock x:Name="WelcomeEyebrow" Text="ON-DEVICE POSSIBILITIES" Style="{StaticResource SectionLabel}" Foreground="#79B4FF" HorizontalAlignment="Center" />
+                                    <TextBlock x:Name="WelcomeTitle" Text="Big ideas. Local intelligence." FontSize="32" FontWeight="SemiBold"
+                                               TextAlignment="Center" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="WelcomeDescription" Text="A space to think, build, and explore with your models.&#xA;Powered by Windows ML Tasks. Running on your device."
+                                               TextAlignment="Center" FontSize="14" LineHeight="23" TextWrapping="Wrap" Foreground="{StaticResource StudioSecondary}" />
+                                </StackPanel>
+                                <Grid ColumnSpacing="12" Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                    <Button AutomationProperties.AutomationId="StarterExplain" Click="Starter_Click" Style="{StaticResource StarterButton}"
+                                            Tag="Explain how on-device AI works in three simple points.">
+                                        <StackPanel Spacing="12">
+                                            <FontIcon Glyph="&#xE82F;" FontSize="20" Foreground="#79B4FF" HorizontalAlignment="Left" />
+                                            <TextBlock Text="Make something clear" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="Break a big concept into&#xA;something simple." Style="{StaticResource HintText}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Grid.Column="1" AutomationProperties.AutomationId="StarterIdea" Click="Starter_Click" Style="{StaticResource StarterButton}"
+                                            Tag="Suggest three creative ideas for an app that uses on-device AI.">
+                                        <StackPanel Spacing="12">
+                                            <FontIcon Glyph="&#xEA80;" FontSize="20" Foreground="#AEAAFF" HorizontalAlignment="Left" />
+                                            <TextBlock Text="Start with an idea" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="Find a fresh angle for&#xA;your next project." Style="{StaticResource HintText}" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                                <StackPanel x:Name="WelcomeHintRow" Orientation="Horizontal" Spacing="7" HorizontalAlignment="Center">
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" Foreground="{StaticResource StudioMuted}" />
+                                    <TextBlock x:Name="WelcomeHint" Text="Connect a model in the sidebar to get started."
+                                               Style="{StaticResource HintText}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+                    <ScrollViewer x:Name="OutputScroll" Visibility="Collapsed" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch" Padding="28,24">
+                        <ItemsControl x:Name="MessageList" ItemsSource="{x:Bind Messages}" MaxWidth="900" HorizontalAlignment="Stretch">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:StudioMessage">
+                                    <Grid Margin="0,0,0,22" HorizontalAlignment="{x:Bind Alignment}">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Border Width="28" Height="28" CornerRadius="8" Background="{x:Bind AvatarBackground}" VerticalAlignment="Top">
+                                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="13" Foreground="{x:Bind AvatarForeground}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="7" Margin="12,3,0,0">
+                                            <TextBlock Text="{x:Bind Role}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource StudioSecondary}" />
+                                            <Border Background="{x:Bind Background}" BorderBrush="{x:Bind BorderBrush}" BorderThickness="1" CornerRadius="0,12,12,12" Padding="17,13">
+                                                <TextBlock Text="{x:Bind Text, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                                                           FontSize="14" LineHeight="24" AutomationProperties.AutomationId="MessageText" />
+                                            </Border>
+                                            <TextBlock Text="{x:Bind Detail, Mode=OneWay}" FontSize="10" Foreground="{StaticResource StudioMuted}"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <StackPanel x:Name="ComposerPanel" Grid.Row="4" Padding="28,0,28,18" Spacing="10" MaxWidth="956" HorizontalAlignment="Stretch">
+                    <Expander x:Name="InstructionsPanel" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                              Background="Transparent" BorderThickness="0" CornerRadius="8" MinHeight="0">
+                        <Expander.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE713;" FontSize="12" Foreground="{StaticResource StudioMuted}" />
+                                <TextBlock Text="System instructions" FontSize="11" Foreground="{StaticResource StudioSecondary}" />
+                            </StackPanel>
+                        </Expander.Header>
+                        <TextBox x:Name="SystemPrompt" AutomationProperties.Name="System instructions"
+                                 Text="You are a helpful assistant." AcceptsReturn="True" TextWrapping="Wrap"
+                                 MaxHeight="110" Style="{StaticResource StudioInput}" />
+                    </Expander>
+                    <Border BorderBrush="#35465D" BorderThickness="1" CornerRadius="13" Background="#171E27" Padding="14,8,12,12">
+                        <StackPanel Spacing="6">
+                            <TextBox x:Name="Prompt" AutomationProperties.AutomationId="Prompt" AutomationProperties.Name="Prompt"
+                                     PlaceholderText="What's on your mind?" AcceptsReturn="True" TextWrapping="Wrap"
+                                     MinHeight="62" MaxHeight="140" Background="Transparent" BorderThickness="0" FontSize="14"
+                                     Padding="4,9" KeyDown="Prompt_KeyDown" />
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center" Margin="4,0,0,0">
+                                    <FontIcon Glyph="&#xE8D4;" FontSize="12" Foreground="{StaticResource StudioMuted}" />
+                                    <TextBlock x:Name="ComposerHint" Text="Connect a model to begin" FontSize="11" Foreground="{StaticResource StudioMuted}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button x:Name="StopButton" AutomationProperties.AutomationId="StopButton" Content="Stop"
+                                            Click="Stop_Click" Visibility="Collapsed" IsEnabled="False"
+                                            Style="{StaticResource QuietButton}" BorderBrush="#713D41" Foreground="#FFAAA5" />
+                                    <Button x:Name="SendButton" AutomationProperties.AutomationId="SendButton" Click="Send_Click"
+                                            IsEnabled="False" Style="{StaticResource AccentButtonStyle}" Padding="14,9" CornerRadius="7">
+                                        <Button.Background><StaticResource ResourceKey="StudioAccent" /></Button.Background>
+                                        <Button.Foreground><SolidColorBrush Color="White" /></Button.Foreground>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock x:Name="SendLabel" Text="Send message" FontSize="12" FontWeight="SemiBold" />
+                                            <FontIcon Glyph="&#xE724;" FontSize="12" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Name="ResultDetails" Text="Generated answers can be inaccurate. Review important information."
+                               FontSize="10" Foreground="{StaticResource StudioMuted}" TextAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+                            <ScrollViewer x:Name="SpeechWorkspace" Grid.Row="3" Grid.RowSpan="2" Visibility="Collapsed"
+                                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel Padding="30,26,30,24" Spacing="22" MaxWidth="960" HorizontalAlignment="Stretch">
+                                    <Grid ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                        <Border Width="56" Height="56" Background="#1B304C" BorderBrush="#2D4E74" BorderThickness="1" CornerRadius="16">
+                                            <FontIcon Glyph="&#xE720;" FontSize="25" Foreground="#91C2FF" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center">
+                                            <TextBlock Text="Give your ideas a voice." FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="Live audio or a recorded moment. Transcribed on your device."
+                                                       Style="{StaticResource HintText}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Border Background="#152336" BorderBrush="#29415E" BorderThickness="1" CornerRadius="9" Padding="14">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock x:Name="SpeechCapabilityTitle" Text="Capture ready. Connect a speech model to transcribe."
+                                                       FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock x:Name="SpeechCapabilityDetail"
+                                                       Text="Microphone recording and file import work independently. Native live transcription is enabled only when the Task session supports it."
+                                                       Style="{StaticResource HintText}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Grid ColumnSpacing="14">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="AUDIO SOURCE" Style="{StaticResource SectionLabel}" />
+                                            <ComboBox x:Name="SpeechInputMode" SelectedIndex="0" SelectionChanged="SpeechInput_Changed"
+                                                      HorizontalAlignment="Stretch" AutomationProperties.Name="Speech input mode">
+                                                <ComboBoxItem Content="Recorded audio" />
+                                                <ComboBoxItem Content="Live microphone" />
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Bottom">
+                                            <TextBlock Text="16 kHz / mono" FontFamily="Consolas" FontSize="11" Foreground="#91C2FF" />
+                                            <TextBlock Text="Up to 2 minutes" FontSize="10" Foreground="{StaticResource StudioMuted}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Border Background="#171E27" BorderBrush="{StaticResource StudioBorder}" BorderThickness="1" CornerRadius="12" Padding="20">
+                                        <StackPanel Spacing="15">
+                                            <StackPanel x:Name="RecordedAudioPanel" Spacing="12">
+                                                <TextBlock Text="A recording worth keeping." FontSize="17" FontWeight="SemiBold" />
+                                                <TextBlock Text="Import WAV, MP3, M4A or FLAC audio, or record a clip here. Audio is decoded, downmixed and resampled before it reaches the Task."
+                                                           Style="{StaticResource HintText}" />
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Button x:Name="ImportAudioButton" Content="Open audio" Click="ImportAudio_Click" Style="{StaticResource QuietButton}" />
+                                                    <Button x:Name="RecordAudioButton" Content="Record clip" Click="RecordAudio_Click" Style="{StaticResource QuietButton}" />
+                                                    <Button x:Name="SaveAudioButton" Content="Save WAV" Click="SaveAudio_Click" IsEnabled="False" Style="{StaticResource QuietButton}" />
+                                                </StackPanel>
+                                                <TextBlock x:Name="AudioClipLabel" Text="No audio selected" Foreground="{StaticResource StudioSecondary}" FontSize="12" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <StackPanel x:Name="LiveAudioPanel" Visibility="Collapsed" Spacing="12">
+                                                <TextBlock Text="Speak. See it take shape." FontSize="17" FontWeight="SemiBold" />
+                                                <TextBlock Text="Native live input streams microphone chunks to the ASR Task. Text appears when the model commits it; windowed models may take longer."
+                                                           Style="{StaticResource HintText}" />
+                                                <Button x:Name="StartLiveButton" Content="Start live transcription" Click="StartLive_Click"
+                                                        Style="{StaticResource AccentButtonStyle}" IsEnabled="False" CornerRadius="7" />
+                                            </StackPanel>
+                                            <Grid x:Name="CaptureMeter" Visibility="Collapsed" ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <FontIcon Glyph="&#xE720;" Foreground="#FFAAA5" FontSize="14" VerticalAlignment="Center" />
+                                                <ProgressBar x:Name="MicrophoneLevel" Grid.Column="1" Maximum="1" Value="0"
+                                                             Foreground="#79B4FF" VerticalAlignment="Center" AutomationProperties.Name="Microphone level" />
+                                                <TextBlock x:Name="RecordingTime" Grid.Column="2" Text="0:00" FontFamily="Consolas" FontSize="12" VerticalAlignment="Center" />
+                                            </Grid>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <Button x:Name="TranscribeButton" Content="Transcribe clip" Click="Transcribe_Click"
+                                                        Style="{StaticResource AccentButtonStyle}" IsEnabled="False" CornerRadius="7" />
+                                                <Button x:Name="FinishCaptureButton" Content="Finish recording" Click="FinishCapture_Click"
+                                                        Style="{StaticResource QuietButton}" Visibility="Collapsed" />
+                                                <Button x:Name="CancelSpeechButton" Content="Cancel" Click="CancelSpeech_Click"
+                                                        Style="{StaticResource QuietButton}" Visibility="Collapsed" Foreground="#FFAAA5" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                    <Grid>
+                                        <TextBlock Text="TRANSCRIPT" Style="{StaticResource SectionLabel}" VerticalAlignment="Center" />
+                                        <Button x:Name="CopyTranscriptButton" Content="Copy text" Click="CopyTranscript_Click"
+                                                HorizontalAlignment="Right" Style="{StaticResource QuietButton}" IsEnabled="False" />
+                                    </Grid>
+                                    <TextBox x:Name="SpeechTranscript" PlaceholderText="Your words will appear here."
+                                             IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="180"
+                                             Style="{StaticResource StudioInput}" FontSize="15" Padding="18" AutomationProperties.Name="Speech transcript" />
+                                    <TextBlock Text="Transcripts may contain mistakes. Review names, numbers and important details."
+                                               FontSize="10" Foreground="{StaticResource StudioMuted}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </ScrollViewer>
+                            <ScrollViewer x:Name="DecisionWorkspace" Grid.Row="3" Grid.RowSpan="2" Visibility="Collapsed"
+                                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel Padding="30,26,30,24" Spacing="20" MaxWidth="960" HorizontalAlignment="Stretch">
+                                    <Grid ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                        <Border Width="56" Height="56" Background="#1B304C" BorderBrush="#2D4E74" BorderThickness="1" CornerRadius="16">
+                                            <FontIcon Glyph="&#xE9D5;" FontSize="25" Foreground="#91C2FF" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center">
+                                            <TextBlock Text="Decide with confidence." FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="Ask typed questions about any text. Get calibrated answers and a recommendation to act or escalate."
+                                                       Style="{StaticResource HintText}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Border Background="#152336" BorderBrush="#29415E" BorderThickness="1" CornerRadius="9" Padding="14">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock x:Name="DecisionCapabilityTitle" Text="Connect a typed-decision model to start."
+                                                       FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock x:Name="DecisionCapabilityDetail"
+                                                       Text="Choice picks a label, score picks an ordinal level, yes/no answers true or false. Each answer carries a probability for every option."
+                                                       Style="{StaticResource HintText}" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <TextBlock Text="STATE" Style="{StaticResource SectionLabel}" VerticalAlignment="Bottom" />
+                                        <ComboBox x:Name="DecisionExample" Grid.Column="1" PlaceholderText="Load an example" MinWidth="190"
+                                                  SelectionChanged="DecisionExample_Changed" AutomationProperties.Name="Decision example" />
+                                    </Grid>
+                                    <TextBox x:Name="DecisionState" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96"
+                                             PlaceholderText="A message, ticket, review or serialized document to evaluate."
+                                             Style="{StaticResource StudioInput}" FontSize="14" Padding="14,12"
+                                             AutomationProperties.AutomationId="DecisionState" AutomationProperties.Name="Decision state" />
+
+                                    <StackPanel Spacing="4">
+                                        <Grid>
+                                            <TextBlock Text="QUESTIONS" Style="{StaticResource SectionLabel}" VerticalAlignment="Center" />
+                                            <Button x:Name="AddQuestionButton" Click="AddQuestion_Click" HorizontalAlignment="Right" Style="{StaticResource QuietButton}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                                    <TextBlock Text="Add question" FontSize="12" />
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                        <TextBlock Text="Choice: one 'label: description' per line.  Score: one criterion per level, lowest first.  Yes / No: no options, or the 'no' then the 'yes' description."
+                                                   Style="{StaticResource HintText}" />
+                                    </StackPanel>
+                                    <ItemsControl x:Name="DecisionQuestionList" ItemsSource="{x:Bind DecisionQuestions}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:DecisionQuestionItem">
+                                                <Border Background="#171E27" BorderBrush="{StaticResource StudioBorder}" BorderThickness="1"
+                                                        CornerRadius="10" Padding="16,14" Margin="0,0,0,12">
+                                                    <Grid RowSpacing="10" ColumnSpacing="10">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="150" /><ColumnDefinition Width="140" /><ColumnDefinition /><ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                                        <TextBox Text="{x:Bind Name, Mode=TwoWay}" PlaceholderText="name" Style="{StaticResource StudioInput}"
+                                                                 FontFamily="Cascadia Code,Consolas" FontSize="12" AutomationProperties.Name="Question name" />
+                                                        <ComboBox Grid.Column="1" SelectedIndex="{x:Bind KindIndex, Mode=TwoWay}" HorizontalAlignment="Stretch"
+                                                                  AutomationProperties.Name="Question kind">
+                                                            <ComboBoxItem Content="Choice" />
+                                                            <ComboBoxItem Content="Score" />
+                                                            <ComboBoxItem Content="Yes / No" />
+                                                        </ComboBox>
+                                                        <NumberBox Grid.Column="2" Value="{x:Bind Threshold, Mode=TwoWay}" Minimum="0" Maximum="1"
+                                                                   SmallChange="0.05" SpinButtonPlacementMode="Compact" HorizontalAlignment="Right" MinWidth="170"
+                                                                   PlaceholderText="Act threshold (optional)" AutomationProperties.Name="Act threshold" />
+                                                        <Button Grid.Column="3" Click="RemoveQuestion_Click" Tag="{x:Bind}" Style="{StaticResource QuietButton}"
+                                                                Padding="9" AutomationProperties.Name="Remove question">
+                                                            <FontIcon Glyph="&#xE74D;" FontSize="13" />
+                                                        </Button>
+                                                        <TextBox Grid.Row="1" Grid.ColumnSpan="4" Text="{x:Bind Instructions, Mode=TwoWay}"
+                                                                 PlaceholderText="Question, e.g. Which department should handle this?"
+                                                                 Style="{StaticResource StudioInput}" AutomationProperties.Name="Question instructions" />
+                                                        <TextBox Grid.Row="2" Grid.ColumnSpan="4" Text="{x:Bind OptionsText, Mode=TwoWay}" AcceptsReturn="True"
+                                                                 TextWrapping="Wrap" MinHeight="64" FontSize="12" Style="{StaticResource StudioInput}"
+                                                                 PlaceholderText="Options, one per line"
+                                                                 AutomationProperties.Name="Question options" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="DecisionHint" Text="Connect a model to decide." FontSize="11"
+                                                   Foreground="{StaticResource StudioMuted}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                        <Button x:Name="DecideButton" Grid.Column="1" Click="Decide_Click" IsEnabled="False"
+                                                AutomationProperties.AutomationId="DecideButton" Style="{StaticResource AccentButtonStyle}"
+                                                CornerRadius="7" Padding="18,9">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE768;" FontSize="12" />
+                                                <TextBlock Text="Decide" FontSize="12" FontWeight="SemiBold" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+
+                                    <StackPanel x:Name="DecisionResultsPanel" Spacing="12" Visibility="Collapsed">
+                                        <Grid>
+                                            <TextBlock Text="ANSWERS" Style="{StaticResource SectionLabel}" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="DecisionSummary" FontFamily="Cascadia Code,Consolas" FontSize="11"
+                                                       Foreground="#91C2FF" HorizontalAlignment="Right" AutomationProperties.AutomationId="DecisionSummary" />
+                                        </Grid>
+                                        <ItemsControl x:Name="DecisionResultList" ItemsSource="{x:Bind DecisionResults}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="local:DecisionResultItem">
+                                                    <Border Background="#151B23" BorderBrush="#28323E" BorderThickness="1" CornerRadius="12" Padding="20,16" Margin="0,0,0,12">
+                                                        <StackPanel Spacing="10">
+                                                            <Grid ColumnSpacing="10">
+                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{x:Bind Name}" FontFamily="Cascadia Code,Consolas" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                                <Border Grid.Column="1" Background="#20304A" CornerRadius="4" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{x:Bind KindLabel}" FontSize="9" CharacterSpacing="80" Foreground="#8ABEFF" />
+                                                                </Border>
+                                                                <Border Grid.Column="2" Background="{x:Bind RecommendationBackground}" CornerRadius="5" Padding="10,4">
+                                                                    <TextBlock Text="{x:Bind RecommendationText}" FontSize="11" FontWeight="SemiBold" CharacterSpacing="60"
+                                                                               Foreground="{x:Bind RecommendationForeground}" AutomationProperties.AutomationId="DecisionRecommendation" />
+                                                                </Border>
+                                                            </Grid>
+                                                            <TextBlock Text="{x:Bind Instructions}" Style="{StaticResource HintText}" />
+                                                            <TextBlock Text="{x:Bind AnswerText}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"
+                                                                       AutomationProperties.AutomationId="DecisionAnswer" />
+                                                            <ItemsControl ItemsSource="{x:Bind Probabilities}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate x:DataType="local:ProbabilityRow">
+                                                                        <Grid ColumnSpacing="12" Margin="0,0,0,7">
+                                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="170" /><ColumnDefinition /><ColumnDefinition Width="56" /></Grid.ColumnDefinitions>
+                                                                            <StackPanel VerticalAlignment="Center">
+                                                                                <TextBlock Text="{x:Bind Label}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                                                                <TextBlock Text="{x:Bind Detail}" FontSize="10" Foreground="{StaticResource StudioMuted}" TextTrimming="CharacterEllipsis" />
+                                                                            </StackPanel>
+                                                                            <ProgressBar Grid.Column="1" Value="{x:Bind Percent}" Maximum="100" Height="8" MinHeight="8"
+                                                                                         CornerRadius="4" Foreground="{x:Bind BarBrush}" Background="#202833" VerticalAlignment="Center" />
+                                                                            <TextBlock Grid.Column="2" Text="{x:Bind PercentText}" FontFamily="Cascadia Code,Consolas" FontSize="11"
+                                                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                                        </Grid>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                            <TextBlock Text="{x:Bind MetricsText}" FontSize="11" Foreground="{StaticResource StudioSecondary}" TextWrapping="Wrap" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <TextBlock Text="Decisions can be wrong. Escalate when confidence is low or the stakes are high."
+                                                   FontSize="10" Foreground="{StaticResource StudioMuted}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                            <ScrollViewer x:Name="PerfWorkspace" Grid.Row="3" Grid.RowSpan="2" Visibility="Collapsed"
+                                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel Padding="30,26,30,24" Spacing="20" MaxWidth="1000" HorizontalAlignment="Stretch">
+                                    <Grid ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                        <Border Width="56" Height="56" Background="#1B304C" BorderBrush="#2D4E74" BorderThickness="1" CornerRadius="16">
+                                            <FontIcon Glyph="&#xEC4A;" FontSize="25" Foreground="#91C2FF" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center">
+                                            <TextBlock Text="Know your speed." FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="Time to first token, decode rate and memory for every generation, measured by the app on the Task stream."
+                                                       Style="{StaticResource HintText}" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Border Background="#152336" BorderBrush="#29415E" BorderThickness="1" CornerRadius="9" Padding="16,14">
+                                        <Grid ColumnSpacing="20" RowSpacing="4">
+                                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                                            <TextBlock Text="MODEL" Style="{StaticResource SectionLabel}" />
+                                            <TextBlock x:Name="PerfModel" Grid.Row="1" Text="No text model loaded" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="1" Text="DEVICE" Style="{StaticResource SectionLabel}" />
+                                            <TextBlock x:Name="PerfDevice" Grid.Column="1" Grid.Row="1" Text="-" FontSize="13" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="2" Text="CONTEXT" Style="{StaticResource SectionLabel}" />
+                                            <TextBlock x:Name="PerfContext" Grid.Column="2" Grid.Row="1" Text="-" FontSize="13" />
+                                            <TextBlock Grid.Column="3" Text="SESSION LOAD" Style="{StaticResource SectionLabel}" />
+                                            <TextBlock x:Name="PerfLoadTime" Grid.Column="3" Grid.Row="1" Text="-" FontSize="13" FontFamily="Cascadia Code,Consolas" />
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="GPU MEMORY" Style="{StaticResource SectionLabel}" VerticalAlignment="Center" />
+                                                <Button Click="RefreshGpuMemory_Click" Padding="3" MinWidth="0" MinHeight="0" Background="Transparent" BorderThickness="0"
+                                                        AutomationProperties.Name="Refresh GPU memory" ToolTipService.ToolTip="This process's dedicated GPU memory (DXCore). Refresh">
+                                                    <FontIcon Glyph="&#xE72C;" FontSize="10" />
+                                                </Button>
+                                            </StackPanel>
+                                            <TextBlock x:Name="PerfGpuMemory" Grid.Column="4" Grid.Row="1" Text="-" FontSize="13" FontFamily="Cascadia Code,Consolas"
+                                                       AutomationProperties.AutomationId="PerfGpuMemory" />
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Background="#171E27" BorderBrush="{StaticResource StudioBorder}" BorderThickness="1" CornerRadius="12" Padding="20">
+                                        <StackPanel Spacing="14">
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Benchmark" FontSize="17" FontWeight="SemiBold" />
+                                                <TextBlock Text="llama-bench style tests: pp evaluates a prompt of N tokens, tg generates N tokens one step at a time. Results are mean &#xB1; standard deviation in tokens per second."
+                                                           Style="{StaticResource HintText}" />
+                                            </StackPanel>
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <ComboBox x:Name="BenchmarkPromptTokens" Header="Prompt (pp)" SelectedIndex="3" MinWidth="110"
+                                                          AutomationProperties.AutomationId="BenchmarkPromptTokens" AutomationProperties.Name="Prompt processing tokens"
+                                                          ToolTipService.ToolTip="llama-bench -p: prompt tokens evaluated in one step">
+                                                    <ComboBoxItem Content="Off" Tag="0" />
+                                                    <ComboBoxItem Content="128" Tag="128" />
+                                                    <ComboBoxItem Content="256" Tag="256" />
+                                                    <ComboBoxItem Content="512" Tag="512" />
+                                                    <ComboBoxItem Content="1024" Tag="1024" />
+                                                    <ComboBoxItem Content="2048" Tag="2048" />
+                                                </ComboBox>
+                                                <ComboBox x:Name="BenchmarkTokens" Grid.Column="1" Header="Generate (tg)" SelectedIndex="3" MinWidth="110"
+                                                          AutomationProperties.AutomationId="BenchmarkTokens" AutomationProperties.Name="Text generation tokens"
+                                                          ToolTipService.ToolTip="llama-bench -n: tokens generated from a one-token prompt">
+                                                    <ComboBoxItem Content="Off" Tag="0" />
+                                                    <ComboBoxItem Content="32" Tag="32" />
+                                                    <ComboBoxItem Content="64" Tag="64" />
+                                                    <ComboBoxItem Content="128" Tag="128" />
+                                                    <ComboBoxItem Content="256" Tag="256" />
+                                                    <ComboBoxItem Content="512" Tag="512" />
+                                                </ComboBox>
+                                                <ComboBox x:Name="BenchmarkDepth" Grid.Column="2" Header="Depth (d)" SelectedIndex="0" MinWidth="100"
+                                                          AutomationProperties.AutomationId="BenchmarkDepth" AutomationProperties.Name="Context depth"
+                                                          ToolTipService.ToolTip="llama-bench -d: tokens already in the context (KV cache) before each test">
+                                                    <ComboBoxItem Content="0" Tag="0" />
+                                                    <ComboBoxItem Content="512" Tag="512" />
+                                                    <ComboBoxItem Content="1024" Tag="1024" />
+                                                    <ComboBoxItem Content="2048" Tag="2048" />
+                                                    <ComboBoxItem Content="4096" Tag="4096" />
+                                                </ComboBox>
+                                                <ComboBox x:Name="BenchmarkRuns" Grid.Column="3" Header="Repetitions (r)" SelectedIndex="1" MinWidth="110"
+                                                          AutomationProperties.Name="Benchmark repetitions" ToolTipService.ToolTip="llama-bench -r: measured runs per test">
+                                                    <ComboBoxItem Content="3" Tag="3" />
+                                                    <ComboBoxItem Content="5" Tag="5" />
+                                                    <ComboBoxItem Content="10" Tag="10" />
+                                                    <ComboBoxItem Content="20" Tag="20" />
+                                                </ComboBox>
+                                                <ComboBox x:Name="BenchmarkWarmup" Grid.Column="4" Header="Warm-up" SelectedIndex="2" MinWidth="90"
+                                                          AutomationProperties.Name="Warm-up runs" ToolTipService.ToolTip="Unmeasured runs per test before the repetitions. The first runs after loading a model are slower">
+                                                    <ComboBoxItem Content="0" Tag="0" />
+                                                    <ComboBoxItem Content="1" Tag="1" />
+                                                    <ComboBoxItem Content="2" Tag="2" />
+                                                    <ComboBoxItem Content="3" Tag="3" />
+                                                </ComboBox>
+                                            </Grid>
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="BenchmarkHint" Text="Load a text model in the sidebar to benchmark it." Style="{StaticResource HintText}" VerticalAlignment="Center" />
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                    <Button x:Name="StopBenchmarkButton" Content="Stop" Click="StopBenchmark_Click" Visibility="Collapsed"
+                                                            Style="{StaticResource QuietButton}" Foreground="#FFAAA5" />
+                                                    <Button x:Name="BenchmarkButton" Click="Benchmark_Click" IsEnabled="False" CornerRadius="7" Padding="18,9"
+                                                            Style="{StaticResource AccentButtonStyle}" AutomationProperties.AutomationId="BenchmarkButton">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <FontIcon Glyph="&#xE768;" FontSize="12" />
+                                                            <TextBlock Text="Run benchmark" FontSize="12" FontWeight="SemiBold" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <StackPanel x:Name="PerfSummaryPanel" Spacing="10" Visibility="Collapsed">
+                                        <Grid>
+                                            <TextBlock Text="BENCHMARK RESULTS" Style="{StaticResource SectionLabel}" VerticalAlignment="Center" />
+                                            <Button x:Name="CopyBenchmarkButton" Content="Copy as Markdown" Click="CopyBenchmark_Click" HorizontalAlignment="Right"
+                                                    Style="{StaticResource QuietButton}" ToolTipService.ToolTip="Copy the results table in llama-bench's markdown format" />
+                                        </Grid>
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                            <Border Background="#151B23" BorderBrush="#28323E" BorderThickness="1" CornerRadius="10" Padding="16,14">
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock x:Name="PerfPromptLabel" Text="Prompt processing" FontSize="12" Foreground="{StaticResource StudioSecondary}" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <TextBlock x:Name="PerfPrompt" Text="-" FontSize="28" FontWeight="SemiBold" Foreground="#79B4FF" AutomationProperties.AutomationId="PerfPrompt" />
+                                                        <TextBlock Text="tok/s" FontSize="12" VerticalAlignment="Bottom" Margin="0,0,0,6" Foreground="{StaticResource StudioSecondary}" />
+                                                    </StackPanel>
+                                                    <TextBlock x:Name="PerfPromptRange" FontSize="10" Foreground="{StaticResource StudioMuted}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Grid.Column="1" Background="#151B23" BorderBrush="#28323E" BorderThickness="1" CornerRadius="10" Padding="16,14">
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock x:Name="PerfDecodeLabel" Text="Text generation" FontSize="12" Foreground="{StaticResource StudioSecondary}" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <TextBlock x:Name="PerfDecode" Text="-" FontSize="28" FontWeight="SemiBold" Foreground="#79B4FF" AutomationProperties.AutomationId="PerfDecode" />
+                                                        <TextBlock Text="tok/s" FontSize="12" VerticalAlignment="Bottom" Margin="0,0,0,6" Foreground="{StaticResource StudioSecondary}" />
+                                                    </StackPanel>
+                                                    <TextBlock x:Name="PerfDecodeRange" FontSize="10" Foreground="{StaticResource StudioMuted}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Grid.Column="2" Background="#151B23" BorderBrush="#28323E" BorderThickness="1" CornerRadius="10" Padding="16,14">
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock Text="Prompt time" FontSize="12" Foreground="{StaticResource StudioSecondary}" />
+                                                    <TextBlock x:Name="PerfTtft" Text="-" FontSize="28" FontWeight="SemiBold" AutomationProperties.AutomationId="PerfTtft" />
+                                                    <TextBlock x:Name="PerfTtftRange" FontSize="10" Foreground="{StaticResource StudioMuted}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Grid.Column="3" Background="#151B23" BorderBrush="#28323E" BorderThickness="1" CornerRadius="10" Padding="16,14">
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock Text="Per generated token" FontSize="12" Foreground="{StaticResource StudioSecondary}" />
+                                                    <TextBlock x:Name="PerfMsPerToken" Text="-" FontSize="28" FontWeight="SemiBold" />
+                                                    <TextBlock x:Name="PerfMsPerTokenRange" FontSize="10" Foreground="{StaticResource StudioMuted}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                        <Border Background="#151B23" BorderBrush="#28323E" BorderThickness="1" CornerRadius="10" Padding="14,10">
+                                            <StackPanel Spacing="2">
+                                                <Grid ColumnSpacing="12" Padding="0,2,0,8">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="140" /><ColumnDefinition Width="180" /><ColumnDefinition Width="90" /><ColumnDefinition Width="200" /></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="MODEL" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="1" Text="TEST" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="2" Text="T/S" Style="{StaticResource SectionLabel}" HorizontalAlignment="Right" />
+                                                    <TextBlock Grid.Column="3" Text="MS" Style="{StaticResource SectionLabel}" HorizontalAlignment="Right" />
+                                                    <TextBlock Grid.Column="4" Text="NOTES" Style="{StaticResource SectionLabel}" />
+                                                </Grid>
+                                                <ItemsControl ItemsSource="{x:Bind BenchmarkRows}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="local:BenchmarkRowItem">
+                                                            <Grid ColumnSpacing="12" Padding="0,6" BorderBrush="#222B36" BorderThickness="0,1,0,0">
+                                                                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="140" /><ColumnDefinition Width="180" /><ColumnDefinition Width="90" /><ColumnDefinition Width="200" /></Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{x:Bind Model}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock Grid.Column="1" Text="{x:Bind Test}" FontFamily="Cascadia Code,Consolas" FontSize="12" FontWeight="SemiBold" />
+                                                                <TextBlock Grid.Column="2" Text="{x:Bind Rate}" FontFamily="Cascadia Code,Consolas" FontSize="12" Foreground="#79B4FF"
+                                                                           HorizontalAlignment="Right" AutomationProperties.AutomationId="BenchmarkRate" />
+                                                                <TextBlock Grid.Column="3" Text="{x:Bind Milliseconds}" FontFamily="Cascadia Code,Consolas" FontSize="12" HorizontalAlignment="Right" />
+                                                                <TextBlock Grid.Column="4" Text="{x:Bind Note}" FontSize="10" Foreground="{StaticResource StudioMuted}" TextWrapping="Wrap" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock x:Name="PerfSummaryDetail" Style="{StaticResource HintText}" AutomationProperties.AutomationId="PerfSummaryDetail" />
+                                    </StackPanel>
+
+                                    <Border Background="#171E27" BorderBrush="{StaticResource StudioBorder}" BorderThickness="1" CornerRadius="12" Padding="20">
+                                        <StackPanel Spacing="14">
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Speculative decoding: Off vs on" FontSize="17" FontWeight="SemiBold" />
+                                                <TextBlock Text="Runs the same greedy prompts with speculation off, then with the loaded method, and checks the text is identical. Decode speed, drafted and accepted tokens come from the Runtime's per-stream statistics."
+                                                           Style="{StaticResource HintText}" />
+                                                <Expander Header="Prompts used" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,4,0,0">
+                                                    <TextBlock x:Name="SpeculativePromptList" Style="{StaticResource HintText}" FontFamily="Cascadia Code,Consolas"
+                                                               IsTextSelectionEnabled="True" TextWrapping="Wrap" />
+                                                </Expander>
+                                            </StackPanel>
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                                <ComboBox x:Name="SpeculativePromptSet" Header="Prompts" SelectedIndex="0" MinWidth="190"
+                                                          SelectionChanged="SpeculativePromptSet_SelectionChanged"
+                                                          AutomationProperties.AutomationId="SpeculativePromptSet" AutomationProperties.Name="Prompt set"
+                                                          ToolTipService.ToolTip="Coding: the app's own C# source as context, cut to this many tokens, then three coding tasks.">
+                                                    <ComboBoxItem Content="Short (3 prompts)" Tag="0" />
+                                                    <ComboBoxItem Content="Coding, 4K context" Tag="4096" />
+                                                    <ComboBoxItem Content="Coding, 8K context" Tag="8192" />
+                                                    <ComboBoxItem Content="Coding, 16K context" Tag="16384" />
+                                                    <ComboBoxItem Content="Coding, ~30K (all files)" Tag="32768" />
+                                                </ComboBox>
+                                                <ComboBox x:Name="SpeculativeTokens" Grid.Column="1" Header="Generate" SelectedIndex="0" MinWidth="120"
+                                                          AutomationProperties.AutomationId="SpeculativeTokens" AutomationProperties.Name="Tokens per prompt"
+                                                          ToolTipService.ToolTip="Maximum tokens generated per prompt. The context window must hold the prompt plus these tokens.">
+                                                    <ComboBoxItem Content="128" Tag="128" />
+                                                    <ComboBoxItem Content="256" Tag="256" />
+                                                    <ComboBoxItem Content="512" Tag="512" />
+                                                    <ComboBoxItem Content="1,024" Tag="1024" />
+                                                    <ComboBoxItem Content="2,048" Tag="2048" />
+                                                    <ComboBoxItem Content="4,096" Tag="4096" />
+                                                    <ComboBoxItem Content="8,192" Tag="8192" />
+                                                    <ComboBoxItem Content="16,384" Tag="16384" />
+                                                    <ComboBoxItem Content="32,768" Tag="32768" />
+                                                </ComboBox>
+                                                <ComboBox x:Name="SpeculativeEndOfText" Grid.Column="2" Header="End of text" SelectedIndex="0" MinWidth="150"
+                                                          AutomationProperties.AutomationId="SpeculativeEndOfText" AutomationProperties.Name="End of text"
+                                                          ToolTipService.ToolTip="Ignore keeps generating past the model's end-of-text token, like llama-bench, so every prompt produces the full count. Text after the end token is not meaningful and often repeats, which inflates prompt-lookup and drafter acceptance; use Stop for realistic numbers.">
+                                                    <ComboBoxItem Content="Stop" Tag="stop" />
+                                                    <ComboBoxItem Content="Ignore (full count)" Tag="ignore" />
+                                                </ComboBox>
+                                            </Grid>
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="SpeculativeCompareHint" Text="Load a model with a speculative decoding method to compare it." Style="{StaticResource HintText}" VerticalAlignment="Center" />
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                    <Button x:Name="CopySpeculativeButton" Content="Copy as Markdown" Click="CopySpeculative_Click" IsEnabled="False"
+                                                            Style="{StaticResource QuietButton}" />
+                                                    <Button x:Name="SpeculativeCompareButton" Click="SpeculativeCompare_Click" IsEnabled="False" CornerRadius="7" Padding="18,9"
+                                                            Style="{StaticResource AccentButtonStyle}" AutomationProperties.AutomationId="SpeculativeCompareButton">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <FontIcon Glyph="&#xE9D9;" FontSize="12" />
+                                                            <TextBlock Text="Compare" FontSize="12" FontWeight="SemiBold" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                            <StackPanel x:Name="SpeculativeResultsPanel" Spacing="10" Visibility="Collapsed">
+                                                <TextBlock x:Name="SpeculativeSpeedup" FontSize="22" FontWeight="SemiBold" Foreground="#79D5A1"
+                                                           AutomationProperties.AutomationId="SpeculativeSpeedup" />
+                                                <Border Background="#151B23" BorderBrush="#28323E" BorderThickness="1" CornerRadius="10" Padding="14,10">
+                                                    <StackPanel Spacing="2">
+                                                        <Grid ColumnSpacing="12" Padding="0,2,0,8">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition /><ColumnDefinition Width="150" /><ColumnDefinition Width="56" /><ColumnDefinition Width="86" />
+                                                                <ColumnDefinition Width="70" /><ColumnDefinition Width="70" /><ColumnDefinition Width="70" /><ColumnDefinition Width="90" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="PROMPT" Style="{StaticResource SectionLabel}" />
+                                                            <TextBlock Grid.Column="1" Text="METHOD" Style="{StaticResource SectionLabel}" />
+                                                            <TextBlock Grid.Column="2" Text="OUT" Style="{StaticResource SectionLabel}" HorizontalAlignment="Right" />
+                                                            <TextBlock Grid.Column="3" Text="DECODE T/S" Style="{StaticResource SectionLabel}" HorizontalAlignment="Right" />
+                                                            <TextBlock Grid.Column="4" Text="DRAFTED" Style="{StaticResource SectionLabel}" HorizontalAlignment="Right" />
+                                                            <TextBlock Grid.Column="5" Text="ACCEPTED" Style="{StaticResource SectionLabel}" HorizontalAlignment="Right" />
+                                                            <TextBlock Grid.Column="6" Text="ACCEPT" Style="{StaticResource SectionLabel}" HorizontalAlignment="Right" />
+                                                            <TextBlock Grid.Column="7" Text="TOK/STEP" Style="{StaticResource SectionLabel}" HorizontalAlignment="Right" />
+                                                        </Grid>
+                                                        <ItemsControl ItemsSource="{x:Bind SpeculativeRows}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="local:SpeculativeRowItem">
+                                                                    <Grid ColumnSpacing="12" Padding="0,6" BorderBrush="#222B36" BorderThickness="0,1,0,0">
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition /><ColumnDefinition Width="150" /><ColumnDefinition Width="56" /><ColumnDefinition Width="86" />
+                                                                            <ColumnDefinition Width="70" /><ColumnDefinition Width="70" /><ColumnDefinition Width="70" /><ColumnDefinition Width="90" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Text="{x:Bind PromptLabel}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                                                        <TextBlock Grid.Column="1" Text="{x:Bind Method}" FontSize="12" FontWeight="SemiBold" />
+                                                                        <TextBlock Grid.Column="2" Text="{x:Bind Generated}" FontFamily="Cascadia Code,Consolas" FontSize="12" HorizontalAlignment="Right" />
+                                                                        <TextBlock Grid.Column="3" Text="{x:Bind Decode}" FontFamily="Cascadia Code,Consolas" FontSize="12" Foreground="#79B4FF" HorizontalAlignment="Right" />
+                                                                        <TextBlock Grid.Column="4" Text="{x:Bind Drafted}" FontFamily="Cascadia Code,Consolas" FontSize="12" HorizontalAlignment="Right" />
+                                                                        <TextBlock Grid.Column="5" Text="{x:Bind Accepted}" FontFamily="Cascadia Code,Consolas" FontSize="12" HorizontalAlignment="Right" />
+                                                                        <TextBlock Grid.Column="6" Text="{x:Bind AcceptRate}" FontFamily="Cascadia Code,Consolas" FontSize="12" HorizontalAlignment="Right" />
+                                                                        <TextBlock Grid.Column="7" Text="{x:Bind TokensPerStep}" FontFamily="Cascadia Code,Consolas" FontSize="12" HorizontalAlignment="Right" />
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </StackPanel>
+                                                </Border>
+                                                <TextBlock x:Name="SpeculativeDetail" Style="{StaticResource HintText}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <StackPanel Spacing="8">
+                                        <Grid>
+                                            <TextBlock Text="GENERATION HISTORY" Style="{StaticResource SectionLabel}" VerticalAlignment="Center" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                                <Button x:Name="ClearPerfButton" Click="ClearPerf_Click" Style="{StaticResource QuietButton}" IsEnabled="False"
+                                                        AutomationProperties.AutomationId="ClearPerfButton" AutomationProperties.Name="Clear history">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                                                        <TextBlock Text="Clear" FontSize="12" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button x:Name="CopyPerfButton" Content="Copy as CSV" Click="CopyPerf_Click"
+                                                        Style="{StaticResource QuietButton}" IsEnabled="False" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <Border Background="#151B23" BorderBrush="#28323E" BorderThickness="1" CornerRadius="10" Padding="14,10">
+                                            <StackPanel Spacing="2">
+                                                <Grid ColumnSpacing="10" Padding="0,2,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="64" /><ColumnDefinition Width="92" /><ColumnDefinition Width="64" /><ColumnDefinition Width="64" />
+                                                        <ColumnDefinition Width="72" /><ColumnDefinition Width="80" /><ColumnDefinition Width="64" /><ColumnDefinition Width="130" /><ColumnDefinition />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="TIME" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="1" Text="SOURCE" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="2" Text="PROMPT" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="3" Text="OUT" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="4" Text="TTFT MS" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="5" Text="DECODE T/S" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="6" Text="MS/TOK" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="7" Text="TOTAL MS" Style="{StaticResource SectionLabel}" />
+                                                    <TextBlock Grid.Column="8" Text="MODEL / NOTES" Style="{StaticResource SectionLabel}" />
+                                                </Grid>
+                                                <TextBlock x:Name="PerfHistoryEmpty" Text="Generations from Chat, Completion and benchmarks appear here."
+                                                           Style="{StaticResource HintText}" Margin="0,4,0,6" />
+                                                <ItemsControl ItemsSource="{x:Bind PerfRuns}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="local:PerfRunItem">
+                                                            <Grid ColumnSpacing="10" Padding="0,5" BorderBrush="#222B36" BorderThickness="0,1,0,0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="64" /><ColumnDefinition Width="92" /><ColumnDefinition Width="64" /><ColumnDefinition Width="64" />
+                                                                    <ColumnDefinition Width="72" /><ColumnDefinition Width="80" /><ColumnDefinition Width="64" /><ColumnDefinition Width="130" /><ColumnDefinition />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{x:Bind Time}" FontFamily="Cascadia Code,Consolas" FontSize="11" Foreground="{StaticResource StudioSecondary}" />
+                                                                <TextBlock Grid.Column="1" Text="{x:Bind Source}" FontSize="12" />
+                                                                <TextBlock Grid.Column="2" Text="{x:Bind PromptTokens}" FontFamily="Cascadia Code,Consolas" FontSize="11" />
+                                                                <TextBlock Grid.Column="3" Text="{x:Bind GeneratedTokens}" FontFamily="Cascadia Code,Consolas" FontSize="11" />
+                                                                <TextBlock Grid.Column="4" Text="{x:Bind Ttft}" FontFamily="Cascadia Code,Consolas" FontSize="11" />
+                                                                <TextBlock Grid.Column="5" Text="{x:Bind Decode}" FontFamily="Cascadia Code,Consolas" FontSize="11" Foreground="#79B4FF"
+                                                                           AutomationProperties.AutomationId="PerfRowDecode" />
+                                                                <TextBlock Grid.Column="6" Text="{x:Bind MsPerToken}" FontFamily="Cascadia Code,Consolas" FontSize="11" />
+                                                                <TextBlock Grid.Column="7" Text="{x:Bind Total}" FontFamily="Cascadia Code,Consolas" FontSize="11" />
+                                                                <StackPanel Grid.Column="8">
+                                                                    <TextBlock Text="{x:Bind Model}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Text="{x:Bind Note}" FontSize="10" Foreground="{StaticResource StudioMuted}" TextWrapping="Wrap" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock Text="Times are host wall clock from the request call, measured by the app as it reads the Task stream. Completion counts every token; Chat sees parser deltas, which can hold text back, so its decode rate may be unavailable. Prompt cache use shows when the Runtime reports it."
+                                                   FontSize="10" Foreground="{StaticResource StudioMuted}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="2" Background="#12171D" BorderBrush="{StaticResource StudioBorder}" BorderThickness="0,1,0,0" Padding="20,0">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Ellipse Width="5" Height="5" Fill="#79B4FF" />
+                <TextBlock Text="Windows ML Runtime" FontSize="10" Foreground="{StaticResource StudioSecondary}" />
+                <TextBlock Text="Task API" FontSize="10" Foreground="{StaticResource StudioMuted}" />
+            </StackPanel>
+            <TextBlock x:Name="TaskFamilyLabel" Text="Chat Completion" FontSize="10" Foreground="{StaticResource StudioMuted}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+        </Grid>
+    </Grid>
+</Window>

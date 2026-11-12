@@ -1,0 +1,13 @@
+01-Runtime.GenerationDefaults.cs.txt	Runtime/GenerationDefaults.cs
+02-Runtime.TaskRuntime.Devices.cs.txt	Runtime/TaskRuntime.Devices.cs
+03-Runtime.TaskRuntime.cs.txt	Runtime/TaskRuntime.cs
+04-Runtime.TaskRuntime.Speech.cs.txt	Runtime/TaskRuntime.Speech.cs
+05-Runtime.TaskRuntime.Decision.cs.txt	Runtime/TaskRuntime.Decision.cs
+06-DecisionModels.cs.txt	DecisionModels.cs
+07-Audio.SpeechAudio.cs.txt	Audio/SpeechAudio.cs
+08-MainWindow.Perf.cs.txt	MainWindow.Perf.cs
+09-MainWindow.Speech.cs.txt	MainWindow.Speech.cs
+10-MainWindow.Decision.cs.txt	MainWindow.Decision.cs
+11-MainWindow.xaml.cs.txt	MainWindow.xaml.cs
+12-MainWindow.Settings.cs.txt	MainWindow.Settings.cs
+13-Runtime.TaskRuntime.Benchmark.cs.txt	Runtime/TaskRuntime.Benchmark.cs
