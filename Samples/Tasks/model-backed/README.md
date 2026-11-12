@@ -196,7 +196,11 @@ The samples print this guidance with the error. Python raises
 - Models-backed speech recognition transcribes only in Windows ML 2.9; a
   configuration set to translate fails `CreateSession` with
   `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)`.
-- A draft model works only when the llama.cpp loader loaded both models.
+- A separate draft model (`DRAFT_MODEL`) works only when the llama.cpp loader
+  loaded both models. Published weights draft with the `MODEL` method instead,
+  from the multi-token prediction layers the model carries or a companion
+  drafter such as a DFlash 2 checkpoint. See
+  [Speculative decoding with published weights](../../../docs/api-reference/IWinMLTextGenerationTask.md#speculative-decoding-with-published-weights).
 - Speech recognition keeps an explicit tokenizer, and its input waveform stays
   in host memory, separate from the model's GPU target.
 - A decision result holds answers, not generated text. A recommendation is a
