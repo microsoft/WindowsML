@@ -43,7 +43,7 @@ foreach ($rid in $RuntimeIdentifiers) {
     if (Test-Path $root) { Remove-Item -LiteralPath $root -Recurse -Force }
 
     Write-Host "Publishing $rid..."
-    dotnet publish $project -c Release -r $rid --self-contained true -p:Platform=$platform -o $app --nologo -v:q
+    dotnet publish $project -c Release -r $rid --self-contained true -p:Platform=$platform -p:Version=$Version -o $app --nologo -v:q
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed for $rid." }
     foreach ($required in "TaskStudio.exe", "coreclr.dll", "Microsoft.WindowsAppRuntime.dll", "WinMLRuntimeCore.dll",
         "WinMLTasks.dll", "WinMLTasksModels.dll", "dxcgc.dll", "D3D12\D3D12Core.dll") {
