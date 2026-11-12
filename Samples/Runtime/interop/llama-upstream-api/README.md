@@ -80,6 +80,17 @@ input, builds and runs without changes.
 CMake projects use the package's config in `build\cmake`
 (`find_package(microsoft.windows.ai.machinelearning.libllama.core CONFIG)`) and
 link the `WinML::llama` imported target, or `WinML::mtmd` for multimodal input.
+Add the package's `build\cmake` folder to `CMAKE_PREFIX_PATH`. CMake doesn't
+copy the DLLs, so copy the files that `WINML_LLAMA_RUNTIME_FILES` lists beside
+the executable, and the `WINML_LLAMA_BACKEND_DIR` folder as `LlamaBackends`:
+
+```cmake
+find_package(microsoft.windows.ai.machinelearning.libllama.core CONFIG REQUIRED)
+target_link_libraries(app PRIVATE WinML::llama)
+add_custom_command(TARGET app POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${WINML_LLAMA_RUNTIME_FILES} "$<TARGET_FILE_DIR:app>"
+    COMMAND "${CMAKE_COMMAND}" -E copy_directory "${WINML_LLAMA_BACKEND_DIR}" "$<TARGET_FILE_DIR:app>/LlamaBackends")
+```
 
 The headers are llama.cpp's public headers at the llama.cpp release that the
 package is built from. `WinMLLlamaCoreManifest.json` beside the executable
