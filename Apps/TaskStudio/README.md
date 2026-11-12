@@ -124,7 +124,8 @@ sessions are loaded. You can also delete the directory.
 
 Choose a model **folder** that contains `config.json` and safetensors weights,
 with the model's `tokenizer_config.json` and tokenizer files. When you browse
-to a model folder, the app selects its tokenizer configuration.
+to a model folder, or type its path and leave the tokenizer empty, the app
+selects its tokenizer configuration.
 
 ```text
 Model:     C:\models\Qwen2.5-0.5B-Instruct

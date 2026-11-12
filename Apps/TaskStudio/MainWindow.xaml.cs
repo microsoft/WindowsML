@@ -65,6 +65,15 @@ public sealed partial class MainWindow : Window
         return (await picker.PickSingleFileAsync())?.Path;
     }
 
+    // A model folder typed into the path box gets the tokenizer that Browse would choose.
+    private static void UseFolderTokenizerIfEmpty(TextBox modelPath, TextBox tokenizerPath)
+    {
+        string folder = modelPath.Text.Trim();
+        if (tokenizerPath.Text.Trim().Length > 0 || !System.IO.Directory.Exists(folder)) return;
+        string tokenizer = System.IO.Path.Combine(folder, "tokenizer_config.json");
+        if (System.IO.File.Exists(tokenizer)) tokenizerPath.Text = tokenizer;
+    }
+
     private async void BrowseModel_Click(object sender, RoutedEventArgs e)
     {
         if (busy) return;
@@ -114,6 +123,7 @@ public sealed partial class MainWindow : Window
         {
             // Null keeps the model's default sequence length.
             uint? contextTokens = (ContextLength.SelectedItem as ComboBoxItem)?.Tag is string tag ? uint.Parse(tag, CultureInfo.InvariantCulture) : null;
+            UseFolderTokenizerIfEmpty(ModelPath, TokenizerPath);
             await LoadGenerationDefaultsAsync(ModelPath.Text.Trim());
             var loadTimer = System.Diagnostics.Stopwatch.StartNew();
             var speculation = SelectedSpeculation();

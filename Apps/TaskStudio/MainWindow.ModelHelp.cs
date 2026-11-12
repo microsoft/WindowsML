@@ -29,7 +29,7 @@ public sealed partial class MainWindow
         }
         Section("\uE8B7", "Folder: Hugging Face safetensors",
             "Pick the model folder with the folder button. It must contain config.json and model.safetensors (or an index and shards) as published. " +
-            "Set the tokenizer to that folder's tokenizer_config.json. " +
+            "The tokenizer defaults to that folder's tokenizer_config.json. " +
             "generation_config.json, when present, supplies the sampling defaults. Examples: Qwen/Qwen3-0.6B, Qwen/Qwen2.5-0.5B-Instruct.");
         Section("\uE8E5", "File: GGUF (Chat and Completion)",
             "Pick a single .gguf file with the file button. A file loads when the Runtime supports its architecture and tensor types, " +
