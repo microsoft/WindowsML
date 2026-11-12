@@ -421,8 +421,10 @@ public sealed partial class MainWindow : Window
     private void ShowError(Exception error)
     {
         // The app wraps some Runtime failures with a clearer message; show the Runtime's code, not the wrapper's.
-        var code = (error.InnerException ?? error).HResult;
-        ShowStatus("Task operation failed", $"{error.Message} (0x{code:X8})", InfoBarSeverity.Error);
+        var code = $"0x{(error.InnerException ?? error).HResult:X8}";
+        // A bare HRESULT's system message already ends with its code.
+        string message = error.Message.Contains(code, StringComparison.OrdinalIgnoreCase) ? error.Message : $"{error.Message} ({code})";
+        ShowStatus("Task operation failed", message, InfoBarSeverity.Error);
     }
 
     private void ShowStatus(string title, string message, InfoBarSeverity severity)
