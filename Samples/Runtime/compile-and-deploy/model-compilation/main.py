@@ -111,6 +111,11 @@ def _numpy_dtype(runtime_api: Any, data_type: Any) -> Any:
 def main() -> int:
     args = _parse_args()
     request = execution_request(args)
+    if request.ep is not None and request.ep.casefold() == "webgpuexecutionprovider":
+        raise ValueError(
+            "WebGPU runs models but cannot compile them. Use --ep <name> with a "
+            "provider that compiles, or --device cpu."
+        )
     if request.ep is None:
         if request.device != "cpu":
             raise ValueError(
