@@ -49,6 +49,7 @@ public sealed partial class MainWindow
         SessionStatus.Text = "Preparing the speech model...";
         try
         {
+            UseFolderTokenizerIfEmpty(SpeechModelPath, SpeechTokenizerPath);
             var capabilities = await runtime.LoadSpeechAsync(SpeechModelPath.Text, SpeechTokenizerPath.Text, SpeechLanguage.Text.Trim(), RequireGpu());
             speechLoaded = true;
             ShowActiveDevice(capabilities.Device);
