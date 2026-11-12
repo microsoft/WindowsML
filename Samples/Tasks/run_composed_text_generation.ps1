@@ -44,6 +44,8 @@ if (-not $ModelPath) {
 if (-not (Test-Path -LiteralPath $ModelPath -PathType Leaf)) {
     throw "Model was not found: $ModelPath"
 }
+# A bare file name has no parent path, so resolve it before looking beside it.
+$ModelPath = (Resolve-Path -LiteralPath $ModelPath).Path
 if (-not $TokenizerPath) {
     $TokenizerPath = Join-Path (Split-Path -Parent $ModelPath) "tokenizer.json"
 }
@@ -52,7 +54,7 @@ if (-not (Test-Path -LiteralPath $TokenizerPath -PathType Leaf)) {
 }
 
 $sampleArguments = @(
-    (Resolve-Path -LiteralPath $ModelPath).Path,
+    $ModelPath,
     (Resolve-Path -LiteralPath $TokenizerPath).Path,
     $Prompt,
     $MaxNewTokens.ToString(),
