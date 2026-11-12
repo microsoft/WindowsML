@@ -74,7 +74,7 @@ if (args.Length == 1 && TaskRuntime.IsGgufFile(args[0]))
 
 if (args.Length != 2)
 {
-    Console.Error.WriteLine("Usage: Smoke <model-directory> <tokenizer_config.json> | <model.gguf> [tokenizer_config.json] | --conversation <tokenizer_config.json> | --defaults | --devices | --audio [--microphone] | --speech <model-directory> <tokenizer_config.json> <audio-file> | --decision <model-directory>");
+    Console.Error.WriteLine("Usage: TaskStudio.SmokeTests <model-directory> <tokenizer_config.json> | <model.gguf> [tokenizer_config.json] | --conversation <tokenizer_config.json> | --defaults | --devices | --audio [--microphone] | --speech <model-directory> <tokenizer_config.json> <audio-file> | --decision <model-directory>");
     return 2;
 }
 

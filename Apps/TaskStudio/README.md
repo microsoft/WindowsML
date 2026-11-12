@@ -250,8 +250,9 @@ A configuration is consumed by the session it creates, so the comparison binds
 a new one to the loaded model for each method and closes the old sessions
 first. It resets the chat conversation.
 
-Measured with `Smoke --spec` on an NVIDIA RTX Spark, greedy, 128 tokens for
-each of the three short prompts, with the decode rate over all three prompts:
+Measured with `TaskStudio.SmokeTests --spec` on an NVIDIA RTX Spark, greedy,
+128 tokens for each of the three short prompts, with the decode rate over all
+three prompts:
 
 | Model | Method | Off (tokens/s) | On (tokens/s) | Speedup | Drafts accepted (rewrite code, explain, count) |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -364,12 +365,12 @@ back, so a Chat turn can have no decode rate.
 
 ## Smoke tests
 
-The `Smoke` console project checks the same Runtime service that the app uses,
-without the UI. Build it like the app, and pass model paths:
+The `TaskStudio.SmokeTests` console project checks the same Runtime service that
+the app uses, without the UI. Build it like the app, and pass model paths:
 
 ```powershell
-dotnet build Apps\TaskStudio\Smoke\Smoke.csproj -p:Platform=ARM64
-$smoke = '.\Apps\TaskStudio\Smoke\bin\ARM64\Debug\net8.0-windows10.0.19041.0\win-arm64\Smoke.exe'
+dotnet build Apps\TaskStudio\SmokeTests\TaskStudio.SmokeTests.csproj -p:Platform=ARM64
+$smoke = '.\Apps\TaskStudio\SmokeTests\bin\ARM64\Debug\net8.0-windows10.0.19041.0\win-arm64\TaskStudio.SmokeTests.exe'
 & $smoke --devices
 & $smoke --defaults
 & $smoke --conversation C:\models\Qwen3-0.6B\tokenizer_config.json
