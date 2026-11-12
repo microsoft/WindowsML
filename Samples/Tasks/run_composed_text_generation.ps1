@@ -13,6 +13,11 @@ The tokenizer.json of the model. Defaults to the one beside the model.
 
 .PARAMETER Device
 Execution target of the composition: cpu or gpu.
+
+.PARAMETER Ep
+Execution provider to pin on the selected device, such as webgpu or trtrtx, or a
+provider's catalog name. -Device gpu pins webgpu unless -Ep names another one.
+The Runtime acquires a pinned provider when it isn't installed.
 #>
 
 [CmdletBinding()]
@@ -24,6 +29,7 @@ param(
     [uint32]$MaxNewTokens = 64,
     [ValidateSet("cpu", "gpu")]
     [string]$Device = "cpu",
+    [string]$Ep,
     [ValidateSet("ARM64", "x64")]
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
@@ -61,6 +67,9 @@ $sampleArguments = @(
     "--device",
     $Device.ToLowerInvariant()
 )
+if ($Ep) {
+    $sampleArguments += @("--ep", $Ep)
+}
 
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
     -ProjectName task-composed-text-generation `

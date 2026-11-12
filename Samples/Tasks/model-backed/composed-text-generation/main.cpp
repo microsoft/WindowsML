@@ -8,6 +8,8 @@
 #include "model_task.h"
 #include "text_generation_task.h"
 
+#include "../../../Runtime/shared/common.h"
+
 #include <string>
 
 int wmain(int argumentCount, wchar_t** arguments)
@@ -18,6 +20,7 @@ try
     LPCWSTR modelPath = nullptr;
     LPCWSTR tokenizerPath = nullptr;
     LPCWSTR prompt = kDefaultChatPrompt;
+    LPCWSTR executionProvider = nullptr;
     UINT32 maxNewTokens = 64;
     bool useGpu = false;
     int positionalCount = 0;
@@ -31,6 +34,10 @@ try
             const std::wstring device = arguments[++index];
             useGpu = device == L"gpu";
             validArguments = useGpu || device == L"cpu";
+        }
+        else if (argument == L"--ep" && index + 1 < argumentCount)
+        {
+            executionProvider = arguments[++index];
         }
         else if (argument.starts_with(L"--"))
         {
@@ -65,22 +72,49 @@ try
     if (!validArguments || tokenizerPath == nullptr)
     {
         std::fwprintf(stderr, L"Usage: task-composed-text-generation.exe <task_model.onnx> "
-                              L"<tokenizer.json> [prompt] [max-new-tokens] [--device cpu|gpu]\n");
+                              L"<tokenizer.json> [prompt] [max-new-tokens] [--device cpu|gpu] "
+                              L"[--ep <provider>]\n");
         return 2;
+    }
+
+    // WebGPU is the default GPU provider because it works across GPU vendors,
+    // and the Runtime acquires it if it isn't installed. --ep pins another
+    // provider, such as trtrtx for TensorRT for RTX on an NVIDIA RTX GPU.
+    if (useGpu && executionProvider == nullptr)
+    {
+        executionProvider = L"webgpu";
     }
 
     ComPtr<IWinMLRuntime> runtime;
     THROW_IF_FAILED(WinMLCreateRuntime(IID_PPV_ARGS(runtime.GetAddressOf())));
+    const WINML_EXECUTION_TARGET_KIND kind =
+        useGpu ? WINML_EXECUTION_TARGET_KIND_GPU : WINML_EXECUTION_TARGET_KIND_CPU;
     ComPtr<IWinMLExecutionTarget> target;
     if (useGpu)
     {
         THROW_IF_FAILED(runtime->CreateExecutionTarget(
-            WINML_EXECUTION_TARGET_KIND_GPU, WINML_EXECUTION_TARGET_PREFERENCE_PERFORMANCE,
-            target.GetAddressOf()));
+            kind, WINML_EXECUTION_TARGET_PREFERENCE_PERFORMANCE, target.GetAddressOf()));
     }
     else
     {
         THROW_IF_FAILED(runtime->CreateCpuExecutionTarget(target.GetAddressOf()));
+    }
+
+    if (executionProvider != nullptr)
+    {
+        // Pin the provider on the device's target. The Runtime acquires a
+        // pinned provider when it builds the composition. The composition
+        // needs the device's target to create its token tensors.
+        const std::string requestedProvider = WideToUtf8(executionProvider);
+        const std::wstring providerName =
+            Utf8ToWide(ResolveExecutionProviderName(requestedProvider.c_str()));
+        ComPtr<IWinMLOrtCompatibility> compatibility;
+        THROW_IF_FAILED(runtime.As(&compatibility));
+        ComPtr<IWinMLExecutionTarget> pinnedTarget;
+        THROW_IF_FAILED(compatibility->CreateExecutionTarget(
+            providerName.c_str(), kind, target.Get(), pinnedTarget.GetAddressOf()));
+        target = pinnedTarget;
+        std::wprintf(L"Pinned execution provider: %ls\n", providerName.c_str());
     }
 
     ComPtr<IWinMLModel> model;

@@ -130,7 +130,7 @@ The executables are under `out\<platform>\<configuration>\<project-name>`:
 | Sample | Arguments |
 | --- | --- |
 | `task-model-text-generation` | `<checkpoint-folder or model.gguf> [prompt] [max-new-tokens] [--capacity <tokens>] [--program-cache <directory> [--cache-weights]]` |
-| `task-composed-text-generation` | `<task_model.onnx> <tokenizer.json> [prompt] [max-new-tokens] [--device cpu or gpu]` |
+| `task-composed-text-generation` | `<task_model.onnx> <tokenizer.json> [prompt] [max-new-tokens] [--device cpu or gpu] [--ep <provider>]` |
 | `task-llama-text-generation` | `<model.gguf> [prompt] [max-new-tokens] [--draft-model <draft.gguf>] [--device cpu or gpu]` |
 | `task-model-speech-recognition` | `<model-folder> <tokenizer.json> <input.wav> [--language <tag>] [--mode transcribe or translate]` |
 | `task-decision` | `<model-folder> [state] [--program-cache <directory> [--cache-weights]]` |
