@@ -25,7 +25,7 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="NAudio.WinMM" />
     <PackageReference Include="NAudio.Wasapi" />
-    <Compile Remove="Smoke\**" />
+    <Compile Remove="SmokeTests\**" />
     <Content Include="BenchmarkData\coding\*.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Import Project="Runtime\Runtime.props" />
