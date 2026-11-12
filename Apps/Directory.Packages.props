@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Package versions for the apps. The Windows ML package versions come from the
+  samples, so the apps and the samples always use the same Windows ML release.
+-->
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\Samples\Directory.Packages.props" />
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.369" />
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.260209005" />
+    <PackageVersion Include="NAudio.Wasapi" Version="2.2.1" />
+    <PackageVersion Include="NAudio.WinMM" Version="2.2.1" />
+  </ItemGroup>
+</Project>
