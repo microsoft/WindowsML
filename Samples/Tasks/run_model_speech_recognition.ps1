@@ -63,7 +63,7 @@ $sampleArguments = @(
     (Resolve-Path -LiteralPath $TokenizerPath).Path,
     (Resolve-Path -LiteralPath $AudioPath).Path,
     "--mode",
-    $Mode
+    $Mode.ToLowerInvariant()
 )
 if ($Language) {
     $sampleArguments += @("--language", $Language)

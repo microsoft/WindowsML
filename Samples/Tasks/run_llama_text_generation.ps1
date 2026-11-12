@@ -52,7 +52,7 @@ $sampleArguments = @(
     $Prompt,
     $MaxNewTokens.ToString(),
     "--device",
-    $Device
+    $Device.ToLowerInvariant()
 )
 if ($DraftModel) {
     if (-not (Test-Path -LiteralPath $DraftModel -PathType Leaf)) {

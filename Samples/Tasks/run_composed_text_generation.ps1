@@ -59,7 +59,7 @@ $sampleArguments = @(
     $Prompt,
     $MaxNewTokens.ToString(),
     "--device",
-    $Device
+    $Device.ToLowerInvariant()
 )
 
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
