@@ -262,6 +262,7 @@ int Run(const Options& options)
     std::printf("Prompt: %s\nResponse: ", options.prompt.c_str());
     llama_batch batch = llama_batch_get_one(tokens.data(), static_cast<int32_t>(tokens.size()));
     llama_token token = LLAMA_TOKEN_NULL;
+    std::vector<char> piece(256);
     for (int generated = 0; generated < options.maxTokens; ++generated)
     {
         const int32_t status = llama_decode(context.get(), batch);
@@ -277,16 +278,24 @@ int Run(const Options& options)
             break;
         }
 
-        char piece[256];
-        const int32_t length = llama_token_to_piece(vocab, token, piece,
-                                                    static_cast<int32_t>(sizeof(piece)), 0, false);
+        // A piece longer than the buffer returns its negated length, so grow the
+        // buffer to that length and convert the token again.
+        int32_t length = llama_token_to_piece(vocab, token, piece.data(),
+                                              static_cast<int32_t>(piece.size()), 0, false);
+        if (length < 0)
+        {
+            piece.resize(static_cast<size_t>(-length));
+            length = llama_token_to_piece(vocab, token, piece.data(),
+                                          static_cast<int32_t>(piece.size()), 0, false);
+        }
+
         if (length < 0)
         {
             std::fputs("\nCould not convert a token to text.\n", stderr);
             return 1;
         }
 
-        std::fwrite(piece, 1, static_cast<size_t>(length), stdout);
+        std::fwrite(piece.data(), 1, static_cast<size_t>(length), stdout);
         std::fflush(stdout);
         batch = llama_batch_get_one(&token, 1);
     }
