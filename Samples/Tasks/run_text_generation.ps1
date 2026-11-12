@@ -71,6 +71,8 @@ if (-not $ModelPath) {
 if (-not (Test-Path -LiteralPath $ModelPath)) {
     throw "Language model was not found: $ModelPath"
 }
+# A bare file name has no parent path, so resolve it before looking beside it.
+$ModelPath = (Resolve-Path -LiteralPath $ModelPath).Path
 
 $extension = if (Test-Path -LiteralPath $ModelPath -PathType Leaf) {
     [IO.Path]::GetExtension($ModelPath).ToLowerInvariant()
@@ -108,7 +110,7 @@ else {
 }
 
 $sampleArguments = @(
-    (Resolve-Path -LiteralPath $ModelPath).Path,
+    $ModelPath,
     $resolvedTokenizer,
     $Prompt,
     $MaxNewTokens.ToString(),
