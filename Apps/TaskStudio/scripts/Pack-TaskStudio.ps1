@@ -7,7 +7,8 @@ Publishes Windows ML Task Studio as a self-contained app, one zip for each archi
 .DESCRIPTION
 For each runtime identifier, publishes TaskStudio.csproj in Release as a self-contained app, with .NET, the
 Windows App SDK, the Windows ML Runtime and the Direct3D 12 Agility SDK beside TaskStudio.exe. It then writes
-dist\TaskStudio-<version>-<rid>.zip, with the app in a studio folder, a README.txt and MODELS.md.
+dist\TaskStudio-<version>-<rid>.zip, with the app in a studio folder, a README.txt, MODELS.md and
+SPECULATIVE-DECODING.md.
 
 The person who runs the app needs no .NET installation or build tools. Models are not included.
 
@@ -64,6 +65,9 @@ ML CGC backend supports. Models run only on the GPU, with no CPU fallback.
 Models are not included. MODELS.md lists models known to work, with Hugging
 Face links. In the app, the ? button beside MODEL explains what each tab loads.
 
+SPECULATIVE-DECODING.md shows how to run Qwen3.8-27B NVFP4 with its DFlash 2
+drafter for faster decoding.
+
 If Windows blocks the app after you download the zip, open the zip's
 Properties, select Unblock, then extract it again.
 
@@ -73,6 +77,7 @@ Settings > Advanced deletes them.
 Task Studio is a sample app, provided as is.
 "@ | Set-Content (Join-Path $root "README.txt") -Encoding utf8
     Copy-Item (Join-Path $appRoot "MODELS.md") (Join-Path $root "MODELS.md")
+    Copy-Item (Join-Path $appRoot "SPECULATIVE-DECODING.md") (Join-Path $root "SPECULATIVE-DECODING.md")
 
     $zip = Join-Path $OutputDirectory "TaskStudio-$Version-$rid.zip"
     if (Test-Path $zip) { Remove-Item -LiteralPath $zip -Force }

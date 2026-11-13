@@ -33,6 +33,7 @@ publisher's license and terms before you use a model.
 | Llama-3.2-1B-Instruct | [unsloth/Llama-3.2-1B-Instruct](https://huggingface.co/unsloth/Llama-3.2-1B-Instruct) | |
 | Gemma-3-1B-it | [unsloth/gemma-3-1b-it](https://huggingface.co/unsloth/gemma-3-1b-it) | See [Known issues](#known-issues) |
 | Qwen3.5-9B | [Qwen/Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B) | Text only. Draft layers (MTP) speculative decoding |
+| Qwen3.8-27B NVFP4 | [nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | Text only. Needs a GPU driver that runs NVFP4, see [Known issues](#known-issues). Draft layers (MTP) or a DFlash 2 drafter, see [SPECULATIVE-DECODING.md](SPECULATIVE-DECODING.md) |
 
 ### GGUF files
 
@@ -64,7 +65,8 @@ Every file below loads with the tokenizer stored in it.
 - **NVFP4 and FP8 checkpoints.** Checkpoints quantized with NVIDIA ModelOpt,
   such as [nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4),
   need a GPU driver that runs NVFP4 or FP8 itself. With a driver that doesn't,
-  creating the sessions fails with `ERROR_NOT_SUPPORTED`.
+  creating the sessions fails with `ERROR_NOT_SUPPORTED`. On an NVIDIA RTX
+  Spark, driver 621.24 runs nvidia/Qwen3.8-27B-NVFP4 and driver 621.01 doesn't.
 - **Companion draft models.** Windows ML takes a DFlash 2 draft model as the
   companion drafter. A DFlash 1 draft model, such as
   [z-lab/Qwen3.5-9B-DFlash](https://huggingface.co/z-lab/Qwen3.5-9B-DFlash),

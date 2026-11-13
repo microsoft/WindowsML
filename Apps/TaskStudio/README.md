@@ -202,6 +202,9 @@ the tokenizer's end-of-sequence policy stays enabled.
 
 ### Speculative decoding
 
+[SPECULATIVE-DECODING.md](SPECULATIVE-DECODING.md) shows step by step how to
+run Qwen3.8-27B NVFP4 with its DFlash 2 drafter.
+
 **Speculative decoding** under the context window selects how draft tokens are
 proposed when the app creates the sessions. The session verifies the drafts in
 one step and keeps only the tokens that its own sampling produces, so the method
