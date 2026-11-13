@@ -66,9 +66,9 @@ download models. The Runtime package version must include `WinMLServer.dll` and
 `WinMLServer.exe`. The LibLlama.Core package provides the llama.cpp runtime and
 its CPU backend for GGUF models; the
 [GGUF models guide](../../docs/Runtime/gguf-models.md#c-payload-deployment)
-describes how the build deploys them, and
-[GPU backends](../../docs/Runtime/gguf-models.md#gpu-backends) how to add a GPU
-backend that you build yourself. Pass
+describes how the build deploys them. Add `-LlamaCuda` to also deploy the
+opt-in CUDA backend for NVIDIA GPUs; see
+[GPU backends](../../docs/Runtime/gguf-models.md#gpu-backends). Pass
 `-Platform ARM64` or `-Platform x64` consistently to
 both build and run scripts when targeting a different architecture.
 The C# client is built into `client\csharp\bin\<Platform>\<Configuration>\net8.0`
@@ -92,7 +92,8 @@ whether the model is present under `Samples\Server\models`, and prints the
 command that downloads it if it is missing. Both hosts serve the same Qwen2.5
 0.5B Instruct GGUF model as the Task API samples, on the CPU by default. Pass
 `-Device gpu` to either run script to run the model on a GPU, where llama.cpp
-uses a GPU backend for the device the Runtime selects.
+uses a GPU backend for the device the Runtime selects. Build with `-LlamaCuda`
+to deploy the CUDA backend for NVIDIA GPUs.
 
 With `-Client`, each run script starts the server, runs the client against it,
 and stops the server when the client exits. Without `-Client`,

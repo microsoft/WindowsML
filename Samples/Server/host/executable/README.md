@@ -13,7 +13,9 @@ The `Microsoft.Windows.AI.MachineLearning` package includes `WinMLServer.exe`.
 This project compiles no code: `WinMLCopyServerHost` deploys the executable
 with the Server and Task runtimes it loads, and the
 `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` package adds the llama.cpp
-runtime and the CPU backend that serves GGUF models.
+runtime and the CPU backend that serves GGUF models. `build.ps1 -LlamaCuda`
+also adds the opt-in CUDA backend from the
+`Microsoft.Windows.AI.MachineLearning.LibLlama` package.
 
 ```powershell
 ..\..\check_artifacts.ps1 -Sample server-executable

@@ -133,8 +133,8 @@ state by ordinal; Runtime schemas provide the tensor shapes and data types. See
 
 For GGUF, install the llama.cpp backend with
 `python.exe -m pip install --pre windowsml-llama-core`. The wheel installs the
-CPU llama.cpp backend; to run on a GPU, add a backend you build yourself. The
-setup and cleanup commands are documented in
+CPU llama.cpp backend; to run on an NVIDIA GPU, also install the opt-in
+`windowsml-llama-cuda` wheel. The setup and cleanup commands are documented in
 [Python payload install](../../../../docs/Runtime/gguf-models.md#python-payload-install),
 and the GPU options in
 [GPU backends](../../../../docs/Runtime/gguf-models.md#gpu-backends).

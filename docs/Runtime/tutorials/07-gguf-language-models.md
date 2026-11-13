@@ -26,7 +26,8 @@ Language projects reference the
 `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` package, which copies the
 llama.cpp runtime with its CPU backend beside the sample executable. See
 [C++ payload deployment](../gguf-models.md#c-payload-deployment). No separate
-build flag is required for these language samples.
+build flag is required for these language samples on the CPU. Add
+`-LlamaCuda` to also deploy the opt-in CUDA backend for NVIDIA GPUs.
 
 ## 3. Run the shared starter
 
@@ -75,8 +76,9 @@ GGUF, keep every shard in one directory and pass the first shard:
 ```
 
 The prompt and generated tokens must fit within `-ContextCapacity`. `-Device gpu`
-needs a GPU backend that you build yourself, such as the CUDA backend for NVIDIA
-GPUs or Vulkan. See [GPU backends](../gguf-models.md#gpu-backends) and the
+needs a GPU backend. For NVIDIA GPUs, build with `-LlamaCuda` to deploy the
+opt-in CUDA backend; see [NVIDIA CUDA](../gguf-models.md#nvidia-cuda). For
+another family, such as Vulkan, see the
 [llama.cpp backend tool](../../../Tools/llama/README.md).
 
 ## 6. Compose ONNX Runtime speech and GGUF language
