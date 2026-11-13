@@ -179,12 +179,13 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
             }
             catch (Exception error) when (speculation.Mode != SpeculativeMode.Off && error.HResult == unchecked((int)0x80070032))
             {
-                // A drafter the support query accepts can still be refused once the session reads its weights.
-                if (companion)
-                    throw new NotSupportedException("The Runtime cannot run this model with this drafter. " +
-                        "Pick a drafter trained for this model, or load without speculative decoding.", error);
-                throw new NotSupportedException($"This model cannot run {Describe(speculation.Mode)} here. " +
-                    SupportedMethodsText(SpeculativeSupport, companion), error);
+                // The refusal doesn't name its cause. A drafter the support query accepts can still be refused once the
+                // session reads its weights, and a model the GPU can't run, such as NVFP4 weights, is refused here too.
+                string method = companion ? "this drafter" : Describe(speculation.Mode);
+                string refused = companion ? "drafter" : "method";
+                throw new NotSupportedException($"The Runtime cannot create sessions for this model with {method} on this GPU. " +
+                    $"It doesn't say whether it refused the model or the {refused}, so load the model with speculative decoding " +
+                    "off to tell them apart.", error);
             }
             loadedSpeculation = speculation;
             history.Clear();
