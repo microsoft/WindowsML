@@ -84,7 +84,8 @@ internal static unsafe class Program
                 Console.Error.WriteLine($"       {ex.InnerException.Message}");
             }
 
-            return 1;
+            // Like the C++ sample, exit with the failure HRESULT.
+            return ex.HResult < 0 ? ex.HResult : 1;
         }
     }
 

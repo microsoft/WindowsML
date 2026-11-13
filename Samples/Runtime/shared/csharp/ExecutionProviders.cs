@@ -11,6 +11,7 @@
 // the Microsoft.Windows.AI.MachineLearning package and share the process's
 // ONNX Runtime environment with the Runtime.
 
+using System.Runtime.InteropServices;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.Windows.AI.MachineLearning;
 using Microsoft.Windows.AI.MachineLearning.Runtime;
@@ -101,8 +102,10 @@ internal static class ExecutionProviders
         RegisterFromCatalog(device.Ep, providerName, device.Kind);
         if (!ReportDevices(providerName, HardwareType(device.Kind)))
         {
-            throw new NotSupportedException(
-                $"Provider '{providerName}' does not expose the requested {DeviceOptions.KindName(device.Kind)} device.");
+            // Same HRESULT as the C++ helper: HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED).
+            throw new COMException(
+                $"Provider '{providerName}' does not expose the requested {DeviceOptions.KindName(device.Kind)} device.",
+                unchecked((int)0x80070032));
         }
     }
 
@@ -199,7 +202,8 @@ internal static class ExecutionProviders
             $"  EP summary: registered={registered}, ready={ready}, ensured={ensured}, notPresent={notPresent}, ensureFailed={ensureFailed}");
         if (ready == 0 && ensured == 0)
         {
-            throw new InvalidOperationException($"Requested provider '{requestedName}' is not installed and ready.");
+            // Same HRESULT as the C++ helper: HRESULT_FROM_WIN32(ERROR_NOT_FOUND).
+            throw new COMException($"Requested provider '{requestedName}' is not installed and ready.", unchecked((int)0x80070490));
         }
     }
 
