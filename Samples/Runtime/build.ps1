@@ -51,7 +51,7 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
-    [ValidateSet("all", "image-classification", "super-resolution", "whisper", "hello-language-model", "llm-chat", "speech-to-language-model", "model-compilation", "managed-shared-context")]
+    [ValidateSet("all", "image-classification", "super-resolution", "whisper", "hello-language-model", "llm-chat", "speech-to-language-model", "model-compilation", "managed-shared-context", "llama-upstream-api")]
     [string]$Sample = "all",
     [string]$RuntimePackageVersion,
     [string]$LibLlamaPackageVersion,
@@ -89,7 +89,8 @@ $allProjects = @(
     "language\llm-chat\llm-chat.vcxproj",
     "language\speech-to-language-model\speech-to-language-model.vcxproj",
     "compile-and-deploy\model-compilation\model-compilation.vcxproj",
-    "interop\managed-shared-context\managed-shared-context.vcxproj"
+    "interop\managed-shared-context\managed-shared-context.vcxproj",
+    "interop\llama-upstream-api\llama-upstream-api.vcxproj"
 )
 $projects = switch ($Sample) {
     "image-classification" { @($allProjects[0]); break }
@@ -100,6 +101,7 @@ $projects = switch ($Sample) {
     "speech-to-language-model" { @($allProjects[5]); break }
     "model-compilation" { @($allProjects[6]); break }
     "managed-shared-context" { @($allProjects[7]); break }
+    "llama-upstream-api" { @($allProjects[8]); break }
     default { $allProjects }
 }
 

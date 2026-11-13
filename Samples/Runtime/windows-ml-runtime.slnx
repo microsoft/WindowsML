@@ -8,6 +8,7 @@
   <Project Path="language\speech-to-language-model\speech-to-language-model.vcxproj" />
   <Project Path="compile-and-deploy\model-compilation\model-compilation.vcxproj" />
   <Project Path="interop\managed-shared-context\managed-shared-context.vcxproj" />
+  <Project Path="interop\llama-upstream-api\llama-upstream-api.vcxproj" />
   <Folder Name="/Documentation/">
     <File Path="README.md" />
     <File Path="..\..\docs\Runtime\artifacts.md" />
