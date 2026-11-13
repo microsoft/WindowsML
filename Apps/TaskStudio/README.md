@@ -406,9 +406,11 @@ about a support ticket, require the expected answers (billing, blocking, and a
 churn risk), and cover act thresholds, rejection with `E_INVALIDARG`,
 cancellation, and unload and reload.
 The speculative checks report the Runtime's support for each method, require
-verification steps when the method is on and none when it's off, compare the
-greedy text with Off, and check that the loaded method is restored. A native
-error or a missing transcript or answer fails the process.
+verification steps when the method is on and none when it's off, require some
+accepted drafts, compare the greedy text with Off, and check that the loaded
+method is restored. Differing text is a warning, because a near tie can change
+it, but text that differs on every prompt within its first tenth fails.
+A native error or a missing transcript or answer fails the process.
 
 ## Limitations
 

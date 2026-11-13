@@ -56,11 +56,23 @@ internal static class SpeculativeSmoke
             Console.WriteLine("FAIL: the Off run reported verification steps.");
             failures++;
         }
+        // A working method gets some drafts accepted. None on any prompt means the drafts or the verification are broken.
+        if (on.All(r => (r.Stats?.AcceptedTokens ?? 0) == 0))
+        {
+            Console.WriteLine("FAIL: no draft was accepted on any prompt.");
+            failures++;
+        }
         int same = off.Zip(on).Count(pair => pair.First.Text == pair.Second.Text);
         Console.WriteLine($"{(same == off.Count ? "PASS" : "WARN")}: identical greedy text on {same} of {off.Count} prompts " +
             "(a multi-position step can pick differently on a near tie).");
         foreach (var (a, b) in off.Zip(on).Where(pair => pair.First.Text != pair.Second.Text))
             Console.WriteLine($"  {a.Prompt}: same for the first {TextComparison.CommonPrefix(a.Text, b.Text):N0} of {a.Text.Length:N0} characters.");
+        // A near tie can change a prompt's text partway through, but not every prompt's text from the start.
+        if (off.Count > 1 && off.Zip(on).All(pair => 10L * TextComparison.CommonPrefix(pair.First.Text, pair.Second.Text) < pair.First.Text.Length))
+        {
+            Console.WriteLine("FAIL: on every prompt the speculative text differs from Off within its first tenth.");
+            failures++;
+        }
         static double? Overall(IEnumerable<SpeculativeComparisonRow> set)
         {
             var measured = set.Where(r => r.Timing.DecodeMs is > 0).ToList();
