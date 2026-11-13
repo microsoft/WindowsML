@@ -25,6 +25,30 @@ application picks.
 > change. Report issues and share feedback through
 > [GitHub Issues](https://github.com/microsoft/WindowsML/issues).
 
+## Recover disk space
+
+The samples keep models, build outputs, and model preparation tools in these
+places. Delete what you no longer need.
+
+| Location | Contents | How to recover the space |
+|---|---|---|
+| `Runtime\models`, `Tasks\models`, and `Server\models` | The models you download and the models the preparation scripts produce. | Delete a model you no longer need. `check_artifacts.ps1` prints how to obtain it again. |
+| Next to a model file | A compiled copy of the model, `<model>_ctx.onnx`, that some execution providers save the first time they run it, and files named after that copy, such as `<model>_ctx_qnn.bin`. | Delete them. The provider saves them again the next time it runs the model. |
+| `out` and `obj` in `Runtime`, `Tasks`, and `Server`, and the `bin` and `obj` folders next to the projects | Build outputs. | Delete them. The next build creates them again. |
+| `%LOCALAPPDATA%\WinMLSampleTools` | The Python environments of the model preparation scripts. On an ARM64 PC the language model export uses `llm-export-py311-x64-v1`, so an `llm-export-py311-v1` folder there is left from an earlier version of the samples. | Delete the environments you no longer use, or the whole folder. The scripts create the environments they need again. |
+| `%USERPROFILE%\.cache\huggingface\hub`, unless you moved it with `HF_HOME` or `HF_HUB_CACHE` | The model that the language model export downloads, in a folder such as `models--Qwen--Qwen2.5-0.5B-Instruct`. This is Hugging Face's shared cache. | Delete the model's folder if no other project uses it. |
+| `%APPDATA%\uv\python` | A Python that uv downloads for the language model export when no matching Python is installed. On an ARM64 PC this is x64 Python. | `uv python list --only-installed` shows it, and `uv python uninstall` removes a version that nothing else uses. Also delete the `llm-export` environments in `%LOCALAPPDATA%\WinMLSampleTools`, which stop working without it. |
+| `%LOCALAPPDATA%\WindowsMLTaskStudio\CompiledPrograms` | The programs that [Task Studio](../Apps/TaskStudio/) compiles. | In Task Studio, open **Settings**, expand **Advanced**, and select **Delete program cache**, which is available when no sessions are loaded. You can also delete the folder while Task Studio is closed. |
+
+The language model export and the model preparation scripts keep the packages
+they install out of the uv and pip caches, so deleting their environments frees
+that space. Earlier versions of the samples also left the packages in those
+caches, and uv shares those files with the environment, so the space returns
+only after you delete the environment and clear the cache.
+`uv cache clean torch` removes PyTorch, the largest of them. `uv cache clean`
+and `pip cache purge` clear everything, including what other projects have
+cached.
+
 ## Optional model MSIX sample
 
 - [`OptionalMsixMinimal`](OptionalMsixMinimal/): a standalone Windows Forms sample

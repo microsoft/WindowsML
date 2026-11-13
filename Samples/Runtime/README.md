@@ -132,7 +132,8 @@ these points in mind while you try it:
   fail to reload the compiled model with some providers. `--mode file` works.
 - Some providers save a compiled copy of a model next to the model file. The
   copy can be as large as the model, so the models folder must be writable and
-  have that space free.
+  have that space free. [Recover disk space](../README.md#recover-disk-space)
+  explains how to remove it.
 
 ## Learn more
 

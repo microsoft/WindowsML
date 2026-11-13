@@ -60,6 +60,12 @@ determine whether your use is permitted before downloading or using a model.
 The sample package version is pinned in
 [`Samples\Directory.Packages.props`](../../Samples/Directory.Packages.props).
 
+## Disk space
+
+Models, build outputs, and the model preparation tools can take several GB.
+[Recover disk space](../../Samples/README.md#recover-disk-space) lists where the
+samples keep them and how to remove what you no longer need.
+
 ## Artifact catalog
 
 The table below is generated from `Samples\shared\SampleArtifacts.psd1`, the
