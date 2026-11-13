@@ -1,5 +1,6 @@
 // Copyright (C) Microsoft Corporation. All rights reserved.
 
+using System.Globalization;
 using TaskStudio.Runtime;
 
 // Checks speculative decoding through the Task API: what the Runtime reports for the model, that the loaded method
