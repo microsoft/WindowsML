@@ -36,11 +36,6 @@ internal static unsafe class ExecutionTargets
         }
 
         string providerName = ExecutionProviders.ResolveName(device.Ep);
-        if (ExecutionProviders.IsWebGpu(providerName))
-        {
-            Console.WriteLine("WebGPU uses the Runtime-owned default GPU target.");
-            return hardwareTarget;
-        }
 
         // A provider-pinned target fails to initialize if the provider cannot
         // run on the requested device class.

@@ -94,7 +94,7 @@ internal static class ExecutionProviders
                 throw new ArgumentException("WebGPU supports GPU execution only.");
             }
 
-            Console.WriteLine("  WebGPU is Runtime-owned; using the default GPU target.");
+            Console.WriteLine("  WebGPU: the Runtime acquires and registers it for the pinned GPU target.");
             return;
         }
 

@@ -24,7 +24,7 @@
 // Run it
 //   .\run_model_text_generation.ps1 -Language csharp [-Format checkpoint|gguf]
 //       [-ModelPath <checkpoint-folder|model.gguf>] [-SequenceCapacity <tokens>]
-//       [-ProgramCache <directory>]
+//       [-ProgramCache <directory> [-CacheWeights]]
 //   .\run_llama_text_generation.ps1 -Language csharp [-ModelPath <model.gguf>]
 //       [-DraftModel <draft.gguf>] [-Device cpu|gpu]
 //
@@ -113,7 +113,10 @@ internal static unsafe class Program
         TextGenerationObjects text = CreateTextGeneration(runtime, objects);
 
         // Sessions compile programs for the GPU. A program cache directory keeps
-        // them, so later runs start faster.
+        // them, so later runs start faster. With --cache-weights it also keeps the
+        // weights prepared for each program, so later runs read them instead of
+        // preparing them again, at the cost of about one copy of the prepared
+        // weights per program on disk.
         fixed (char* programCache = options.ProgramCache)
         {
             WINML_TEXT_GENERATION_MODEL_OPTIONS modelOptions = default;
@@ -122,6 +125,13 @@ internal static unsafe class Program
                 modelOptions.presentFields =
                     WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_COMPILED_PROGRAM_DIRECTORY;
                 modelOptions.compiledProgramDirectory = new PCWSTR(programCache);
+                if (options.CacheWeights)
+                {
+                    modelOptions.presentFields |=
+                        WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_COMPILED_PROGRAM_STORAGE;
+                    modelOptions.compiledProgramStorage =
+                        WINML_COMPILED_PROGRAM_STORAGE.WINML_COMPILED_PROGRAM_STORAGE_PROGRAMS_AND_WEIGHTS;
+                }
             }
 
             // No SetTokenizer: SetModel creates the model's own tokenizer from its files.
@@ -592,6 +602,7 @@ internal sealed record Options(
     bool Llama,
     ulong Capacity,
     string? ProgramCache,
+    bool CacheWeights,
     string? DraftModelPath,
     bool UseGpu)
 {
@@ -607,6 +618,7 @@ internal sealed record Options(
         bool llama = false;
         ulong capacity = 0;
         string? programCache = null;
+        bool cacheWeights = false;
         string? draftModelPath = null;
         string? device = null;
         int positionalCount = 0;
@@ -631,6 +643,9 @@ internal sealed record Options(
                     continue;
                 case "--program-cache":
                     programCache = Path.GetFullPath(Value(args, ref i));
+                    continue;
+                case "--cache-weights":
+                    cacheWeights = true;
                     continue;
                 case "--draft-model":
                     draftModelPath = Value(args, ref i);
@@ -676,9 +691,14 @@ internal sealed record Options(
             throw new ArgumentException("A checkpoint folder or GGUF file is required.");
         }
 
-        if (llama && (capacity != 0 || programCache is not null))
+        if (llama && (capacity != 0 || programCache is not null || cacheWeights))
         {
-            throw new ArgumentException("--capacity and --program-cache apply to the model provider; omit --llama.");
+            throw new ArgumentException("--capacity, --program-cache and --cache-weights apply to the model provider; omit --llama.");
+        }
+
+        if (cacheWeights && programCache is null)
+        {
+            throw new ArgumentException("--cache-weights requires --program-cache.");
         }
 
         if (!llama && (draftModelPath is not null || device is not null))
@@ -686,19 +706,20 @@ internal sealed record Options(
             throw new ArgumentException("--draft-model and --device apply only with --llama.");
         }
 
-        return new Options(modelPath, prompt, maxNewTokens, llama, capacity, programCache, draftModelPath, device == "gpu");
+        return new Options(modelPath, prompt, maxNewTokens, llama, capacity, programCache, cacheWeights, draftModelPath, device == "gpu");
     }
 
     public static void PrintUsage()
     {
         Console.WriteLine("Usage: task-model-text-generation-csharp.exe <checkpoint-folder|model.gguf> [prompt] [max-new-tokens]");
-        Console.WriteLine("           [--capacity <tokens>] [--program-cache <directory>]");
+        Console.WriteLine("           [--capacity <tokens>] [--program-cache <directory> [--cache-weights]]");
         Console.WriteLine("       task-model-text-generation-csharp.exe --llama <model.gguf> [prompt] [max-new-tokens]");
         Console.WriteLine("           [--draft-model <draft.gguf>] [--device cpu|gpu]");
         Console.WriteLine($"  The prompt defaults to \"{DefaultChatPrompt}\" and max-new-tokens to {DefaultMaxNewTokens}.");
         Console.WriteLine("  Without --llama, the model provider plans the model for the GPU and creates its tokenizer");
         Console.WriteLine("  from its files. --capacity sets the largest sequence a session holds; --program-cache keeps");
-        Console.WriteLine("  the programs that sessions compile, so later runs start faster.");
+        Console.WriteLine("  the programs that sessions compile, so later runs start faster; --cache-weights also keeps");
+        Console.WriteLine("  the weights prepared for each program.");
         Console.WriteLine("  --llama loads a GGUF file with the llama.cpp model loader instead, on the CPU unless");
         Console.WriteLine("  --device gpu. --draft-model adds speculative decoding with a smaller GGUF model that shares");
         Console.WriteLine("  the model's tokenizer.");
