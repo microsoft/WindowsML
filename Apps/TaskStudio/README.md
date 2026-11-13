@@ -221,10 +221,13 @@ from `IWinMLTextGenerationSpeculativeResult`.
 
 A method that the Runtime reports as unsupported for the model fails the load
 and lists the supported methods. Load the drafter the same way as the model, as
-a folder. The Runtime can still refuse a drafter when it creates the session
-and reads the drafter's weights, and the app then says so. The Connected model
-card shows the method and what the model supports. Completion replies show the
-drafted and accepted tokens; the Chat result doesn't report them.
+a folder. The Runtime can still refuse the sessions when it creates them, for a
+drafter whose weights it can't use or for a model whose NVFP4 or FP8 weights the
+GPU driver doesn't run (see [Known issues](MODELS.md#known-issues)). It doesn't
+say which, so the app suggests loading with speculative decoding off to tell
+them apart. The Connected model card shows the method and what the model
+supports. Completion replies show the drafted and accepted tokens; the Chat
+result doesn't report them.
 
 The **Speculative decoding: Off vs on** card on the Perf tab runs greedy
 prompts with speculation off and then with the loaded method, compares the
