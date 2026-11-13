@@ -19,8 +19,8 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <WinMLRuntimePackageVersion Condition="'$(WinMLRuntimePackageVersion)' == ''">2.9.16-experimental</WinMLRuntimePackageVersion>
-    <WinMLLibLlamaPackageVersion Condition="'$(WinMLLibLlamaPackageVersion)' == ''">0.7.0.87-dev</WinMLLibLlamaPackageVersion>
+    <WinMLRuntimePackageVersion Condition="'$(WinMLRuntimePackageVersion)' == ''">2.9.31-experimental</WinMLRuntimePackageVersion>
+    <WinMLLibLlamaPackageVersion Condition="'$(WinMLLibLlamaPackageVersion)' == ''">0.7.0.102-experimental</WinMLLibLlamaPackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Windows.AI.MachineLearning" Version="$(WinMLRuntimePackageVersion)" />
