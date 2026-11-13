@@ -287,12 +287,15 @@ file and serves it from the command line. See the
 
 The C++ samples use the `Microsoft.Windows.AI.MachineLearning` NuGet package
 and add `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` for GGUF support.
+`build.ps1 -LlamaCuda` also adds `Microsoft.Windows.AI.MachineLearning.LibLlama`
+for the opt-in llama.cpp CUDA backend; see
+[NVIDIA CUDA](gguf-models.md#nvidia-cuda).
 [`Directory.Packages.props`](../../Samples/Directory.Packages.props) lists the sample
 versions.
 
 Python applications use `windowsml.runtime`. Install the `with-ort` extra for
 the matching ONNX Runtime package, and install the `windowsml-llama-core` wheel
-for GGUF support:
+for GGUF support. The `windowsml-llama-cuda` wheel adds the CUDA backend:
 
 ```powershell
 python.exe -m pip install --pre "windowsml[with-ort]"

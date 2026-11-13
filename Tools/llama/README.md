@@ -2,12 +2,16 @@
 
 # llama.cpp backends
 
-Windows ML ships only the llama.cpp CPU backend, in
+Windows ML ships the llama.cpp CPU backend in
 `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` and the
-`windowsml-llama-core` wheel. It doesn't ship or redistribute GPU backends or
-vendor runtimes, including NVIDIA CUDA components. The language samples run on
-the CPU with that package alone. To run a GGUF model on a GPU, build a backend
-with this folder's script.
+`windowsml-llama-core` wheel. The CUDA backend for NVIDIA GPUs is opt-in and
+ships in the `LibLlama.Cuda.win-x64` and `LibLlama.Cuda.win-arm64` packages and
+the `windowsml-llama-cuda` wheel; see
+[NVIDIA CUDA](../../docs/Runtime/gguf-models.md#nvidia-cuda). Windows ML doesn't
+ship other GPU backends or redistribute vendor runtimes. The language samples
+run on the CPU with the Core package alone. To run a GGUF model on another GPU
+backend, or on a CUDA backend that you build yourself, build it with this
+folder's script.
 
 `Build-LlamaBackend.ps1` builds a standard upstream `ggml-<family>.dll`, such as
 `cuda` for NVIDIA GPUs, `vulkan`, or `opencl`, that matches the Core package.
@@ -15,9 +19,14 @@ The output is loaded by `WinMLRuntimeLlama.dll`; it is not a WinML-specific
 backend fork. Run the commands below from the repository root, and use the
 script from the same branch as the samples you build.
 
+Don't build a family that the application also gets from a package, such as
+`cuda` in a sample built with `-LlamaCuda`. The package's build replaces that
+`LlamaBackends\<family>` folder.
+
 ## NVIDIA CUDA responsibilities
 
-The `cuda` backend depends on NVIDIA software that Windows ML doesn't provide:
+A `cuda` backend that you build yourself depends on NVIDIA software that
+Windows ML doesn't provide:
 
 - You install the NVIDIA CUDA Toolkit yourself, and the script builds against
   it.

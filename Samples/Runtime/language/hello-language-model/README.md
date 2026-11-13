@@ -62,6 +62,6 @@ python.exe .\language\hello-language-model\main.py `
 For GGUF, install the llama.cpp backend with
 `python.exe -m pip install --pre windowsml-llama-core`, then run
 `main.py --backend llama`. The wheel installs the CPU llama.cpp backend. To run
-on a GPU, add a backend you build yourself; see
+on an NVIDIA GPU, also install the opt-in `windowsml-llama-cuda` wheel; see
 [Python payload install](../../../../docs/Runtime/gguf-models.md#python-payload-install)
 and [GPU backends](../../../../docs/Runtime/gguf-models.md#gpu-backends).

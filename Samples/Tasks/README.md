@@ -46,8 +46,8 @@ download models. The GGUF samples also reference
 `Microsoft.Windows.AI.MachineLearning.LibLlama.Core`, which deploys the CPU
 llama.cpp backend; see
 [C++ payload deployment](../../docs/Runtime/gguf-models.md#c-payload-deployment).
-Running a GGUF model on a GPU needs a backend that you build yourself; see
-[GPU backends](../../docs/Runtime/gguf-models.md#gpu-backends).
+To run a GGUF model on an NVIDIA GPU, add `-LlamaCuda` to deploy the opt-in
+CUDA backend; see [GPU backends](../../docs/Runtime/gguf-models.md#gpu-backends).
 Pass `-Platform ARM64` or `-Platform x64` consistently to both
 build and run scripts when targeting a different architecture.
 
@@ -106,7 +106,8 @@ python.exe .\composition\speech-to-text-generation\main.py `
 ```
 
 Before running a Python GGUF flow, install the llama.cpp backend with
-`python.exe -m pip install --pre windowsml-llama-core`. See the
+`python.exe -m pip install --pre windowsml-llama-core`. For an NVIDIA GPU, also
+install the opt-in `windowsml-llama-cuda` wheel. See the
 [GGUF setup instructions](../../docs/Runtime/gguf-models.md#python-payload-install).
 
 To check the installed packages, run:
@@ -119,6 +120,7 @@ python.exe .\scripts\verify_python_environment.py `
 Pass the `windowsml` package version that corresponds to the package pinned in
 [`Samples\Directory.Packages.props`](../Directory.Packages.props). The script
 also checks that the installed `onnxruntime-windowsml` version is the one
-`windowsml` requires, and that an installed `windowsml-llama-core` wheel has the
-same version as `windowsml`. Add `--require-llama` before a GGUF flow to fail
-when the `windowsml-llama-core` wheel is missing.
+`windowsml` requires, and that installed `windowsml-llama-core` and
+`windowsml-llama-cuda` wheels have the same version as `windowsml`. Add
+`--require-llama` before a GGUF flow to fail when the `windowsml-llama-core`
+wheel is missing.
