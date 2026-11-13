@@ -397,9 +397,9 @@ inline std::vector<TopKResult> GetTopK(const float* data, size_t count, int k)
     // Equal scores are ordered by the lower index so results are deterministic;
     // std::partial_sort alone leaves the order of ties unspecified.
     std::partial_sort(results.begin(), results.begin() + std::min(static_cast<size_t>(k), count),
-                      results.end(),
-                      [](const TopKResult& a, const TopKResult& b)
-                      { return a.value > b.value || (a.value == b.value && a.index < b.index); });
+                      results.end(), [](const TopKResult& a, const TopKResult& b) {
+                          return a.value > b.value || (a.value == b.value && a.index < b.index);
+                      });
 
     results.resize(std::min(static_cast<size_t>(k), count));
     return results;
