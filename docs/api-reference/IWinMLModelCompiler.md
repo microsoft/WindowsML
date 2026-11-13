@@ -9,6 +9,14 @@ Target-bound model compilation interface. Query it from an
 files or to a caller-supplied sink. Load the compiled artifact with the standard
 `IWinMLRuntime::LoadModelFromFile` or `LoadModelFromBuffer` methods.
 
+The target decides the artifact. A target pinned to an ONNX Runtime execution
+provider writes an EPContext ONNX model. A GPU target that isn't pinned to a
+provider compiles for the [CGC backend](../Runtime/backends.md#the-cgc-backend)
+and writes a CGC artifact: name it `.oir` for the device-targeted form and
+`.mlirbc` for the durable form so that `LoadModelFromFile` recognizes it.
+Compilation commits an artifact and its resources, not an executable pipeline;
+`Build` establishes that the reloaded artifact runs on its target.
+
 ```
 IWinMLModelCompiler IID:            906a0175-188e-403f-a0ef-5caa0692db9e
 IWinMLModelCompileOptions IID:      8e5f1c07-4a2b-4d16-9c33-b7a4e2d95f80
@@ -18,12 +26,47 @@ IWinMLOnnxSymbolicDimensionOverrides IID:
 
 ## Compiled model form
 
-`WINML_COMPILED_MODEL_FORM_DEVICE_TARGETED` is the default. It asks for an
-artifact targeted to the compile device. `WINML_COMPILED_MODEL_FORM_DURABLE`
-asks for a portable compiled form when the target supports one.
+`WINML_COMPILED_MODEL_FORM` selects what kind of compiled artifact to produce:
+one built for the exact machine that compiled it, or a portable one that still
+loads on other devices and after driver or runtime updates.
+
+| Value | Behavior |
+|---|---|
+| `WINML_COMPILED_MODEL_FORM_DEVICE_TARGETED` | Default. Built for the hardware and software stack that compiled it. Loads fastest, but a different device, driver, or runtime version rejects it. |
+| `WINML_COMPILED_MODEL_FORM_DURABLE` | Hardware-independent. Keeps loading across devices and software updates; the hardware-specific work is finished at load, so loading costs more. |
+
+Configure the form on an [options object](#iwinmlmodelcompileoptions). The
+`CompileToFile` and `CompileToSink` methods always use the defaults; the
+`WithOptions` methods take a caller-supplied options object.
 
 Use `IsCompiledModelFormSupported` to query support before compiling. A compile
-request for an unsupported form fails instead of changing the requested form.
+request for a form the target cannot produce returns
+`HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)` instead of producing a different
+form.
+
+## CGC compilation
+
+Windows ML chooses how a device-targeted CGC compile lowers the model for the
+device; the API has no lowering option. Two parts of the package take part,
+and an application can see what happens without each of them.
+
+- The ONNX-to-CGC compiler, `FoundryToolbox.dll`, compiles an ONNX source
+  model. An application can leave it out with the `WinMLCopyFoundryToolbox`
+  MSBuild property set to `false`. Without it, `IsCompiledModelFormSupported`
+  reports the durable form unsupported, a durable request returns
+  `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)`, and a device-targeted compile of an
+  ONNX source returns `HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND)`. Compiled
+  artifacts load and run without it.
+- The CGC runtime, `cgc_ir.dll` and `dxcgc.dll`, finishes a device-targeted
+  compile. Windows ML loads the copies next to the runtime, or else the copies
+  in the application directory, always by full path. ARM64EC packages don't
+  include it, so `IsCompiledModelFormSupported` reports the device-targeted
+  form unsupported for a CGC target, and a device-targeted compile returns
+  `HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND)`. The durable form doesn't use it.
+
+Device-targeted CGC compilation requires every tensor extent to be known ahead
+of time. Fix the symbolic dimensions of an ONNX source with
+[`IWinMLOnnxSymbolicDimensionOverrides`](#iwinmlonnxsymbolicdimensionoverrides).
 
 ---
 
@@ -37,10 +80,14 @@ HRESULT CompileToFile(
 ```
 
 Compiles `model` for the target and writes the artifact to `artifactPath`.
-`externalWeightsPath` may be null.
+`externalWeightsPath` may be null, which selects the backend default. A CGC
+compile that externalizes resources names them `winml-<hash>.safetensors` by
+default.
 
 **Returns:** `S_OK` on success or a validation, file, target, or backend compile
-failure.
+failure. `D3D12_ERROR_DRIVER_VERSION_MISMATCH` when `model` is a CGC artifact
+in text form stamped with a CGC IR version that this version cannot
+re-serialize; compile it again from the source model.
 
 ---
 
@@ -70,6 +117,11 @@ HRESULT CompileToFileWithOptions(
 ```
 
 Compiles to files using `options`. Passing `nullptr` uses default options.
+
+A durable artifact embeds its resources, so no sidecar is written beside it.
+Supplying `externalWeightsPath` together with
+`WINML_COMPILED_MODEL_FORM_DURABLE` returns
+`HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)` rather than ignoring the path.
 
 **Returns:** `S_OK` on success, `E_INVALIDARG` for options created by another
 compiler or invalid option values, or a validation, file, target, or backend
@@ -149,6 +201,12 @@ HRESULT GetCompiledModelForm(
 Returns the requested compiled model form.
 
 **Returns:** `S_OK` on success or `E_POINTER` for a null `form`.
+
+In Python, `ExecutionTarget.model_compiler()` returns a `ModelCompiler`.
+`ModelCompiler.compile_to_file` takes `form` and `options` keyword arguments,
+`supports_form` reports support for a form, and `create_options` returns a
+`ModelCompileOptions` with `form`, `supports_symbolic_dimensions`, and
+`symbolic_dimensions`.
 
 ---
 

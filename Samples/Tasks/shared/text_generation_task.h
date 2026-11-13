@@ -861,4 +861,38 @@ try
 }
 CATCH_RETURN()
 
+inline constexpr LPCWSTR kDefaultChatPrompt = L"Write one sentence about the ocean.";
+
+// Formats the prompt as one user turn with the model's chat template, so an
+// instruct model ends its reply on its own, then streams the reply and prints
+// the token counts and why generation stopped.
+inline HRESULT StreamChatReply(IWinMLTasks* tasks, IWinMLTextGenerationTaskFactory* factory,
+                               IWinMLTextGenerationSession* session, IWinMLTokenizer* tokenizer,
+                               LPCWSTR prompt, UINT32 maxNewTokens,
+                               TextGenerationResult& generation) noexcept
+try
+{
+    RETURN_HR_IF_NULL(E_POINTER, tasks);
+    RETURN_HR_IF_NULL(E_POINTER, factory);
+
+    const auto values = winml::tasks::MakeTextGenerationOptions(maxNewTokens);
+    ComPtr<IWinMLTextGenerationOptions> options;
+    RETURN_IF_FAILED(
+        factory->CreateTextGenerationOptions(&values, 0, nullptr, options.GetAddressOf()));
+    ComPtr<IWinMLCancellationSource> cancellation;
+    RETURN_IF_FAILED(tasks->CreateCancellationSource(cancellation.GetAddressOf()));
+
+    std::vector<UINT32> promptTokens;
+    RETURN_IF_FAILED(EncodeChatPrompt(tokenizer, prompt, promptTokens));
+    std::wprintf(L"Prompt: %ls\nReply: ", prompt);
+    RETURN_IF_FAILED(
+        GenerateTokens(session, options.Get(), promptTokens, cancellation.Get(), true, generation));
+    std::wprintf(L"\nTokens: prompt=%u generated=%u\nFinished because: %ls\n",
+                 generation.promptTokenCount, generation.generatedTokenCount,
+                 DescribeFinishReason(generation.finishReason));
+    std::fflush(stdout);
+    return S_OK;
+}
+CATCH_RETURN()
+
 } // namespace winmlsamples::tasks

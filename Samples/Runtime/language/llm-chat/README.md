@@ -20,8 +20,9 @@ model. The default export uses the ungated `Qwen/Qwen2.5-0.5B-Instruct` model.
 The first export creates an isolated Python environment under
 `%LOCALAPPDATA%\WinMLSampleTools` and downloads the model. Keeping the
 environment outside a deep repository worktree avoids Windows package-install
-path limits. Install a trusted version of `uv` first if it is not already
-available:
+path limits. PyPI publishes PyTorch for x64 Windows only, so on an ARM64 PC the
+environment uses x64 Python, which runs under emulation. Install a trusted
+version of `uv` first if it is not already available:
 
 ```powershell
 winget install --id astral-sh.uv

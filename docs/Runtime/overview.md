@@ -6,10 +6,13 @@ The Windows ML (WinML) Runtime API is a Windows-native foundation for running AI
 locally on CPUs, GPUs, and NPUs. An application loads models, chooses where each
 one runs, connects them into pipelines, and moves data through them as tensors.
 The same programming model works for ONNX models, which run on ONNX Runtime
-with execution providers, and for GGUF models, which run on llama.cpp.
+with execution providers, and for GGUF models, which run on llama.cpp when the
+application builds a pipeline with them.
 
 Two more surfaces build on the same WinML Runtime objects. The Task API adds typed
-text generation, chat completion, and speech recognition, and the Windows ML
+text generation, chat completion, speech recognition, and decisions. A Task can
+take a model the application loaded, such as published Hugging Face weights,
+and Windows ML runs it on the GPU target the application picked. The Windows ML
 Server serves text generation to OpenAI-compatible clients on the same
 computer. This page explains how the three fit together and the design goals
 behind them.
@@ -37,16 +40,19 @@ common tasks easier to configure and use.
     OpenAI-compatible HTTP     |                |
               |                v                |
               +----------> Task APIs            |
-                           task behavior        |
+                           task behavior,       |
+                           models given to      |
+                           a Task               |
                                 |               v
                                 +--------> WinML Runtime API
                                            models, targets, pipelines,
                                            stages, tensors, state
                                                    |
-                                       +-----------+-----------+
-                                       v                       v
-                                  ONNX Runtime             llama.cpp
-                                  .onnx / .ort              .gguf
+                         +-------------------------+----------------+
+                         v                         v                v
+                    ONNX Runtime                 CGC              llama.cpp
+                    .onnx / .ort        published weights,        .gguf
+                                        compiled artifacts
 ```
 
 These are layers of composition, not three independent execution stacks.
@@ -115,13 +121,23 @@ Python applications use the same objects through `windowsml.runtime`.
 
 ### One programming model across backends
 
-The model file selects the backend: `.onnx` and `.ort` files run on ONNX
-Runtime, and `.gguf` files run on llama.cpp. After loading, the targets,
+In a pipeline that the application builds, the model file selects the backend:
+`.onnx` and `.ort` files run on ONNX Runtime, `.gguf` files run on llama.cpp,
+and compiled CGC artifacts run on the CGC backend. After loading, the targets,
 pipeline builder, stage bindings, tensors, and [`Run`](../api-reference/IWinMLPipeline.md#run) are the same for both, so
 [Hello LanguageModel](../../Samples/Runtime/language/hello-language-model/) streams a reply from an
 ONNX or a GGUF model with the same application flow. Loading a model doesn't
 prepare it for hardware. [`Build`](../api-reference/IWinMLPipelineBuilder.md#build) prepares each model for the target of its
 stage. [Backends and model formats](backends.md) covers the details.
+
+A Task that is given a model works differently: the call that loaded the model
+decides how it runs. Windows ML plans published weights loaded with
+[`LoadModelFromPath`](../api-reference/IWinMLRuntime.md#loadmodelfrompath) or
+`LoadModelFromFile` into programs for the CGC backend and runs them on the GPU
+target the application picked, and llama.cpp
+runs a GGUF file only when the application loads it with
+[`IWinMLLlamaModelLoader`](../api-reference/IWinMLLlamaModelLoader.md).
+Windows ML never switches a model to another engine on its own.
 
 ### Placement that the application chooses
 
@@ -137,6 +153,10 @@ each stage reports the target that it resolved to.
 The WinML Runtime doesn't retry a failed build on another target or provider.
 Within ONNX Runtime, operators that a provider declines can run on the CPU,
 sometimes the whole model, so check where a model runs when that matters.
+[`IWinMLStageExecutionDiagnostics`](../api-reference/IWinMLStageExecutionDiagnostics.md),
+enabled before `Build`, reports for every kind of stage whether all, some, or
+none of its work runs on its target's device, and breaks the work down by
+device and execution technology.
 [Devices and execution providers](providers.md) covers device options,
 provider pinning, and failures.
 
@@ -176,7 +196,11 @@ supports it, [`IWinMLModelCompiler`](../api-reference/IWinMLModelCompiler.md), q
 artifact to a file or to an application-provided sink. The application loads
 the artifact later with the same [`LoadModelFromFile`](../api-reference/IWinMLRuntime.md#loadmodelfromfile) and [`LoadModelFromBuffer`](../api-reference/IWinMLRuntime.md#loadmodelfrombuffer)
 calls as any other model. Compiled artifacts can be specific to the hardware
-and backend used to prepare them.
+and backend used to prepare them. On a GPU target that isn't pinned to an
+execution provider, the compiler writes a CGC artifact, either
+device-targeted, which loads fastest on the device that compiled it, or
+durable, which keeps loading across devices and driver updates; see
+[The CGC backend](backends.md#the-cgc-backend).
 [Model compilation](../../Samples/Runtime/compile-and-deploy/model-compilation/) compiles a model,
 reloads it, and runs it.
 
@@ -188,7 +212,8 @@ application needs them, extension interfaces are available through
 named stage bindings, provider options and session settings, shared provider
 contexts, and diagnostics about the provider a stage selected.
 [Managed shared context](../../Samples/Runtime/interop/managed-shared-context/) runs two ONNX
-Runtime stages in one shared provider context. Applications can use these
+Runtime stages in one shared provider context. llama.cpp stage options set
+thread counts and batch sizes. Applications can use these
 extensions without making them part of every model's execution flow.
 
 ## The Tensor API: data, memory, and native integration
@@ -207,7 +232,13 @@ readback is needed.
 
 Inputs are bound by index and stay bound until they're replaced. Outputs go to
 tensors the application provides, or to WinML Runtime-owned tensors the application
-reads after `Run`.
+reads after `Run`. A caller-bound output must match the output's declared data
+type and shape. [`IWinMLStageHostBuffers`](../api-reference/IWinMLStageHostBuffers.md)
+binds application-owned host memory to several inputs and outputs in one call
+without creating tensors, and
+[`IWinMLCallerBoundStageOptions`](../api-reference/IWinMLCallerBoundStageOptions.md)
+declares that the application supplies device storage for every input and
+output of a stage, so the Runtime allocates none of its own.
 
 This release's samples primarily use CPU-visible inputs and results, including
 when inference runs on a GPU or NPU. They demonstrate native data conversion
@@ -230,31 +261,50 @@ backends. Format conversions can still produce new tensor data.
 ## The Task API
 
 The Task API adds typed tasks on top of WinML Runtime objects the application
-creates. The application still loads models, creates targets, builds
-pipelines, and keeps conversation history. Objects supplied to one Task must
-come from the same WinML Runtime. Tasks handle work that applications and middleware
-would otherwise implement themselves:
+creates. The application loads models, creates targets, and keeps conversation
+history. It then gives a Task its model in one of three ways:
+
+| Pattern | The application | Windows ML |
+|---|---|---|
+| Bring your own weights | Loads a published model, such as a Hugging Face checkpoint folder of safetensors weights or a GGUF file, with `LoadModelFromPath` or `LoadModelFromFile`, and calls `SetModel`. No pipeline and no tokenizer to set up. | Plans it for the CGC backend, runs it on the GPU target the application picked, and creates the model's tokenizer from its files. A model it does not support fails with `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)`. |
+| Bring your own model | Loads the graphs it exported and describes them with `SetComposition` and a typed description (`UNIFIED`, `EMBEDDING_DECODER`, or `PREFILL_DECODE`). | Composes the stages exactly as the application would wire them by hand, with each model on the backend its load selected. |
+| llama.cpp, explicitly | Loads a GGUF file with `IWinMLLlamaModelLoader` and calls `SetModel`, optionally with a draft model loaded the same way. | Runs the model on llama.cpp. This is the only way a Models-backed Task uses llama.cpp. |
+
+The application can still build the pipelines itself and configure the Task by
+hand for full control. Objects supplied to one Task must come from the same
+WinML Runtime. Tasks handle work that applications and middleware would
+otherwise implement themselves:
 
 - **Text generation** runs the token loop with sampling, optional constraints,
   streaming, and cancellation. The final result reports token counts and why
-  generation stopped. It works with one unified pipeline or separate prefill
-  and decode pipelines.
+  generation stopped. It works with a model given to the Task, a described
+  composition, one unified pipeline, or separate prefill and decode pipelines.
+  An optional statistical watermark marks sampled text so a detector with the
+  key can recognize it.
 - **Speculative decoding** proposes several draft tokens and verifies them in
   one step on stages that support multi-position verification and rollback.
   Drafts come from the model's predictor, a smaller draft model, or matches in
   earlier text. The [Text generation](../../Samples/Tasks/language/text-generation/)
-  sample uses it with GGUF models.
+  and [llama.cpp text generation](../../Samples/Tasks/model-backed/llama-text-generation/)
+  samples use it with GGUF models.
 - **Chat completion** applies the model's chat template to supplied messages
   and separates content, reasoning, and tool calls in the output. When a
   request extends the tokens the session already holds, only the new part is
   evaluated, and the result reports how many prompt tokens were reused.
-- **Speech recognition** runs application-built Whisper encoder and decoder
-  pipelines and turns audio into a transcript.
+- **Speech recognition** turns audio into a transcript, from a published
+  speech model such as a Whisper checkpoint folder or from application-built
+  Whisper encoder and decoder pipelines. A session can be given a language,
+  translate to English where the model supports it, and report provisional
+  predictions during live input.
+- **Decisions** evaluate a state, such as a support ticket, against typed
+  questions and return probabilities, a confidence, and a recommendation to act
+  or escalate, without generating text.
 
-Tasks don't load models, choose targets or backends, run tools, or retry
-requests. Applications and libraries can use this common behavior and still
-reach the WinML Runtime objects underneath. An application that needs a different
-loop or policy can skip Tasks and use the WinML Runtime API directly.
+Tasks don't choose targets or engines, run tools, or retry requests, and they
+never move a model from one engine to another. Applications and libraries can use
+this common behavior and still reach the WinML Runtime objects underneath. An
+application that needs a different loop or policy can skip Tasks and use the
+WinML Runtime API directly.
 [Task and WinML Runtime lifecycle](../Tasks/task-lifecycle.md) shows ownership,
 sessions, streams, and cancellation.
 
@@ -280,19 +330,24 @@ run tools, or keep conversation history between requests.
 
 The server listens only on loopback and requires an access key created each
 time it starts. For development and testing, the `WinMLServer.exe` host loads a model
-file and serves it from the command line. See the
-[Server samples](../../Samples/Server/README.md).
+file and serves it from the command line. A host can also watermark the text a
+model lane samples, and a request can see how many tokens carry the watermark;
+see [Watermarked responses](../api-reference/IWinMLServer.md#watermarked-responses).
+See the [Server samples](../../Samples/Server/README.md).
 
 ## Languages and packages
 
 The C++ samples use the `Microsoft.Windows.AI.MachineLearning` NuGet package
-and add `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` for GGUF support.
+and add `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` for llama.cpp.
+The Runtime package depends on the Direct3D 12 Agility SDK package
+`Microsoft.Direct3D.D3D12`, which NuGet restores with it and which deploys
+`D3D12\D3D12Core.dll` beside the application for the CGC backend.
 [`Directory.Packages.props`](../../Samples/Directory.Packages.props) lists the sample
 versions.
 
-Python applications use `windowsml.runtime`. Install the `with-ort` extra for
-the matching ONNX Runtime package, and install the `windowsml-llama-core` wheel
-for GGUF support:
+Python applications use `windowsml.runtime` and `windowsml.tasks`. Install the
+`with-ort` extra for the matching ONNX Runtime package, and install the
+`windowsml-llama-core` wheel for llama.cpp:
 
 ```powershell
 python.exe -m pip install --pre "windowsml[with-ort]"
@@ -303,6 +358,81 @@ The Python samples keep each scenario short. The C++ samples add native
 integrations such as WIC and Media Foundation.
 [Python samples](python-samples.md#differences-from-c) lists the differences.
 
+### C# bindings with CsWin32
+
+The `Microsoft.Windows.AI.MachineLearning` package includes Win32 metadata for
+the Runtime and Task APIs, `metadata\win32\Microsoft.Windows.AI.MachineLearning.Runtime.winmd`,
+with documentation that CsWin32 turns into XML documentation comments. A C#
+project that references [CsWin32](https://github.com/microsoft/CsWin32)
+0.3.335 or later generates bindings for the APIs it lists. The package adds the
+metadata to CsWin32 and lets the generated imports load the Runtime DLLs from
+the application directory. Set `WinMLEnableRuntimeCsWin32Metadata` to `false`
+to opt out. The Server API isn't included in the metadata. No sample in this
+repository uses the bindings yet.
+
+```xml
+<PropertyGroup>
+  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+</PropertyGroup>
+<ItemGroup>
+  <PackageReference Include="Microsoft.Windows.AI.MachineLearning" Version="..." />
+  <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.335" PrivateAssets="all" />
+</ItemGroup>
+```
+
+Set the runtime identifier that matches the process architecture, `win-x64` or
+`win-arm64`, so the package's native DLLs are placed next to the application.
+List the APIs in `NativeMethods.txt` by fully qualified name, because the
+Windows SDK metadata also defines older `IWinMLRuntime` and
+`WinMLCreateRuntime` names. Interfaces that you obtain through
+`QueryInterface` must be listed too.
+
+```text
+Microsoft.Windows.AI.MachineLearning.Runtime.WinMLCreateRuntime
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLRuntime
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.WinMLCreateTasks
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTasks
+```
+
+The interfaces are in-process COM interfaces without marshaling support, so
+generate them as unmanaged structs by setting `"allowMarshaling": false` in
+`NativeMethods.json`, and release each interface pointer you own:
+
+```csharp
+using Microsoft.Windows.AI.MachineLearning.Runtime;
+
+unsafe
+{
+    IWinMLRuntime* runtime = null;
+    IWinMLExecutionTarget* target = null;
+    try
+    {
+        Guid runtimeIid = typeof(IWinMLRuntime).GUID;
+        PInvoke.WinMLCreateRuntime(&runtimeIid, (void**)&runtime).ThrowOnFailure();
+        target = runtime->CreateCpuExecutionTarget();
+        Console.WriteLine(target->GetKind());
+    }
+    finally
+    {
+        if (target != null)
+        {
+            target->Release();
+        }
+
+        if (runtime != null)
+        {
+            runtime->Release();
+        }
+    }
+}
+```
+
+Interface methods throw the exception that `Marshal.ThrowExceptionForHR` maps
+from a failure `HRESULT`, and return the `[out, retval]` value. A method that
+reports a condition through `S_FALSE` needs its `HRESULT`: list it under
+`comInterop.preserveSigMethods` in `NativeMethods.json`.
+
 ## Where to go next
 
 | Goal | Read |
@@ -311,6 +441,7 @@ integrations such as WIC and Media Foundation.
 | Understand backends and model formats | [Backends and model formats](backends.md) |
 | Choose devices and execution providers | [Devices and execution providers](providers.md) |
 | Run GGUF language models | [GGUF language models](gguf-models.md) |
+| Give a Task a model | [Models-backed Task samples](../../Samples/Tasks/model-backed/README.md) |
 | Create, bind, and read tensors | [`IWinMLTensor`](../api-reference/IWinMLTensor.md) |
 | Use typed Tasks | [Task API samples](../../Samples/Tasks/README.md) |
 | Serve a model to OpenAI-compatible clients | [Server samples](../../Samples/Server/README.md) |

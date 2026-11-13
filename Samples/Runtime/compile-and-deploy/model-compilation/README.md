@@ -52,7 +52,9 @@ To compile for an accelerator, add the device and provider options from
 `-Mode file`. A provider can write extra files next to `artifact.onnx`; deploy
 them together. The sink and zero-copy modes need a compiler that returns the
 artifact and every resource it references through the sink. The CPU compiler
-supports both modes; provider compilers vary.
+supports both modes; provider compilers vary. A GPU target without a provider
+compiles for the CGC backend instead, which this sample doesn't show; see
+[Compile for the CGC backend](../../../../docs/Runtime/tutorials/06-compile-and-deploy.md#5-compile-for-the-cgc-backend).
 
 Each mode releases the source model after compilation and before it loads the
 compiled result. Sink and zero-copy modes keep only the captured artifact and

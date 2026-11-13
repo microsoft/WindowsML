@@ -13,8 +13,12 @@ read after each successful run.
 | 3 | [Language models](03-language-models.md) | LanguageModel helper, Runtime construction, tokenizer/state, and ONNX Runtime pipelines |
 | 4 | [Speech to LanguageModel](04-speech-to-language.md) | Compose two Runtime pipelines |
 | 5 | [Accelerators and providers](05-accelerators.md) | Device requests, provider pinning, diagnostics, and output checks |
-| 6 | [Compile and deploy](06-compile-and-deploy.md) | Compile artifacts, reload them, and manage resources |
+| 6 | [Compile and deploy](06-compile-and-deploy.md) | Compile artifacts, reload them, manage resources, and compile for the CGC backend |
 | 7 | [GGUF language models](07-gguf-language-models.md) | Reuse LanguageModel with the llama.cpp backend and hybrid composition |
+
+After the tutorials, the [Models-backed Task samples](../../../Samples/Tasks/model-backed/README.md)
+show the shortest path from a published model to a streamed reply: give a Task
+the model and let Windows ML run it on the GPU target you pick.
 
 ## Before you start
 

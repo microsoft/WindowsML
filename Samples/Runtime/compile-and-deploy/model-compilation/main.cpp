@@ -349,16 +349,24 @@ static HRESULT RunZeroCopyPath(IWinMLRuntime* runtime, IWinMLExecutionTarget* pi
 //
 // The compiler is a capability of the execution target: a CPU target, an NPU
 // target, or a GPU target pinned to an execution provider compiles with ONNX
-// Runtime. An unpinned GPU target, including a Runtime-owned provider reached
-// through the default GPU target, has no provider to compile with, so the
-// sample reports that combination before opening the model.
+// Runtime. An unpinned GPU target has no provider to compile with, and WebGPU
+// runs models but cannot compile them, so the sample reports either case
+// before opening the model.
 static HRESULT ValidateCompilerBackend(const DeviceArgs& device)
 {
-    const bool pinned = !device.epName.empty() &&
-                        !IsWebGpuEpName(ResolveExecutionProviderName(device.epName.c_str()));
+    const bool webGpu = !device.epName.empty() &&
+                        IsWebGpuEpName(ResolveExecutionProviderName(device.epName.c_str()));
+    const bool pinned = !device.epName.empty() && !webGpu;
     if (device.deviceType != WINML_EXECUTION_TARGET_KIND_GPU || pinned)
     {
         return S_OK;
+    }
+
+    if (webGpu)
+    {
+        wprintf(L"ERROR: WebGPU runs models but cannot compile them.\n");
+        wprintf(L"       Use --ep <name> with a provider that compiles, or --device cpu.\n");
+        return E_INVALIDARG;
     }
 
     wprintf(L"ERROR: --device gpu needs an app-registered execution provider to compile with.\n");

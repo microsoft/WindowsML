@@ -16,11 +16,12 @@ image classifier to multi-turn chat and multi-stage pipelines.
 
 ## Why use the Runtime API
 
-- The model file selects the backend. `.onnx` and `.ort` files run on ONNX
-  Runtime, `.gguf` files run on llama.cpp, and the calls that load, place, and
-  run a model are the same for both.
+- In a pipeline, the model file selects the backend. `.onnx` and `.ort` files
+  run on ONNX Runtime, `.gguf` files run on llama.cpp, and the calls that load,
+  place, and run a model are the same for both.
 - Each pipeline stage requests a CPU, GPU, or NPU execution target, and the
-  application can query the hardware that each stage resolved to.
+  application can query the hardware that each stage resolved to and how much
+  of its work runs there.
 - Pipelines connect models and processors, hand tensors from one stage to the
   next, and keep state, such as a language model's KV cache, between runs.
 - Tokenizers, chat templates, and tensor factories for images, audio, and text
@@ -28,7 +29,8 @@ image classifier to multi-turn chat and multi-stage pipelines.
 - A compiled model can be saved and reloaded, so later runs skip compilation.
 
 The [Task API samples](../Tasks/README.md) build on these Runtime objects with
-typed tasks for text generation and speech recognition, and the
+typed tasks for text generation, speech recognition, and decisions, including
+Tasks that take published model weights directly, and the
 [Server samples](../Server/README.md) serve a text-generation model to
 OpenAI-compatible clients.
 
@@ -105,12 +107,25 @@ these points in mind while you try it:
   error after it prints its result. Try the CPU target or another provider, and
   report the device, driver, and provider through
   [GitHub Issues](https://github.com/microsoft/windowsml/issues).
+- With some GPU providers, a sample that exits normally can lose what it printed
+  when its output is redirected to a file or a pipe, because the provider ends
+  the process before the C runtime writes buffered output. Run the sample in a
+  console to see its output.
+- A GGUF model on `-Device gpu` needs a llama.cpp GPU backend that you build
+  with [`Tools/llama`](../../Tools/llama/README.md). The language samples bind
+  the GPU target to one adapter, so on a device with more than one hardware
+  adapter whose GPU has no PCI location, as on some Arm64 devices with an NPU,
+  loading the model fails with `HRESULT_FROM_WIN32(ERROR_NOT_FOUND)`
+  (`0x80070490`). The Task samples request the GPU by kind and aren't affected.
 - Some GPU providers don't accept the quantized image classification model.
   Depending on the provider, ONNX Runtime runs the model on the CPU instead, or
   the pipeline build fails.
 - `-Device gpu` without `-Ep` uses the Runtime's default GPU target, which can
   be WebGPU even when another GPU provider is installed. Use `-Ep` to choose a
-  provider.
+  provider. The default GPU target does not download WebGPU, so on a device
+  with no installed GPU provider the pipeline build fails with
+  `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)` (`0x80070032`). Use `-Ep webgpu`,
+  which acquires WebGPU and pins it.
 - `-Diagnostics` and `--verbose` keep detailed logging on while the model runs.
   Use them to check placement, not to measure speed.
 - Model compilation's in-memory modes (`--mode sink` and `--mode zerocopy`) can

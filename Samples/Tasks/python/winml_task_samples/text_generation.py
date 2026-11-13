@@ -48,12 +48,15 @@ _FREE_DIMENSION = (1 << 64) - 1
 def _read_declared_sequence_capacity(model) -> int:
     """Read sequence capacity declared by the model's packed state input."""
 
+    # A model whose backend publishes no schema falls back to the default.
     try:
-        descriptor = model.get_input_tensor_desc(1)
-    except Exception:
+        with model.schema() as schema:
+            if schema.input_count < 2:
+                return DEFAULT_SEQUENCE_CAPACITY
+            _, dimensions = schema.input_desc(1)
+    except OSError:
         return DEFAULT_SEQUENCE_CAPACITY
-    dimensions = getattr(descriptor, "dimensions", None)
-    if not dimensions or len(dimensions) != 4:
+    if len(dimensions) != 4:
         return DEFAULT_SEQUENCE_CAPACITY
     declared = int(dimensions[2])
     if declared <= 0 or declared == _FREE_DIMENSION:

@@ -26,7 +26,7 @@ Please search [existing issues](../../issues) first to avoid duplicates.
 ## Getting help
 
 - **Docs:** [Windows ML overview](https://learn.microsoft.com/windows/ai/new-windows-ml/overview) · [Get started](https://learn.microsoft.com/windows/ai/new-windows-ml/get-started) · [Accelerate AI models](https://learn.microsoft.com/windows/ai/new-windows-ml/accelerate-ai-models)
-- **Capturing diagnostics:** [`Samples/capture-logs/`](Samples/capture-logs/) and [Capturing Windows ML logs](https://learn.microsoft.com/windows/ai/new-windows-ml/logs)
+- **Capturing diagnostics:** [`Tools/capture-logs/`](Tools/capture-logs/) and [Capturing Windows ML logs](https://learn.microsoft.com/windows/ai/new-windows-ml/logs)
 - **Blog:** [Windows ML is generally available (Sept 2025)](https://blogs.windows.com/windowsdeveloper/2025/09/23/windows-ml-is-generally-available-empowering-developers-to-scale-local-ai-across-windows-devices/)
 
 ## Microsoft Support Policy

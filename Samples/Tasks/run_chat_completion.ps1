@@ -49,6 +49,8 @@ if (-not $ModelPath) {
 if (-not (Test-Path -LiteralPath $ModelPath -PathType Leaf)) {
     throw "Language model was not found: $ModelPath"
 }
+# A bare file name has no parent path, so resolve it before looking beside it.
+$ModelPath = (Resolve-Path -LiteralPath $ModelPath).Path
 
 $extension = [IO.Path]::GetExtension($ModelPath).ToLowerInvariant()
 if ($Backend -eq "llama" -and $extension -ne ".gguf") {
@@ -73,7 +75,7 @@ if ($Backend -ne "llama") {
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
     -ProjectName task-chat-completion `
     -SampleArguments @(
-        (Resolve-Path -LiteralPath $ModelPath).Path,
+        $ModelPath,
         $resolvedTokenizer,
         $Prompt,
         $FollowUp,

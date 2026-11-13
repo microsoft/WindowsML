@@ -230,9 +230,10 @@ adapters. `sourceStride` of `0` means tightly packed. Used by
 ## Public structure naming
 
 Every public structure in the Runtime C ABI - `WinMLRuntime.idl`,
-`WinMLTensor.idl`, `WinMLTensorFactory.idl`, `WinMLConversation.idl`,
-`WinMLTextGenerationTask.idl`, `WinMLChatCompletionTask.idl`,
-and `WinMLAutomaticSpeechRecognitionTask.idl` - uses the
+`WinMLRuntimeLlama.idl`, `WinMLTensor.idl`, `WinMLTensorFactory.idl`,
+`WinMLConversation.idl`, `WinMLTextGenerationTask.idl`,
+`WinMLChatCompletionTask.idl`, `WinMLAutomaticSpeechRecognitionTask.idl`,
+and `WinMLDecisionTask.idl` - uses the
 `WINML_UPPER_SNAKE_CASE` spelling, matching the enumerations declared beside it.
 Interfaces keep the `IWinMLPascalCase` spelling.
 
@@ -271,7 +272,21 @@ and field-by-field reference coverage; that expansion remains incomplete.
 | [`WINML_TEXT_GENERATION_SPECULATIVE_OPTIONS`](IWinMLTextGenerationTask.md#speculative-decoding) | `WinMLTextGenerationTask.h` | Caller input copied by `SetSpeculativeOptions`: `method` and `draftTokenCount`; no pointers. |
 | [`WINML_TEXT_GENERATION_SPECULATIVE_STATISTICS`](IWinMLTextGenerationTask.md#speculative-decoding) | `WinMLTextGenerationTask.h` | Fully initialized terminal output from `GetSpeculativeStatistics`; no pointers. |
 | [`WINML_SEGMENTED_SEQUENCE_CAPABILITIES`](IWinMLSegmentedSequenceStage.md#getcapabilities) | `WinMLRuntime.h` | Read-only encoder-construction/embedding-input support and optional known embedding shape. |
-| [`WINML_WHISPER_AUTOMATIC_SPEECH_RECOGNITION_BINDINGS`](IWinMLAutomaticSpeechRecognitionTask.md#configuration) | `WinMLAutomaticSpeechRecognitionTask.h` | Atomic input binding set of seven typed interface pointers plus `BOOL forceEncoderOutputCopy`; getter returns each non-null interface AddRef'd. No size/version fields. |
+| [`WINML_TEXT_GENERATION_MODEL_OPTIONS`](IWinMLTextGenerationTask.md#sessions-from-a-model) | `WinMLTextGenerationTask.h` | Caller input borrowed by `SetModel` and `SetComposition`: `presentFields`, `compiledProgramDirectory`, `draftModel`, and `compiledProgramStorage`; the configuration copies it and retains the draft model. |
+| [`WINML_TEXT_GENERATION_SPECULATIVE_METHOD_SUPPORT`](IWinMLTextGenerationTask.md#speculative-method-support) | `WinMLTextGenerationTask.h` | Output of `GetSpeculativeMethodSupport`: support, draft source, default and maximum draft token counts, and whether the model carries draft layers. |
+| [`WINML_TEXT_GENERATION_COMPOSED_STAGE`](IWinMLTextGenerationTask.md#composed-models) | `WinMLTextGenerationTask.h` | One model stage of a composition: the model, token input and output indices, output kind, and up to 128 state pairs as two index arrays. |
+| [`WINML_TEXT_GENERATION_COMPOSED_MODEL`](IWinMLTextGenerationTask.md#composed-models) | `WinMLTextGenerationTask.h` | Caller input copied by `SetComposition`: `presentFields`, `kind`, the `model`, `prefill`, and `decode` stages, `tokenEmbedding`, `head`, `decodeInputMode`, and `logicalCapacity`. Roles the kind does not use are zero-initialized. |
+| [`WINML_TEXT_GENERATION_WATERMARK_OPTIONS`](IWinMLTextGenerationTask.md#watermarking) | `WinMLTextGenerationTask.h` | Caller input copied by `SetWatermarkOptions`; `GetWatermarkOptions` reports it with defaults resolved and the key zeroed. |
+| [`WINML_TEXT_GENERATION_WATERMARK_STATISTICS`](IWinMLTextGenerationTask.md#watermarking) | `WinMLTextGenerationTask.h` | Fully initialized terminal output from `GetWatermarkStatistics`; no pointers, no key. |
+| [`WINML_TEXT_GENERATION_WATERMARK_DETECTION`](IWinMLTextGenerationTask.md#watermarking) | `WinMLTextGenerationTask.h` | Output of `DetectWatermark`: token counts, score, and p-value. |
+| [`WINML_ENCODER_DECODER_AUTOMATIC_SPEECH_RECOGNITION_BINDINGS`](IWinMLAutomaticSpeechRecognitionTask.md#encoder-decoder-configuration) | `WinMLAutomaticSpeechRecognitionTask.h` | Atomic input binding set of seven typed interface pointers plus `BOOL forceEncoderOutputCopy`; getter returns each non-null interface AddRef'd. No size/version fields. Named `WINML_WHISPER_AUTOMATIC_SPEECH_RECOGNITION_BINDINGS` before Windows ML 2.9. |
+| [`WINML_AUTOMATIC_SPEECH_RECOGNITION_MODEL_OPTIONS`](IWinMLAutomaticSpeechRecognitionTask.md#models-backed-configuration) | `WinMLAutomaticSpeechRecognitionTask.h` | Caller input borrowed by `SetModel`: `presentFields`, `compiledProgramDirectory`, and `compiledProgramStorage`. |
+| [`WINML_DECISION_OPTION`](IWinMLDecisionTask.md#questions) | `WinMLDecisionTask.h` | Caller input: `label` and `description` strings, borrowed for the call. |
+| [`WINML_DECISION_QUESTION`](IWinMLDecisionTask.md#questions) | `WinMLDecisionTask.h` | Caller input: `presentFields`, `kind`, `instructions`, the option array, and `actThreshold`. |
+| [`WINML_DECISION_REQUEST`](IWinMLDecisionTask.md#questions) | `WinMLDecisionTask.h` | Caller input borrowed by `Decide`: the `state` text and the question array. |
+| [`WINML_DECISION_MODEL_OPTIONS`](IWinMLDecisionTask.md#model-options) | `WinMLDecisionTask.h` | Caller input borrowed by `CreateDecisionTaskFromModel`: `presentFields`, `compiledProgramDirectory`, and `compiledProgramStorage`. |
+| [`WINML_DECISION_ANSWER`](IWinMLDecisionTask.md#answers) | `WinMLDecisionTask.h` | Fully initialized output of `GetAnswer`; probabilities come from `GetProbabilities`. |
+| [`WINML_DECISION_CAPABILITIES`](IWinMLDecisionTask.md) | `WinMLDecisionTask.h` | `maximumOptionsPerQuestion` and `calibrated`. |
 | [`WINML_CHAT_COMPLETION_PROMPT_CACHE`](IWinMLChatCompletionTask.md#sequence-reuse-and-token-counts) | `WinMLChatCompletionTask.h` | Fully initialized terminal accounting output; no pointers. |
 | [`WINML_AUTOMATIC_SPEECH_RECOGNITION_WAVEFORM_METADATA`](IWinMLAutomaticSpeechRecognitionTask.md#session-input-paths) | `WinMLAutomaticSpeechRecognitionTask.h` | Caller input: `UINT32 sampleRate`, `UINT32 channelCount`, `UINT64 validSampleCount`, in that order. No waveform storage is embedded. |
 | [`WINML_CONVERSATION_REQUEST`](IWinMLStructuredConversationFormatter.md) | `WinMLConversation.h` | Caller input and nested pointers valid through the synchronous formatting/Chat Generate call. |
@@ -331,17 +346,63 @@ typedef struct WINML_TEXT_GENERATION_OPTIONS
     float presencePenalty;
     float frequencyPenalty;
     UINT64 seed;
+    WINML_TEXT_GENERATION_WATERMARK_MODE watermarkMode;
 } WINML_TEXT_GENERATION_OPTIONS;
 ```
 
 `WINML_TEXT_GENERATION_OPTION_FIELD_MAX_NEW_TOKENS` is required in
 `presentFields`. Omitted sampling fields resolve to `temperature=0`, `topK=0`,
 `topP=1`, `minP=0`, `repetitionPenalty=1`, `repetitionPenaltyWindow=0`,
-`presencePenalty=0`, `frequencyPenalty=0`, and `seed=0`. Unknown field bits are
-rejected with `E_INVALIDARG`. The factory copies these values and the separately
-supplied stop-token array into immutable options; `GetValues` returns every field
-resolved with `WINML_TEXT_GENERATION_OPTION_FIELD_ALL`. See
+`presencePenalty=0`, `frequencyPenalty=0`, `seed=0`, and
+`watermarkMode=WINML_TEXT_GENERATION_WATERMARK_MODE_DEFAULT`. Unknown field bits
+are rejected with `E_INVALIDARG`. The factory copies these values and the
+separately supplied stop-token array into immutable options; `GetValues` returns
+every field resolved with `WINML_TEXT_GENERATION_OPTION_FIELD_ALL`. Windows ML
+2.9 added `watermarkMode` and its field flag, which changes the structure size
+and the value of `WINML_TEXT_GENERATION_OPTION_FIELD_ALL`; rebuild against the
+2.9 headers. See
 [Text Generation option fields](IWinMLTextGenerationTask.md#option-fields).
+
+---
+
+## WINML_HOST_BUFFER_BINDING
+
+Declared in `WinMLRuntime.h`.
+
+```cpp
+typedef struct WINML_HOST_BUFFER_BINDING
+{
+    UINT32 index;
+    WINML_TENSOR_DESC desc;
+    UINT64 byteCount;
+    BYTE* data;
+    WINML_TENSOR_ACCESS_MODE accessMode;
+} WINML_HOST_BUFFER_BINDING;
+```
+
+One caller-owned host buffer bound to a stage input or output by
+[`IWinMLStageHostBuffers::BindHostBuffers`](IWinMLStageHostBuffers.md).
+`index` is the input or output position; `desc` gives the element type and
+shape, copied during the call; `byteCount` must equal the size the descriptor
+implies; `data` is aligned for the element type; `accessMode` is
+`WINML_TENSOR_ACCESS_MODE_READ` or `WINML_TENSOR_ACCESS_MODE_READWRITE`, and
+outputs require `READWRITE`.
+
+---
+
+## WINML_RESOURCE_CONTENT_DIGEST
+
+Declared in `WinMLRuntime.h` in packages that include the CGC backend.
+
+```cpp
+typedef struct WINML_RESOURCE_CONTENT_DIGEST
+{
+    BYTE bytes[32];
+} WINML_RESOURCE_CONTENT_DIGEST;
+```
+
+Identifies the content of one resource, supplied by
+[`IWinMLStreamingResourceMapReader::GetContentDigest`](IWinMLStreamingResourceMapReader.md).
 
 ---
 
