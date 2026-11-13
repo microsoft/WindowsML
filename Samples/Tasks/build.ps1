@@ -83,12 +83,18 @@ else {
 # -Sample all skips them with a warning, and naming one fails.
 $cppProjects = @($selectedProjects | Where-Object { -not $_.EndsWith(".csproj") })
 $csharpProjects = @($selectedProjects | Where-Object { $_.EndsWith(".csproj") })
-if ($csharpProjects.Count -gt 0 -and -not (Get-Command dotnet.exe -ErrorAction SilentlyContinue)) {
+# dotnet.exe also ships with the .NET runtime alone, so look for an SDK.
+$hasDotNetSdk = $false
+if ($csharpProjects.Count -gt 0 -and (Get-Command dotnet.exe -ErrorAction SilentlyContinue)) {
+    $hasDotNetSdk = [bool](@(& dotnet.exe --list-sdks 2>$null) |
+        Where-Object { $_ -match '^(\d+)\.' -and [int]$Matches[1] -ge 8 })
+}
+if ($csharpProjects.Count -gt 0 -and -not $hasDotNetSdk) {
     if ($Sample -ne "all") {
-        throw "The .NET SDK was not found. Install the .NET 8 SDK or later to build the C# samples."
+        throw "The .NET 8 SDK or later was not found. Install it to build the C# samples."
     }
 
-    Write-Warning "The .NET SDK was not found, so the C# samples are skipped. Install the .NET 8 SDK or later to build them."
+    Write-Warning "The .NET 8 SDK or later was not found, so the C# samples are skipped. Install it to build them."
     $csharpProjects = @()
 }
 $msbuild = if ($cppProjects.Count -gt 0) { Find-MSBuild } else { $null }
