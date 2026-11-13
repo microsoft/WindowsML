@@ -60,9 +60,16 @@ internal static class SpeculativeSmoke
             "(a multi-position step can pick differently on a near tie).");
         foreach (var (a, b) in off.Zip(on).Where(pair => pair.First.Text != pair.Second.Text))
             Console.WriteLine($"  {a.Prompt}: same for the first {TextComparison.CommonPrefix(a.Text, b.Text):N0} of {a.Text.Length:N0} characters.");
-        double offRate = off.Sum(r => r.Timing.GeneratedTokens) / off.Sum(r => (r.Timing.DecodeMs ?? 0) / 1000);
-        double onRate = on.Sum(r => r.Timing.GeneratedTokens) / on.Sum(r => (r.Timing.DecodeMs ?? 0) / 1000);
-        Console.WriteLine($"Overall decode: off {offRate:F1} t/s, {TaskRuntime.Describe(mode)} {onRate:F1} t/s ({onRate / offRate:F2}x).");
+        static double? Overall(IEnumerable<SpeculativeComparisonRow> set)
+        {
+            var measured = set.Where(r => r.Timing.DecodeMs is > 0).ToList();
+            return measured.Count == 0 ? null
+                : measured.Sum(r => (double)r.Timing.GeneratedTokens - 1) / measured.Sum(r => r.Timing.DecodeMs!.Value / 1000);
+        }
+        double? offRate = Overall(off), onRate = Overall(on);
+        string speedup = offRate is double offValue && onRate is double onValue && offValue > 0
+            ? $"{onValue / offValue:F2}x" : "unavailable";
+        Console.WriteLine($"Overall decode: off {FormatRate(offRate)} t/s, {TaskRuntime.Describe(mode)} {FormatRate(onRate)} t/s ({speedup}).");
 
         // The counting prompt repeats itself from the first step, so every method drafts within a few tokens.
         var after = await runtime.GenerateAsync(false, CodingBenchmark.ShortPrompts[2].Text, "", new GenerationSettings(MaxTokens: 32),
@@ -79,4 +86,6 @@ internal static class SpeculativeSmoke
     private static string Format(SpeculativeMethodSupport? support) => support is null ? "not reported"
         : $"{(support.Supported ? "supported" : "unsupported")} (source {support.DraftSource}, default {support.DefaultDraftTokens}, " +
           $"max {support.MaxDraftTokens}, draft layers {(support.ModelDraftLayersPresent ? "yes" : "no")})";
+
+    private static string FormatRate(double? rate) => rate is double value ? value.ToString("F1", CultureInfo.CurrentCulture) : "unavailable";
 }

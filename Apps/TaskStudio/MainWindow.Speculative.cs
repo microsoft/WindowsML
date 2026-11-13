@@ -133,19 +133,26 @@ public sealed partial class MainWindow
                 };
                 item.Markdown = $"| {model} | {label} | {item.Method} | {item.Generated} | {item.Decode} | {item.Drafted} | {item.Accepted} | {item.AcceptRate} | {item.TokensPerStep} |";
                 SpeculativeRows.Add(item);
-                RecordPerf($"A/B {(on ? "spec" : "off")}", new GenerationResult(row.Text, 0, row.FinishReason, false, row.Timing.Total, row.Timing, row.Stats));
+                RecordPerf($"A/B {(on ? "spec" : "off")}", new GenerationResult(row.Text, row.PromptTokens, row.FinishReason, false, row.Timing.Total, row.Timing, row.Stats));
             }
 
             var off = rows.Where(r => r.Mode == SpeculativeMode.Off).ToList();
             var spec = rows.Where(r => r.Mode == mode).ToList();
-            static double Overall(IEnumerable<SpeculativeComparisonRow> set) =>
-                set.Sum(r => (double)r.Timing.GeneratedTokens) / Math.Max(set.Sum(r => (r.Timing.DecodeMs ?? 0) / 1000), 1e-9);
-            double offRate = Overall(off), specRate = Overall(spec);
+            static double? Overall(IEnumerable<SpeculativeComparisonRow> set)
+            {
+                var measured = set.Where(r => r.Timing.DecodeMs is > 0).ToList();
+                return measured.Count == 0 ? null
+                    : measured.Sum(r => (double)r.Timing.GeneratedTokens - 1) / measured.Sum(r => r.Timing.DecodeMs!.Value / 1000);
+            }
+            double? offRate = Overall(off), specRate = Overall(spec);
             int identical = off.Zip(spec).Count(pair => pair.First.Text == pair.Second.Text);
             string divergence = string.Join("; ", off.Zip(spec).Where(pair => pair.First.Text != pair.Second.Text)
                 .Select(pair => $"{pair.First.Prompt} matches for the first {TextComparison.CommonPrefix(pair.First.Text, pair.Second.Text):N0} of {pair.First.Text.Length:N0} characters"));
             uint drafted = (uint)spec.Sum(r => r.Stats?.DraftTokens ?? 0), accepted = (uint)spec.Sum(r => r.Stats?.AcceptedTokens ?? 0);
-            SpeculativeSpeedup.Text = $"{specRate / offRate:F2}x decode  ({offRate:F1} \u2192 {specRate:F1} tok/s)";
+            string speedup = offRate is double offValue && specRate is double specValue && offValue > 0
+                ? $"{specValue / offValue:F2}x decode" : "Speedup unavailable";
+            SpeculativeSpeedup.Text = $"{speedup}  ({offRate?.ToString("F1", CultureInfo.CurrentCulture) ?? "unavailable"} \u2192 " +
+                $"{specRate?.ToString("F1", CultureInfo.CurrentCulture) ?? "unavailable"} tok/s)";
             SpeculativeDetail.Text = $"{SpeculationLabel(mode)} on {model}. Identical greedy text on {identical} of {off.Count} prompts" +
                 (identical == off.Count ? "." : $" (a multi-position verify step can pick differently on a near tie: {divergence}).") +
                 $" Overall: drafted {drafted:N0}, accepted {accepted:N0}" + (drafted > 0 ? $" ({(double)accepted / drafted:P0})." : ".") +

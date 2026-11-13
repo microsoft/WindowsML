@@ -46,6 +46,7 @@ public sealed partial class MainWindow
 
     private static string Ms(double? value) => value is double ms ? ms.ToString(ms < 100 ? "F1" : "F0", CultureInfo.CurrentCulture) : "-";
     private static string Rate(double? value) => value is double rate ? rate.ToString("F1", CultureInfo.CurrentCulture) : "-";
+    private static string CsvField(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";
 
     private void RecordPerf(string source, GenerationResult result)
     {
@@ -71,7 +72,7 @@ public sealed partial class MainWindow
             MsPerToken = Ms(timing.MsPerToken),
             Total = $"{Ms(timing.Total.TotalMilliseconds)} ({Rate(overall)} tok/s)",
             Note = note,
-            Csv = string.Join(',', DateTime.Now.ToString("O", CultureInfo.InvariantCulture), source, model, result.PromptTokens,
+            Csv = string.Join(',', DateTime.Now.ToString("O", CultureInfo.InvariantCulture), source, CsvField(model), result.PromptTokens,
                 timing.GeneratedTokens, F(timing.TtftMs), F(timing.DecodeTokensPerSecond), F(timing.MsPerToken),
                 F(timing.Total.TotalMilliseconds), F(overall), result.FinishReason, timing.Cache?.Mode ?? "",
                 timing.Cache?.CachedTokens.ToString(CultureInfo.InvariantCulture) ?? "",
@@ -152,7 +153,7 @@ public sealed partial class MainWindow
             MsPerToken = pp ? "-" : Ms(sample.LastToken.TotalMilliseconds / Math.Max(sample.GeneratedTokens, 1)),
             Total = $"{Ms(sample.LastToken.TotalMilliseconds)} ({Rate(sample.TokensPerSecond)} t/s)",
             Note = pp ? $"pp: {Rate(sample.TokensPerSecond)} t/s" : sample.FinishReason.Replace('_', ' ').ToLowerInvariant(),
-            Csv = string.Join(',', DateTime.Now.ToString("O", CultureInfo.InvariantCulture), source.Replace(',', ' '), model,
+            Csv = string.Join(',', DateTime.Now.ToString("O", CultureInfo.InvariantCulture), source.Replace(',', ' '), CsvField(model),
                 (pp ? sample.Test.PromptTokens : 1) + sample.Test.Depth, sample.GeneratedTokens,
                 sample.FirstToken.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture),
                 pp ? "" : sample.TokensPerSecond.ToString("F3", CultureInfo.InvariantCulture), "",
