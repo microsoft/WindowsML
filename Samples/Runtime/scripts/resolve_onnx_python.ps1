@@ -106,7 +106,9 @@ function Get-OnnxPython {
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to create the ONNX preparation environment."
     }
-    & $toolPython -m pip install --disable-pip-version-check "onnx==1.22.0" | Out-Host
+    # --no-cache-dir keeps the package out of pip's shared cache, so deleting
+    # the environment frees the space it uses.
+    & $toolPython -m pip install --disable-pip-version-check --no-cache-dir "onnx==1.22.0" | Out-Host
     if ($LASTEXITCODE -ne 0 -or -not (Test-OnnxPython $toolPython)) {
         Remove-Item -LiteralPath $toolRoot -Recurse -Force -ErrorAction SilentlyContinue
         throw "Failed to install onnx==1.22.0 for model preparation."

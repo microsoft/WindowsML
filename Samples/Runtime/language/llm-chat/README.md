@@ -18,7 +18,8 @@ From `Samples\Runtime`:
 `llm-chat` covers the exported ONNX models, and `llm-chat-gguf` covers the GGUF
 model. The default export uses the ungated `Qwen/Qwen2.5-0.5B-Instruct` model.
 The first export creates an isolated Python environment under
-`%LOCALAPPDATA%\WinMLSampleTools` and downloads the model. Keeping the
+`%LOCALAPPDATA%\WinMLSampleTools` and downloads the model. To recover that space
+later, see [Recover disk space](../../../README.md#recover-disk-space). Keeping the
 environment outside a deep repository worktree avoids Windows package-install
 path limits. PyPI publishes PyTorch for x64 Windows only, so on an ARM64 PC the
 environment uses x64 Python, which runs under emulation. Install a trusted
