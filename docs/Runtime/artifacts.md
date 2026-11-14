@@ -27,6 +27,7 @@ the check again after acquisition so the catalog verifies every file.
 | `llm-chat-gguf` | Cataloged GGUF language model. |
 | `speech-to-language-model` | Whisper artifacts plus exported ONNX language artifacts. |
 | `model-compilation` | Image-classification artifacts reused by the compiler sample. |
+| `onnx-runtime-winmlcgep` | The same SqueezeNet artifacts, used through the CG execution provider. |
 
 Use `Get-Help .\check_artifacts.ps1 -Full` to see every accepted group.
 
