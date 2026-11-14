@@ -11,10 +11,9 @@
 // the Microsoft.Windows.AI.MachineLearning package and share the process's
 // ONNX Runtime environment with the Runtime.
 
-using System.Runtime.InteropServices;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.Windows.AI.MachineLearning;
-using Microsoft.Windows.AI.MachineLearning.Runtime;
+using WinMLSamples.Runtime;
 
 namespace WinMLSamples;
 
@@ -65,7 +64,7 @@ internal static class ExecutionProviders
     // provider-neutral NPU fallback.
     public static void Prepare(DeviceOptions device)
     {
-        bool isNpu = device.Kind == WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_NPU;
+        bool isNpu = device.Kind == ExecutionTargetKind.Npu;
         if (string.IsNullOrEmpty(device.Ep))
         {
             if (isNpu)
@@ -79,7 +78,7 @@ internal static class ExecutionProviders
         string providerName = ResolveName(device.Ep);
         if (string.Equals(providerName, CpuProviderName, StringComparison.OrdinalIgnoreCase))
         {
-            if (device.Kind != WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_CPU)
+            if (device.Kind != ExecutionTargetKind.Cpu)
             {
                 throw new ArgumentException($"{CpuProviderName} supports CPU execution only.");
             }
@@ -90,7 +89,7 @@ internal static class ExecutionProviders
 
         if (IsWebGpu(providerName))
         {
-            if (device.Kind != WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_GPU)
+            if (device.Kind != ExecutionTargetKind.Gpu)
             {
                 throw new ArgumentException("WebGPU supports GPU execution only.");
             }
@@ -103,15 +102,14 @@ internal static class ExecutionProviders
         if (!ReportDevices(providerName, HardwareType(device.Kind)))
         {
             // Same HRESULT as the C++ helper: HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED).
-            throw new COMException(
-                $"Provider '{providerName}' does not expose the requested {DeviceOptions.KindName(device.Kind)} device.",
-                unchecked((int)0x80070032));
+            throw WinMLException.NotSupported(
+                $"Provider '{providerName}' does not expose the requested {DeviceOptions.KindName(device.Kind)} device.");
         }
     }
 
     // The PCI vendor and device IDs of the devices of one class that a
     // registered provider exposes. Adapter selection stays within this set.
-    public static IReadOnlyList<(uint VendorId, uint DeviceId)> GetHardwareIds(string providerName, WINML_EXECUTION_TARGET_KIND kind)
+    public static IReadOnlyList<(uint VendorId, uint DeviceId)> GetHardwareIds(string providerName, ExecutionTargetKind kind)
     {
         OrtHardwareDeviceType type = HardwareType(kind);
         List<(uint, uint)> ids = new();
@@ -131,7 +129,7 @@ internal static class ExecutionProviders
         return ids;
     }
 
-    private static void RegisterFromCatalog(string requestedName, string providerName, WINML_EXECUTION_TARGET_KIND kind)
+    private static void RegisterFromCatalog(string requestedName, string providerName, ExecutionTargetKind kind)
     {
         Console.WriteLine($"  Preparing EP '{requestedName}' for {DeviceOptions.KindName(kind)} execution...");
 
@@ -203,7 +201,7 @@ internal static class ExecutionProviders
         if (ready == 0 && ensured == 0)
         {
             // Same HRESULT as the C++ helper: HRESULT_FROM_WIN32(ERROR_NOT_FOUND).
-            throw new COMException($"Requested provider '{requestedName}' is not installed and ready.", unchecked((int)0x80070490));
+            throw new WinMLException($"Requested provider '{requestedName}' is not installed and ready.", WinMLException.NotFound);
         }
     }
 
@@ -223,12 +221,12 @@ internal static class ExecutionProviders
         return found;
     }
 
-    private static OrtHardwareDeviceType HardwareType(WINML_EXECUTION_TARGET_KIND kind)
+    private static OrtHardwareDeviceType HardwareType(ExecutionTargetKind kind)
     {
         return kind switch
         {
-            WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_GPU => OrtHardwareDeviceType.GPU,
-            WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_NPU => OrtHardwareDeviceType.NPU,
+            ExecutionTargetKind.Gpu => OrtHardwareDeviceType.GPU,
+            ExecutionTargetKind.Npu => OrtHardwareDeviceType.NPU,
             _ => OrtHardwareDeviceType.CPU,
         };
     }

@@ -4,11 +4,7 @@
   "allowMarshaling": false,
   "comInterop": {
     "preserveSigMethods": [
-      "IWinMLOrtStageDiagnostics.GetRequestedProviderName",
-      "IWinMLOrtStageDiagnostics.GetSelectedProviderName",
-      "IDXCoreAdapterList.GetAdapter",
-      "IDXCoreAdapter.GetProperty",
-      "IDXCoreAdapter.GetPropertySize"
+      "*"
     ]
   }
 }

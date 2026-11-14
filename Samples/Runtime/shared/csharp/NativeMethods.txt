@@ -1,16 +1,44 @@
 // Copyright (C) Microsoft Corporation. All rights reserved.
 //
-// APIs the shared C# helpers use. Every C# sample generates these, plus the
-// APIs listed in its own NativeMethods.txt. The Windows SDK metadata also
-// defines legacy WinML names, so Runtime APIs are listed by their full names.
-// Interfaces obtained through QueryInterface are listed explicitly.
+// The APIs that the sample wrapper in Runtime\ calls. CsWin32 generates
+// internal bindings for them, which only the wrapper uses; sample code calls
+// the wrapper. The Windows SDK metadata also defines legacy WinML names, so
+// Runtime APIs are listed by their full names. Interfaces obtained through
+// QueryInterface are listed explicitly.
+
+// Runtime, targets, pipelines, and stages.
 Microsoft.Windows.AI.MachineLearning.Runtime.WinMLCreateRuntime
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLRuntime
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLOrtCompatibility
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLLlamaModelLoader
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLModelSchema
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStage
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStageSchema
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStatefulStage
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStatefulStageOptions
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStageExecutionDiagnostics
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStageWorkShare
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLOrtStageDiagnostics
+
+// Tensor factories, and the lock that stages a device tensor's data.
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLRawTensorFactory
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLImageTensorFactory
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTensorSynchronizedDataLock
+
+// Tokenizer and chat-template formatting (WinMLTokenizer.dll).
+Microsoft.Windows.AI.MachineLearning.Runtime.WinMLCreateTokenizerFromFile
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTokenizer
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTokenizerDecoder
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTokenizerMetadata
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStructuredConversationFormatter
+
+// Text generation Task API (WinMLTasks.dll).
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.WinMLCreateTasks
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTasks
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationTaskFactory
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLModelTextGenerationConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeResult
 
 // DXCore adapter ranking for --device gpu|npu and --performance|--efficiency.
 DXCoreCreateAdapterFactory

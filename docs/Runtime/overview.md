@@ -371,7 +371,9 @@ pointers. The package adds the metadata to CsWin32 and lets the generated
 imports load the Runtime DLLs from the application directory. Set
 `WinMLEnableRuntimeCsWin32Metadata` to `false` to opt out. The Server API isn't
 included in the metadata. The C# samples under `Samples\Runtime` and
-`Samples\Tasks` use the bindings.
+`Samples\Tasks` call these bindings through a sample wrapper that gives them
+an idiomatic C# surface; see
+[`Samples\Runtime\shared\csharp`](../../Samples/Runtime/shared/csharp/README.md).
 
 ```xml
 <PropertyGroup>
@@ -434,7 +436,8 @@ unsafe
 Interface methods throw the exception that `Marshal.ThrowExceptionForHR` maps
 from a failure `HRESULT`, and return the `[out, retval]` value. A method that
 reports a condition through `S_FALSE` needs its `HRESULT`: list it under
-`comInterop.preserveSigMethods` in `NativeMethods.json`.
+`comInterop.preserveSigMethods` in `NativeMethods.json`. The sample wrapper
+lists every method (`"*"`), so it decides itself which codes are errors.
 
 ## Where to go next
 

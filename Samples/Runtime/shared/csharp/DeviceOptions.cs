@@ -3,28 +3,21 @@
 // The --device, --ep, --performance, --efficiency, and --verbose options that
 // the C# samples share with the C++ samples.
 
-using Microsoft.Windows.AI.MachineLearning.Runtime;
+using WinMLSamples.Runtime;
 
 namespace WinMLSamples;
-
-internal enum ExecutionPolicy
-{
-    Default,
-    PreferPerformance,
-    PreferEfficiency,
-}
 
 internal sealed class DeviceOptions
 {
     public const string Usage = "[--device cpu|gpu|npu] [--ep <name>] [--performance|--efficiency] [--verbose]";
 
-    public WINML_EXECUTION_TARGET_KIND Kind { get; private set; } = WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_CPU;
+    public ExecutionTargetKind Kind { get; private set; } = ExecutionTargetKind.Cpu;
 
     // An installed catalog provider, or a short alias such as openvino, to pin.
     public string? Ep { get; private set; }
 
     // Steers adapter selection when several adapters of the requested class exist.
-    public ExecutionPolicy Policy { get; private set; }
+    public ExecutionTargetPreference Preference { get; private set; }
 
     // Raises ONNX Runtime logging to show node placement and prints stage
     // execution diagnostics.
@@ -43,10 +36,10 @@ internal sealed class DeviceOptions
                 Ep = Value(args, ref index);
                 return true;
             case "--performance":
-                Policy = ExecutionPolicy.PreferPerformance;
+                Preference = ExecutionTargetPreference.Performance;
                 return true;
             case "--efficiency":
-                Policy = ExecutionPolicy.PreferEfficiency;
+                Preference = ExecutionTargetPreference.Efficiency;
                 return true;
             case "--verbose":
                 Verbose = true;
@@ -56,13 +49,13 @@ internal sealed class DeviceOptions
         }
     }
 
-    public static string KindName(WINML_EXECUTION_TARGET_KIND kind)
+    public static string KindName(ExecutionTargetKind kind)
     {
         return kind switch
         {
-            WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_CPU => "CPU",
-            WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_GPU => "GPU",
-            WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_NPU => "NPU",
+            ExecutionTargetKind.Cpu => "CPU",
+            ExecutionTargetKind.Gpu => "GPU",
+            ExecutionTargetKind.Npu => "NPU",
             _ => kind.ToString(),
         };
     }
@@ -73,13 +66,13 @@ internal sealed class DeviceOptions
         return index + 1 < args.Length ? args[++index] : throw new ArgumentException($"{name} requires a value.");
     }
 
-    private static WINML_EXECUTION_TARGET_KIND ParseKind(string device)
+    private static ExecutionTargetKind ParseKind(string device)
     {
         return device.ToLowerInvariant() switch
         {
-            "cpu" => WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_CPU,
-            "gpu" => WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_GPU,
-            "npu" => WINML_EXECUTION_TARGET_KIND.WINML_EXECUTION_TARGET_KIND_NPU,
+            "cpu" => ExecutionTargetKind.Cpu,
+            "gpu" => ExecutionTargetKind.Gpu,
+            "npu" => ExecutionTargetKind.Npu,
             _ => throw new ArgumentException("--device must be cpu, gpu, or npu."),
         };
     }

@@ -10,16 +10,17 @@ It prints the same output as the C++ samples.
 
 | Route | How the app loads the model | Target | Options |
 |---|---|---|---|
-| Model provider (default) | `IWinMLRuntime::LoadModelFromPath` for a checkpoint folder, `LoadModelFromFile` for a GGUF file | GPU, performance preference | `--capacity <tokens>`, `--program-cache <directory>` |
-| llama.cpp (`--llama`) | `IWinMLLlamaModelLoader::LoadModelFromFile` for a GGUF file | CPU, or GPU with `--device gpu` | `--draft-model <draft.gguf>`, `--device cpu\|gpu` |
+| Model provider (default) | `WinMLRuntime.LoadModelFromPath` for a checkpoint folder, `LoadModelFromFile` for a GGUF file | GPU, performance preference | `--capacity <tokens>`, `--program-cache <directory>` |
+| llama.cpp (`--llama`) | `LlamaModelLoader.LoadModelFromFile` for a GGUF file | CPU, or GPU with `--device gpu` | `--draft-model <draft.gguf>`, `--device cpu\|gpu` |
 
 Either way the sample calls `SetModel` without `SetTokenizer`, creates the task
 with the configuration's tokenizer (`GetTokenizer`), formats the prompt as one
-user turn with the model's chat template, and streams the reply from the pull
-stream. It prints the token counts and why generation stopped. With
+user turn with the model's chat template, encodes it, and streams the reply
+with `await foreach` over `TextGenerator.GenerateTokensAsync`. It prints the
+token counts and why generation stopped, then closes the session. With
 `--draft-model`, it enables speculative decoding and prints how many draft
-tokens the model accepted. Ctrl+C cancels generation through the Task's
-cancellation source.
+tokens the model accepted. Ctrl+C cancels a `CancellationToken`, which cancels
+generation through the Task's cancellation source.
 
 ```text
 Prompt: Write one sentence about the ocean.
@@ -34,27 +35,32 @@ ML does not support (`HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)` from
 missing llama.cpp payload, and a GPU target that llama.cpp cannot use. It also
 reports a device without a GPU, where the model provider route cannot run.
 
-## How the bindings are generated
+## How the sample calls the Runtime
 
-The sample declares no Runtime or Task types of its own. The
-`Microsoft.Windows.AI.MachineLearning` package includes Win32 metadata for the
-Runtime and Task APIs, and
-[CsWin32](https://github.com/microsoft/CsWin32) generates bindings for the APIs
-listed in `NativeMethods.txt` when the project builds.
+The sample calls the Runtime and Task APIs through the C# sample wrapper in
+[`Runtime/shared/csharp/Runtime`](../../../../Runtime/shared/csharp/Runtime/),
+which gives their COM-style C API an idiomatic C# surface. The sample code has
+no pointers or `HRESULT` checks. The wrapper is sample code, not a supported
+API; the [shared README](../../../../Runtime/shared/csharp/README.md) explains
+why it exists and what it covers.
 
+- Every object is `IDisposable`. `configuration.As<ModelTextGenerationConfiguration>()`
+  stands in for `QueryInterface`, and `runtime.TryAs(out LlamaModelLoader? loader)`
+  returns `false` where the C++ sample gets `E_NOINTERFACE`.
+- A failure throws a .NET exception that keeps the `HRESULT`: for example,
+  `NotSupportedException` for `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)`. The
+  sample catches the exception type where the C++ sample checks a returned
+  `HRESULT`.
+- A text generation session belongs to the thread that created it.
+  `TextGenerator` keeps the session and its pull stream on one dedicated
+  thread and exposes the reply as an `IAsyncEnumerable` that accepts a
+  `CancellationToken`. `LastResult` holds the result, including the result
+  of a canceled generation, and `CloseAsync` closes the session and reports a
+  failure to close, as the C++ sample does.
 - The project imports
   [`WinMLSamples.CSharp.props`](../../../../Runtime/shared/csharp/WinMLSamples.CSharp.props),
-  which the C# samples share, and builds into `Samples\Tasks\out`.
-- CsWin32 combines every `NativeMethods.txt`. [This sample's list](NativeMethods.txt)
-  adds `WinMLCreateTasks`, the Task interfaces it obtains through
-  `QueryInterface` (`IWinMLTextGenerationTaskFactory`,
-  `IWinMLModelTextGenerationConfiguration` and the speculative interfaces),
-  `IWinMLLlamaModelLoader` and `IWinMLStructuredConversationFormatter`. Task
-  APIs are in the `Microsoft.Windows.AI.MachineLearning.Runtime.Tasks`
-  namespace and are listed by their full names.
-- Generated interface methods throw an exception for a failure `HRESULT` and
-  return their `[out, retval]` value. The sample catches the exception and
-  checks its `HResult` where the C++ sample checks a returned `HRESULT`.
+  which the C# samples share and which compiles the wrapper, and builds into
+  `Samples\Tasks\out`.
 - The project references `Microsoft.Windows.AI.MachineLearning.LibLlama.Core`,
   as the C++ llama.cpp sample does. The package copies the llama.cpp engine
   next to the executable and its CPU backend to `LlamaBackends\cpu`.

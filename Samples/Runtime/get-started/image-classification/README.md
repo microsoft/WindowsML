@@ -42,8 +42,8 @@ The included SqueezeNet model is quantized, and some providers decline its
 quantized operators. ONNX Runtime then runs those operators on the CPU, and
 `-Diagnostics` shows where each node runs.
 
-The [C# version](csharp/README.md) calls the same Runtime interfaces through
-bindings that CsWin32 generates from the package's Win32 metadata. It takes the
+The [C# version](csharp/README.md) calls the same Runtime APIs through the C#
+sample wrapper in [`shared/csharp`](../../shared/csharp/README.md). It takes the
 same options and prints the same predictions:
 
 ```powershell

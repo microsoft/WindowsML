@@ -41,11 +41,10 @@ and the design goals behind them.
 
 Every sample has a C++ version, and most also have a Python version that uses
 `windowsml.runtime`. The image classification and Hello LanguageModel samples
-also have C# versions that call the Runtime through bindings that
-[CsWin32](https://github.com/microsoft/CsWin32) generates from the Win32
-metadata in the `Microsoft.Windows.AI.MachineLearning` package. They take the
-same device and provider options as the C++ samples and share their helpers in
-[`shared/csharp`](shared/csharp/).
+also have C# versions. They call the Runtime through a small C# wrapper in
+[`shared/csharp`](shared/csharp/README.md), which is sample code, not a
+supported API, and take the same device and provider options as the C++
+samples.
 
 | Area | Sample | Languages | What it demonstrates |
 |---|---|---|---|

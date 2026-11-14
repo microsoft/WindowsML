@@ -12,45 +12,48 @@ same options and prints the same reply as the C++ sample.
 `shared\language_model_loader.h` and the logits helpers in
 `shared\llm_inference.h`:
 
-- `IWinMLRuntime::LoadModelFromFile` selects the backend from the artifact:
+- `WinMLRuntime.LoadModelFromFile` selects the backend from the artifact:
   ONNX Runtime for `.onnx` and `.ort` files, llama.cpp for `.gguf` files.
-- `IWinMLPipelineBuilder::AddModelStage` places the model on the target that
+- `PipelineBuilder.AddModelStage` places the model on the target that
   `--device` and `--ep` select, and `RequestOutput(0)` keeps the logits.
-- Before `Build`, `IWinMLStatefulStageOptions::AddStateTensorPair` declares
-  each trailing `past_*` input and `present_*` output of an ONNX decoder whose
-  descriptors match, and `SetSequenceCapacityHint` passes `--context` or a
-  fixed cache length. The Runtime then carries the KV cache between runs. A
-  GGUF stage keeps its own state and declares no pairs.
-- `WinMLCreateTokenizerFromFile` creates the tokenizer from the ONNX model's
+- Before `Build`, `StatefulStageOptions.AddStateTensorPair` declares each
+  trailing `past_*` input and `present_*` output of an ONNX decoder whose
+  descriptors match, and `SequenceCapacityHint` passes `--context` or a fixed
+  cache length. The Runtime then carries the KV cache between runs. A GGUF
+  stage keeps its own state and declares no pairs.
+- `Tokenizer.CreateFromFile` creates the tokenizer from the ONNX model's
   directory or from the GGUF file, unless `--tokenizer` overrides it.
-  `IWinMLStructuredConversationFormatter` applies the chat template, and
-  `--raw` encodes the prompt as plain text instead.
-- The loop runs the prompt once, then reads the last logits row through
-  `IWinMLRawTensorFactory::CreateTensorFromRegion` on a CPU target, takes the
-  argmax, prints the fragment from `IWinMLTokenizerDecoder::DecodeToken`, and
-  runs that token. It stops at an end-of-sequence token, 256 new tokens, or
-  the sequence capacity that `IWinMLStatefulStage` reports.
+  `StructuredConversationFormatter` applies the chat template, and `--raw`
+  encodes the prompt as plain text instead.
+- The loop runs the prompt once, then views the last logits row through
+  `RawTensorFactory.CreateTensorFromRegion` on a CPU target, takes the argmax
+  straight from the locked row's span, prints the fragment from
+  `TokenizerDecoder.DecodeToken`, and runs that token. It stops at an
+  end-of-sequence token, 256 new tokens, or the sequence capacity that
+  `StatefulStage` reports.
 
-## How the bindings are generated
+## How the sample calls the Runtime
 
-The sample declares no Runtime types of its own. The
-`Microsoft.Windows.AI.MachineLearning` package includes Win32 metadata for the
-Runtime API, including the tokenizer and conversation APIs in
-`WinMLTokenizer.dll`. When a C# project also references
-[CsWin32](https://github.com/microsoft/CsWin32), the package passes that
-metadata to CsWin32, which generates bindings for the APIs listed in
-[`NativeMethods.txt`](NativeMethods.txt) and in the shared
-[`..\..\..\shared\csharp\NativeMethods.txt`](../../../shared/csharp/NativeMethods.txt)
-when the project builds. Each Runtime API is listed by its full name, and the
-interfaces obtained through `QueryInterface` are listed explicitly. Generated
-interface methods throw an exception for a failure `HRESULT` and return their
-`[out, retval]` value. See the
+The sample calls the Runtime through the C# sample wrapper in
+[`shared/csharp/Runtime`](../../../shared/csharp/Runtime/), which gives the
+Runtime's COM-style C API, including the tokenizer and conversation APIs in
+`WinMLTokenizer.dll`, an idiomatic C# surface: `IDisposable` objects, .NET
+exceptions that keep the `HRESULT`, properties, strings, and `Span<T>` access
+to tensor memory. The sample code has no pointers or `HRESULT` checks. The
+wrapper is sample code, not a supported API; the
+[shared README](../../../shared/csharp/README.md) explains why it exists and
+what it covers. See the
 [image classification C# sample](../../../get-started/image-classification/csharp/README.md)
 for more about the shared project settings.
 
 `IWinMLTokenizerMetadata::GetEosTokenIds` and `GetBosTokenId` report a missing
-token with `S_FALSE`, which the generated methods discard. The sample reads an
-empty EOS array, and an unchanged BOS value, as "not declared".
+token with `S_FALSE`, a success code, so the wrapper does not throw for it:
+`TokenizerMetadata.GetEosTokenIds` returns an empty array and
+`TryGetBosTokenId` returns `false`.
+
+When the sample itself rejects a model or prompt, it throws
+`WinMLException.NotSupported` or `WinMLException.InvalidData`, which carry the
+same Win32 `HRESULT` that the C++ sample reports.
 
 The project references `Microsoft.Windows.AI.MachineLearning.LibLlama.Core`, as
 the C++ sample does, so the llama.cpp engine modules and the `LlamaBackends`
@@ -59,9 +62,10 @@ folder are copied next to the executable for GGUF models.
 ## Requirements
 
 - The .NET 8 SDK or later.
-- A `Microsoft.Windows.AI.MachineLearning` package that contains
-  `metadata\win32\Microsoft.Windows.AI.MachineLearning.Runtime.winmd`, and the
-  matching `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` package. If the
+- The `Microsoft.Windows.AI.MachineLearning` package that contains
+  `metadata\win32\Microsoft.Windows.AI.MachineLearning.Runtime.winmd`, which
+  the wrapper's bindings are generated from, and the matching
+  `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` package. If the
   versions pinned in `Samples\Directory.Packages.props` do not include them,
   place packages that do in
   [`localpackages`](../../../localpackages/README.md) and pass the versions

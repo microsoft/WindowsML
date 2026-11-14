@@ -21,12 +21,12 @@
 //       [-ModelPath <path>] [-TokenizerSource <path>] [-Device cpu|gpu|npu]
 //       [-Ep <name>] [-Prompt <text>] [-Raw]
 //
-// The Runtime API is a COM-style C API. CsWin32 generates the C# bindings when
-// the project builds, from the Win32 metadata in the
-// Microsoft.Windows.AI.MachineLearning package; NativeMethods.txt here and in
-// ..\..\..\shared\csharp lists the APIs to generate. Generated interface
-// methods throw an exception for a failure HRESULT and return their
-// [out, retval] value.
+// The sample uses the sample wrapper in ..\..\..\shared\csharp\Runtime, an
+// idiomatic C# layer over the Runtime API in the
+// Microsoft.Windows.AI.MachineLearning package. Runtime objects are
+// IDisposable, failures throw .NET exceptions that keep the HRESULT, and
+// logits are read through a Span over the locked tensor memory. The wrapper
+// is sample code; see ..\..\..\shared\csharp\README.md.
 //
 // Learn more (paths relative to this file)
 //   ../../../../../docs/Runtime/tutorials/03-language-models.md
@@ -36,15 +36,13 @@
 //   ../../../../../docs/api-reference/IWinMLTokenizer.md
 
 using System.Text;
-using Microsoft.Windows.AI.MachineLearning.Runtime;
+using WinMLSamples.Runtime;
 using WinMLSamples;
 
 namespace HelloLanguageModel;
 
-internal static unsafe class Program
+internal static class Program
 {
-    private const int S_FALSE = 1;
-
     private static int Main(string[] args)
     {
         // The model streams UTF-8 text fragments, as the C++ sample's _O_U8TEXT stdout does.
@@ -137,7 +135,7 @@ internal static unsafe class Program
                 Console.WriteLine($"Resolved target: {DeviceOptions.KindName(model.GetResolvedTargetKind())}");
                 if (device.Verbose)
                 {
-                    StageDiagnostics.Print(model.Stage, model.Objects);
+                    StageDiagnostics.Print(model.Stage);
                 }
             }
             catch (Exception ex)
@@ -149,32 +147,36 @@ internal static unsafe class Program
             // The model owns the manual loop from CommonPatterns.md: encode the
             // prompt, bind token tensors, Run, read logits, argmax, and
             // DecodeToken fragments.
-            GenerationResult result = options.Raw
-                ? model.GenerateTokens(options.Prompt, 0, Console.Write)
-                : model.GenerateConversation("user", options.Prompt, 0, Console.Write);
+            GenerationResult result;
+            try
+            {
+                result = options.Raw
+                    ? model.GenerateTokens(options.Prompt, 0, Console.Write)
+                    : model.GenerateConversation("user", options.Prompt, 0, Console.Write);
+            }
+            catch (Exception ex)
+            {
+                // Only the HRESULT is printed, as the C++ sample does.
+                Console.Error.WriteLine(
+                    $"{(options.Raw ? "GenerateTokens" : "GenerateConversation")} failed with HRESULT 0x{ex.HResult:X8}.");
+                if (!options.Raw)
+                {
+                    Console.Error.WriteLine("Use --raw to distinguish model execution from chat-template formatting.");
+                }
 
-            if (result.HResult == S_FALSE && result.GeneratedTokenCount != 0)
+                return 1;
+            }
+
+            if (result.StopReason == StopReason.Capacity && result.GeneratedTokenCount != 0)
             {
                 Console.WriteLine();
                 Console.WriteLine("[stopped at the model sequence capacity]");
                 return 0;
             }
 
-            if (result.HResult == S_FALSE)
+            if (result.StopReason == StopReason.Capacity)
             {
                 Console.Error.WriteLine("The prompt does not fit the model sequence capacity.");
-                return 1;
-            }
-
-            if (result.HResult < 0)
-            {
-                Console.Error.WriteLine(
-                    $"{(options.Raw ? "GenerateTokens" : "GenerateConversation")} failed with HRESULT 0x{result.HResult:X8}.");
-                if (!options.Raw)
-                {
-                    Console.Error.WriteLine("Use --raw to distinguish model execution from chat-template formatting.");
-                }
-
                 return 1;
             }
 

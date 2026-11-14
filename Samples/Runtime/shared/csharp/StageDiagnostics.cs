@@ -6,75 +6,98 @@
 // split into work shares by device and execution technology. For an ONNX
 // Runtime stage it also prints the requested and selected provider.
 
-using Microsoft.Windows.AI.MachineLearning.Runtime;
-using Windows.Win32.Foundation;
-using Win32 = Windows.Win32.PInvoke;
+using WinMLSamples.Runtime;
 
 namespace WinMLSamples;
 
-internal static unsafe class StageDiagnostics
+internal static class StageDiagnostics
 {
-    // Call before IWinMLPipelineBuilder::Build. Capturing diagnostics adds
-    // work to Build, so it is off by default.
-    public static void Enable(IWinMLStage* stage, ComObjects objects)
+    // Call before PipelineBuilder.Build. Capturing diagnostics adds work to
+    // Build, so it is off by default.
+    public static void Enable(Stage stage)
     {
-        IWinMLStageExecutionDiagnostics* diagnostics = objects.QueryInterface<IWinMLStageExecutionDiagnostics>(stage);
-        diagnostics->SetExecutionDiagnosticsEnabled(true);
+        using StageExecutionDiagnostics diagnostics = stage.As<StageExecutionDiagnostics>();
+        diagnostics.ExecutionDiagnosticsEnabled = true;
     }
 
     // Call after Build on a stage passed to Enable.
-    public static void Print(IWinMLStage* stage, ComObjects objects)
+    public static void Print(Stage stage)
     {
-        IWinMLStageExecutionDiagnostics* diagnostics = objects.QueryInterface<IWinMLStageExecutionDiagnostics>(stage);
-        WINML_STAGE_PLACEMENT_COVERAGE coverage = diagnostics->GetPlacementCoverage();
-        WINML_STAGE_WORK_UNIT unit = diagnostics->GetWorkUnit();
-        Console.WriteLine($"  Placement coverage: {Trim(coverage, "WINML_STAGE_PLACEMENT_COVERAGE_")}");
+        using StageExecutionDiagnostics diagnostics = stage.As<StageExecutionDiagnostics>();
+        Console.WriteLine($"  Placement coverage: {Name(diagnostics.PlacementCoverage)}");
 
         // The description is for logging only; do not parse it.
-        diagnostics->GetPlacementDescription(out BOOL hasDescription, out PWSTR description);
+        diagnostics.GetPlacementDescription(out bool hasDescription, out string? description);
         if (hasDescription)
         {
-            try
-            {
-                Console.WriteLine($"  Placement: {description}");
-            }
-            finally
-            {
-                Win32.CoTaskMemFree(description.Value);
-            }
+            Console.WriteLine($"  Placement: {description}");
         }
 
-        uint shareCount = diagnostics->GetWorkShareCount();
+        StageWorkUnit unit = diagnostics.WorkUnit;
+        uint shareCount = diagnostics.WorkShareCount;
         for (uint i = 0; i < shareCount; ++i)
         {
-            IWinMLStageWorkShare* share = objects.Add(diagnostics->GetWorkShare(i));
+            using StageWorkShare share = diagnostics.GetWorkShare(i);
             Console.WriteLine(
-                $"    {share->GetUnitCount(),6} {Trim(unit, "WINML_STAGE_WORK_UNIT_")} on {DeviceOptions.KindName(share->GetDeviceKind())} " +
-                $"through {Trim(share->GetImplementation(), "WINML_STAGE_WORK_IMPLEMENTATION_")}");
+                $"    {share.UnitCount,6} {Name(unit)} on {DeviceOptions.KindName(share.DeviceKind)} " +
+                $"through {Name(share.Implementation)}");
         }
 
-        // ONNX Runtime stages also report the provider that served them.
-        IWinMLOrtStageDiagnostics* ort = objects.TryQueryInterface<IWinMLOrtStageDiagnostics>(stage);
-        if (ort != null)
+        // ONNX Runtime stages also report the provider that served them. Other
+        // stages answer the query but report no provider.
+        if (stage.TryAs(out OrtStageDiagnostics? ort))
         {
-            PCWSTR requested;
-            PCWSTR selected;
-            if (ort->GetRequestedProviderName(&requested).Succeeded && ort->GetSelectedProviderName(&selected).Succeeded)
+            using (ort)
             {
-                Console.WriteLine($"  Requested provider: {Name(requested)}, selected provider: {Name(selected)}");
+                try
+                {
+                    Console.WriteLine(
+                        $"  Requested provider: {ort.GetRequestedProviderName() ?? "(runtime choice)"}, " +
+                        $"selected provider: {ort.GetSelectedProviderName() ?? "(runtime choice)"}");
+                }
+                // The provider names are informational, so a failed query skips the line.
+                catch (Exception)
+                {
+                }
             }
         }
     }
 
-    private static string Name(PCWSTR name)
+    // Short C API constant names, such as GRAPH_NODE for WINML_STAGE_WORK_UNIT_GRAPH_NODE.
+    private static string Name(StagePlacementCoverage coverage)
     {
-        return name.Value == null ? "(runtime choice)" : name.ToString();
+        return coverage switch
+        {
+            StagePlacementCoverage.Full => "FULL",
+            StagePlacementCoverage.Partial => "PARTIAL",
+            StagePlacementCoverage.None => "NONE",
+            _ => "UNKNOWN",
+        };
     }
 
-    private static string Trim<T>(T value, string prefix)
-        where T : struct, Enum
+    private static string Name(StageWorkUnit unit)
     {
-        string text = value.ToString();
-        return text.StartsWith(prefix, StringComparison.Ordinal) ? text[prefix.Length..] : text;
+        return unit switch
+        {
+            StageWorkUnit.GraphNode => "GRAPH_NODE",
+            StageWorkUnit.CompiledSubgraph => "COMPILED_SUBGRAPH",
+            StageWorkUnit.ModelLayer => "MODEL_LAYER",
+            StageWorkUnit.Stage => "STAGE",
+            _ => "UNKNOWN",
+        };
+    }
+
+    private static string Name(StageWorkImplementation implementation)
+    {
+        return implementation switch
+        {
+            StageWorkImplementation.Cpu => "CPU",
+            StageWorkImplementation.D3D12Driver => "D3D12_DRIVER",
+            StageWorkImplementation.D3D12Shader => "D3D12_SHADER",
+            StageWorkImplementation.DirectML => "DIRECTML",
+            StageWorkImplementation.WebGpu => "WEBGPU",
+            StageWorkImplementation.VendorLibrary => "VENDOR_LIBRARY",
+            _ => "UNKNOWN",
+        };
     }
 }

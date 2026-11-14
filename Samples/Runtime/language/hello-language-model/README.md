@@ -52,8 +52,8 @@ For the progression from this one-stage sample to the split ONNX pipeline, see
 ## C#
 
 [`csharp\`](csharp/README.md) is a C# version of this sample that calls the
-same Runtime, tokenizer, and stateful-stage APIs through bindings that CsWin32
-generates from the package's Win32 metadata. It covers both backends and
+same Runtime, tokenizer, and stateful-stage APIs through the C# sample wrapper
+in [`shared/csharp`](../../shared/csharp/README.md). It covers both backends and
 prints the same greedy reply:
 
 ```powershell
