@@ -6,7 +6,7 @@ The Windows ML Runtime API gives Windows applications one programming model for
 local AI on CPUs, GPUs, and NPUs. The same Runtime objects run ONNX models
 through ONNX Runtime and GGUF models through llama.cpp. For ONNX models,
 hardware acceleration comes from execution providers that Windows installs and
-keeps up to date. These samples cover the API in C++ and Python, from a first
+keeps up to date. These samples cover the API in C++, C#, and Python, from a first
 image classifier to multi-turn chat and multi-stage pipelines.
 
 > [!NOTE]
@@ -40,13 +40,17 @@ and the design goals behind them.
 ## Samples
 
 Every sample has a C++ version, and most also have a Python version that uses
-`windowsml.runtime`.
+`windowsml.runtime`. The image classification and Hello LanguageModel samples
+also have C# versions. They call the Runtime through a small C# wrapper in
+[`shared/csharp`](shared/csharp/README.md), which is sample code, not a
+supported API, and take the same device and provider options as the C++
+samples.
 
 | Area | Sample | Languages | What it demonstrates |
 |---|---|---|---|
-| Get started | [Image classification](get-started/image-classification/) | C++, Python | Turn an image into a tensor, run a one-stage pipeline, and read the top classes. |
+| Get started | [Image classification](get-started/image-classification/) | C++, C#, Python | Turn an image into a tensor, run a one-stage pipeline, and read the top classes. |
 | Vision | [Super-resolution](vision/super-resolution/) | C++, Python | Convert a video frame to a tensor, upscale it 2x, and convert the result back. |
-| Language | [Hello LanguageModel](language/hello-language-model/) | C++, Python | Load an ONNX or GGUF language model and stream a reply with the same code. |
+| Language | [Hello LanguageModel](language/hello-language-model/) | C++, C#, Python | Load an ONNX or GGUF language model and stream a reply with the same code. |
 | Language | [LLM chat](language/llm-chat/) | C++, Python | Add conversation state, generation limits, and a split three-stage ONNX pipeline. |
 | Speech | [Whisper](speech/whisper/) | C++, Python | Prepare audio and transcribe it with separate encoder and decoder pipelines. |
 | Composition | [Speech to LanguageModel](language/speech-to-language-model/) | C++, Python | Send a Whisper transcript to an ONNX or GGUF language model. |

@@ -5,6 +5,7 @@
   <Project Path="speech\automatic-speech-recognition\task-automatic-speech-recognition.vcxproj" />
   <Project Path="composition\speech-to-text-generation\task-speech-to-text-generation.vcxproj" />
   <Project Path="model-backed\text-generation\task-model-text-generation.vcxproj" />
+  <Project Path="model-backed\text-generation\csharp\task-model-text-generation-csharp.csproj" />
   <Project Path="model-backed\composed-text-generation\task-composed-text-generation.vcxproj" />
   <Project Path="model-backed\llama-text-generation\task-llama-text-generation.vcxproj" />
   <Project Path="model-backed\automatic-speech-recognition\task-model-speech-recognition.vcxproj" />
@@ -17,6 +18,7 @@
     <File Path="composition\speech-to-text-generation\README.md" />
     <File Path="model-backed\README.md" />
     <File Path="model-backed\text-generation\README.md" />
+    <File Path="model-backed\text-generation\csharp\README.md" />
     <File Path="model-backed\composed-text-generation\README.md" />
     <File Path="model-backed\llama-text-generation\README.md" />
     <File Path="model-backed\automatic-speech-recognition\README.md" />

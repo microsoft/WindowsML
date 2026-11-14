@@ -55,6 +55,9 @@ Every sample builds against the package versions pinned in
 [`Samples\Directory.Packages.props`](../Directory.Packages.props). The
 Models-backed Task samples need Windows ML 2.9 or later; see
 [their package requirements](model-backed/README.md#package-requirements).
+The C++ samples need Visual Studio with Desktop development with C++. The C#
+model-backed text generation sample builds with the .NET 8 SDK or later;
+without it, `-Sample all` skips that sample with a warning.
 
 Builds default to the host architecture, restore the
 `Microsoft.Windows.AI.MachineLearning` package from nuget.org or the

@@ -22,7 +22,9 @@ the model and let Windows ML run it on the GPU target you pick.
 
 ## Before you start
 
-1. Install Visual Studio with **Desktop development with C++**.
+1. Install Visual Studio with **Desktop development with C++**. To also build
+   the C# samples, install the .NET 8 SDK or later; without it, `build.ps1`
+   skips them with a warning.
 2. Open a PowerShell prompt in `Samples\Runtime`.
 3. Build and run scripts target this PC's architecture (x64 or ARM64).
 4. Start every new scenario on CPU.

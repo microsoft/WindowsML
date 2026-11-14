@@ -23,6 +23,11 @@ later runs start faster. It can grow larger than the model.
 .PARAMETER CacheWeights
 Also keep the weights prepared for each program in the program cache. Requires
 -ProgramCache.
+
+.PARAMETER Language
+cpp runs the C++ sample; csharp runs the C# sample in
+model-backed\text-generation\csharp. Build it first with
+.\build.ps1 -Sample model-text-generation-csharp.
 #>
 
 [CmdletBinding()]
@@ -41,6 +46,8 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
+    [ValidateSet("cpp", "csharp")]
+    [string]$Language = "cpp",
     [switch]$NonInteractive
 )
 
@@ -91,8 +98,15 @@ if ($ProgramCache) {
     }
 }
 
+$projectName = if ($Language -eq "csharp") {
+    "task-model-text-generation-csharp"
+}
+else {
+    "task-model-text-generation"
+}
+
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
-    -ProjectName task-model-text-generation `
+    -ProjectName $projectName `
     -SampleArguments $sampleArguments `
     -Platform $Platform `
     -Configuration $Configuration

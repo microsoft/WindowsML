@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Copyright (C) Microsoft Corporation. All rights reserved.
+    Models-backed text generation - Windows ML Task API from C#
+  -->
+  <PropertyGroup>
+    <AssemblyName>task-model-text-generation-csharp</AssemblyName>
+    <RootNamespace>ModelTextGeneration</RootNamespace>
+    <!-- Build into Samples\Tasks\out, beside the C++ Task samples. -->
+    <WinMLSampleOutputRoot>$(MSBuildThisFileDirectory)..\..\..\out\</WinMLSampleOutputRoot>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\Runtime\shared\csharp\WinMLSamples.CSharp.props" />
+
+  <!--
+    The llama.cpp route needs the llama.cpp engine and its CPU backend beside
+    the app, as the C++ llama-text-generation sample does. The package copies
+    them to the output, with the backend under LlamaBackends\cpu.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning.LibLlama.Core" />
+  </ItemGroup>
+</Project>
