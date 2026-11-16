@@ -171,20 +171,97 @@ public struct ImageTensorDescription
     public TensorNormalization Normalization { get; set; }
 }
 
-// One conversation message. Role is a chat role such as "user".
+public enum ConversationToolChoice
+{
+    Auto = 0,
+    None = 1,
+    Required = 2,
+    Named = 3,
+}
+
+public enum ConversationParallelToolCalls
+{
+    ModelDefault = 0,
+    Disabled = 1,
+    Enabled = 2,
+}
+
+public enum ConversationResponseFormat
+{
+    Text = 0,
+    JsonObject = 1,
+    JsonSchema = 2,
+}
+
+public enum ConversationEnableThinking
+{
+    ModelDefault = 0,
+    Disabled = 1,
+    Enabled = 2,
+}
+
+// One conversation message. Role is a chat role such as "user", "assistant",
+// or "tool". An assistant message may carry the tool calls it made instead of
+// content; a tool message carries one call's result as its content.
 public sealed class ConversationMessage
 {
     public required string Role { get; init; }
 
-    public required string Content { get; init; }
+    public string? Content { get; init; }
+
+    public string? ReasoningContent { get; init; }
+
+    public IReadOnlyList<ConversationToolCall>? ToolCalls { get; init; }
+
+    // The call a tool message answers.
+    public string? ToolCallId { get; init; }
+
+    public string? ToolName { get; init; }
 }
 
+// A tool call that an assistant message made. ArgumentsJson is a JSON object.
+public sealed record ConversationToolCall(string Id, string Name, string ArgumentsJson);
+
+// A tool that the model may call. ParametersJson is a JSON schema object.
+public sealed class ConversationTool
+{
+    public required string Name { get; init; }
+
+    public string? Description { get; init; }
+
+    public required string ParametersJson { get; init; }
+}
+
+// Unset properties keep the native defaults: no tools, text output, and the
+// model's own thinking behavior.
 public sealed class ConversationRequest
 {
     public ConversationFormatterMode FormatterMode { get; init; }
 
     public required IReadOnlyList<ConversationMessage> Messages { get; init; }
 
+    public IReadOnlyList<ConversationTool>? Tools { get; init; }
+
+    public ConversationToolChoice ToolChoice { get; init; }
+
+    // The tool to call when ToolChoice is Named.
+    public string? NamedToolChoice { get; init; }
+
+    public ConversationParallelToolCalls ParallelToolCalls { get; init; }
+
     // Ends the prompt with the template's assistant generation prompt.
     public bool AddGenerationPrompt { get; init; }
+
+    public ConversationResponseFormat ResponseFormat { get; init; }
+
+    // A JSON schema for ResponseFormat JsonSchema, with an optional name and description.
+    public string? ResponseSchemaJson { get; init; }
+
+    public string? ResponseSchemaName { get; init; }
+
+    public string? ResponseSchemaDescription { get; init; }
+
+    public bool ResponseSchemaStrict { get; init; }
+
+    public ConversationEnableThinking EnableThinking { get; init; }
 }

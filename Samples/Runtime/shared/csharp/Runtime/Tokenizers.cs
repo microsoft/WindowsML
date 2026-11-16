@@ -3,7 +3,6 @@
 // Sample code, not a supported API. Tokenizers, streaming decoders, and chat
 // template formatting.
 
-using System.Runtime.InteropServices;
 using Microsoft.Windows.AI.MachineLearning.Runtime;
 using Windows.Win32.Foundation;
 using Native = Microsoft.Windows.AI.MachineLearning.Runtime.PInvoke;
@@ -147,45 +146,10 @@ public sealed unsafe class StructuredConversationFormatter : WinMLObject, IWinML
 
     public ConversationFormatResult FormatConversation(ConversationRequest request)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        int count = request.Messages.Count;
-        WINML_CONVERSATION_MESSAGE[] messages = new WINML_CONVERSATION_MESSAGE[count];
-        GCHandle[] pins = new GCHandle[count * 2];
-        try
-        {
-            for (int i = 0; i < count; ++i)
-            {
-                pins[2 * i] = GCHandle.Alloc(request.Messages[i].Role, GCHandleType.Pinned);
-                pins[(2 * i) + 1] = GCHandle.Alloc(request.Messages[i].Content, GCHandleType.Pinned);
-                messages[i].role = new PCWSTR((char*)pins[2 * i].AddrOfPinnedObject());
-                messages[i].content = new PCWSTR((char*)pins[(2 * i) + 1].AddrOfPinnedObject());
-            }
-
-            IWinMLConversationFormatResult* result = null;
-            fixed (WINML_CONVERSATION_MESSAGE* messagePointer = messages)
-            {
-                WINML_CONVERSATION_REQUEST native = new()
-                {
-                    formatterMode = (WINML_CONVERSATION_FORMATTER_MODE)request.FormatterMode,
-                    messageCount = (uint)count,
-                    messages = messagePointer,
-                    addGenerationPrompt = request.AddGenerationPrompt,
-                };
-                Check(((IWinMLStructuredConversationFormatter*)ThisPtr)->FormatConversation(&native, &result));
-            }
-
-            return new ConversationFormatResult(Required(result));
-        }
-        finally
-        {
-            foreach (GCHandle pin in pins)
-            {
-                if (pin.IsAllocated)
-                {
-                    pin.Free();
-                }
-            }
-        }
+        using NativeConversationRequest native = new(request);
+        IWinMLConversationFormatResult* result = null;
+        Check(((IWinMLStructuredConversationFormatter*)ThisPtr)->FormatConversation(native.Pointer, &result));
+        return new ConversationFormatResult(Required(result));
     }
 }
 

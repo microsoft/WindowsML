@@ -101,6 +101,16 @@ What the wrapper provides:
   is a `ReadOnlySpan<char>` borrowed until the next read, with no managed
   allocation per token. No sample uses that loop; it is there for apps that
   manage the session thread themselves.
+- **Chat completion.** `WinMLTasks.ChatCompletion` creates chat completion
+  tasks, which compose a tokenizer's chat template with a text generation
+  session. `ChatGenerator` owns both sessions on a `SessionThread` and streams
+  a `ConversationRequest` (roles, tool calls and results, tools, tool choice,
+  response format, and thinking) as `IAsyncEnumerable<ChatCompletionUpdate>`
+  content, reasoning, and tool-call events. `LastOutcome` is a managed copy of
+  the result, with token counts and how many prompt tokens the session reused
+  from the previous turn. `TextGenerationOptionValues` sets sampling options
+  and stop tokens, and `TextGenerationSession.Capabilities` reports whether a
+  session can constrain its tokens, which tool calls need.
 - **Devices.** `DXCoreAdapter.FindBest` ranks the GPUs or NPUs that DXCore
   reports, and `WinMLRuntime.CreateExecutionTarget` has overloads for a device
   class, an adapter, and a registered ONNX Runtime execution provider. A
@@ -140,7 +150,8 @@ collide.
 | Failure `HRESULT` | .NET exception |
 
 Some members have no native counterpart: `DXCoreAdapter`, `SessionThread`,
-`TextGenerator`, `TensorLock<T>`, the adapter and provider overloads of
+`TextGenerator`, `ChatGenerator` and its `ChatCompletionUpdate` and
+`ChatCompletionOutcome` records, `TensorLock<T>`, the adapter and provider overloads of
 `WinMLRuntime.CreateExecutionTarget`, `TryCreateExecutionTarget`,
 `TokenizerMetadata.TryGetBosTokenId`, and `WinMLException.NotSupported`,
 `InvalidData`, and `NoInterface`. The last three create the .NET exception for
@@ -159,9 +170,12 @@ report for it, so the C# and C++ samples exit and report alike.
 | `Runtime\Pipeline.cs` | `PipelineBuilder`, `Pipeline`, `Stage`, and the stage schema, state, and diagnostics interfaces. |
 | `Runtime\Tensors.cs` | `Tensor`, `TensorLock<T>`, `RawTensorFactory`, `ImageTensorFactory`. |
 | `Runtime\Tokenizers.cs` | `Tokenizer`, `TokenizerDecoder`, `TokenizerMetadata`, `StructuredConversationFormatter`. |
+| `Runtime\Conversation.cs` | Copies a `ConversationRequest` into the native request that the formatter and chat sessions take. |
 | `Runtime\SessionThread.cs` | A thread that owns thread-bound objects such as text generation sessions. |
-| `Runtime\Tasks\TextGeneration.cs` | The text generation Task API: configurations, tasks, sessions, pull streams, and results. |
+| `Runtime\Tasks\TextGeneration.cs` | The text generation Task API: configurations, options, tasks, sessions, pull streams, and results. |
 | `Runtime\Tasks\TextGenerator.cs` | `IAsyncEnumerable` token streaming with cancellation. |
+| `Runtime\Tasks\ChatCompletion.cs` | The chat completion Task API: tasks, sessions, event streams, and results. |
+| `Runtime\Tasks\ChatGenerator.cs` | `IAsyncEnumerable` chat completion events with cancellation. |
 | `NativeMethods.txt` | The Runtime, Task, DXCore, and COM APIs that the wrapper calls. |
 | `NativeMethods.json` | CsWin32 options: unmanaged interface structs whose methods return their `HRESULT`. |
 | `DeviceOptions.cs` | Parses `--device`, `--ep`, `--performance`, `--efficiency`, and `--verbose`. |

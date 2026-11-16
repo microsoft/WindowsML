@@ -64,10 +64,45 @@ public sealed class TextGenerationSpeculativeOptions
     public uint DraftTokenCount { get; init; }
 }
 
+// Generation settings for CreateTextGenerationOptions. Unset properties keep
+// the Runtime defaults.
+public sealed class TextGenerationOptionValues
+{
+    public uint? MaxNewTokens { get; init; }
+
+    public float? Temperature { get; init; }
+
+    public uint? TopK { get; init; }
+
+    public float? TopP { get; init; }
+
+    public float? MinP { get; init; }
+
+    public float? RepetitionPenalty { get; init; }
+
+    public uint? RepetitionPenaltyWindow { get; init; }
+
+    public float? PresencePenalty { get; init; }
+
+    public float? FrequencyPenalty { get; init; }
+
+    public ulong? Seed { get; init; }
+
+    // Tokens that end generation, in addition to the task's end-of-sequence tokens.
+    public IReadOnlyList<uint>? StopTokenIds { get; init; }
+}
+
+// What a text generation session supports.
+public readonly record struct TextGenerationCapabilities(
+    bool SupportsContinuation,
+    bool SupportsConstraints,
+    bool SupportsSegmentedPrompts);
+
 // The Task API root object.
 public sealed unsafe class WinMLTasks : WinMLObject, IWinMLInterface<WinMLTasks>
 {
     private TextGenerationTaskFactory? _textGeneration;
+    private ChatCompletionTaskFactory? _chatCompletion;
 
     private WinMLTasks(IWinMLTasks* pointer)
         : base(pointer)
@@ -80,6 +115,10 @@ public sealed unsafe class WinMLTasks : WinMLObject, IWinMLInterface<WinMLTasks>
 
     // The factory for text generation configurations, options, and tasks.
     public TextGenerationTaskFactory TextGeneration => GetCachedInterface(ref _textGeneration);
+
+    // The factory for chat completion tasks, which compose a tokenizer's chat
+    // template with a text generation session.
+    public ChatCompletionTaskFactory ChatCompletion => GetCachedInterface(ref _chatCompletion);
 
     public static WinMLTasks Create(WinMLRuntime runtime)
     {
@@ -101,6 +140,7 @@ public sealed unsafe class WinMLTasks : WinMLObject, IWinMLInterface<WinMLTasks>
     private protected override void OnDisposing()
     {
         DisposeCached(_textGeneration);
+        DisposeCached(_chatCompletion);
     }
 }
 
@@ -156,6 +196,81 @@ public sealed unsafe class TextGenerationTaskFactory : WinMLObject, IWinMLInterf
         };
         IWinMLTextGenerationOptions* options = null;
         Check(Self->CreateTextGenerationOptions(&values, 0, null, &options));
+        return new TextGenerationOptions(Required(options));
+    }
+
+    // Options with the given settings and stop tokens.
+    public TextGenerationOptions CreateTextGenerationOptions(TextGenerationOptionValues values)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        WINML_TEXT_GENERATION_OPTIONS native = default;
+        if (values.MaxNewTokens is uint maxNewTokens)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_MAX_NEW_TOKENS;
+            native.maxNewTokens = maxNewTokens;
+        }
+
+        if (values.Temperature is float temperature)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_TEMPERATURE;
+            native.temperature = temperature;
+        }
+
+        if (values.TopK is uint topK)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_TOP_K;
+            native.topK = topK;
+        }
+
+        if (values.TopP is float topP)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_TOP_P;
+            native.topP = topP;
+        }
+
+        if (values.MinP is float minP)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_MIN_P;
+            native.minP = minP;
+        }
+
+        if (values.RepetitionPenalty is float repetitionPenalty)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_REPETITION_PENALTY;
+            native.repetitionPenalty = repetitionPenalty;
+        }
+
+        if (values.RepetitionPenaltyWindow is uint repetitionPenaltyWindow)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_REPETITION_PENALTY_WINDOW;
+            native.repetitionPenaltyWindow = repetitionPenaltyWindow;
+        }
+
+        if (values.PresencePenalty is float presencePenalty)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_PRESENCE_PENALTY;
+            native.presencePenalty = presencePenalty;
+        }
+
+        if (values.FrequencyPenalty is float frequencyPenalty)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_FREQUENCY_PENALTY;
+            native.frequencyPenalty = frequencyPenalty;
+        }
+
+        if (values.Seed is ulong seed)
+        {
+            native.presentFields |= WINML_TEXT_GENERATION_OPTION_FIELDS.WINML_TEXT_GENERATION_OPTION_FIELD_SEED;
+            native.seed = seed;
+        }
+
+        uint[] stopTokenIds = values.StopTokenIds?.ToArray() ?? [];
+        IWinMLTextGenerationOptions* options = null;
+        fixed (uint* stopTokens = stopTokenIds)
+        {
+            Check(Self->CreateTextGenerationOptions(&native, (uint)stopTokenIds.Length, stopTokenIds.Length == 0 ? null : stopTokens, &options));
+        }
+
         return new TextGenerationOptions(Required(options));
     }
 
@@ -338,6 +453,21 @@ public sealed unsafe class TextGenerationSession : WinMLObject, IWinMLInterface<
     static TextGenerationSession IWinMLInterface<TextGenerationSession>.CreateFromOwnedPointer(nint pointer) => new((IWinMLTextGenerationSession*)pointer);
 
     private IWinMLTextGenerationSession* Self => (IWinMLTextGenerationSession*)ThisPtr;
+
+    internal IWinMLTextGenerationSession* Raw => Self;
+
+    public TextGenerationCapabilities Capabilities
+    {
+        get
+        {
+            WINML_TEXT_GENERATION_CAPABILITIES capabilities;
+            Check(Self->GetCapabilities(&capabilities));
+            return new TextGenerationCapabilities(
+                capabilities.supportsContinuation,
+                capabilities.supportsConstraints,
+                capabilities.supportsSegmentedPrompts);
+        }
+    }
 
     // Generates from a prompt, which the session encodes without a chat template.
     public TextGenerationPullStream GenerateText(string prompt, TextGenerationOptions options, CancellationSource? cancellation = null)

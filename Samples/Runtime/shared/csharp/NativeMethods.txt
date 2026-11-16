@@ -40,6 +40,9 @@ Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLModelTextGenerationConf
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeConfiguration
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeResult
 
+// Chat completion Task API (WinMLTasks.dll).
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLChatCompletionTaskFactory
+
 // DXCore adapter ranking for --device gpu|npu and --performance|--efficiency.
 DXCoreCreateAdapterFactory
 IDXCoreAdapterFactory
