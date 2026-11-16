@@ -45,6 +45,9 @@ public class WinMLException : Exception
     // E_FAIL.
     private const int Fail = unchecked((int)0x80004005);
 
+    // E_UNEXPECTED.
+    private const int UnexpectedCode = unchecked((int)0x8000FFFF);
+
     // Win32 errors that samples also raise themselves; see NotSupported and InvalidData.
     private const int ErrorNotSupported = unchecked((int)0x80070032);
     private const int ErrorInvalidData = unchecked((int)0x8007000D);
@@ -143,6 +146,13 @@ public class WinMLException : Exception
     public static InvalidCastException NoInterface(string message)
     {
         return new InvalidCastException(message) { HResult = NoInterfaceCode };
+    }
+
+    // E_UNEXPECTED, for a state the sample does not expect, such as a session
+    // that is not ready. The Runtime's E_UNEXPECTED also maps to WinMLException.
+    public static WinMLException Unexpected(string message)
+    {
+        return new WinMLException(message, UnexpectedCode);
     }
 
     internal static void ThrowIfFailed(HRESULT hr)

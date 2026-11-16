@@ -165,6 +165,8 @@ public sealed unsafe class ConversationFormatResult : WinMLObject, IWinMLInterfa
     static ConversationFormatResult IWinMLInterface<ConversationFormatResult>.CreateFromOwnedPointer(nint pointer) =>
         new((IWinMLConversationFormatResult*)pointer);
 
+    internal IWinMLConversationFormatResult* Raw => (IWinMLConversationFormatResult*)ThisPtr;
+
     // The formatted prompt as token IDs.
     public uint[] GetTokenIds()
     {

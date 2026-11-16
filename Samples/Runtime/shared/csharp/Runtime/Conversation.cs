@@ -77,6 +77,23 @@ internal sealed unsafe class NativeConversationRequest : IDisposable
             native[i].toolCalls = CopyToolCalls(toolCalls);
             native[i].toolCallId = Copy(message.ToolCallId);
             native[i].toolName = Copy(message.ToolName);
+            IReadOnlyList<ConversationContentPart> parts = message.ContentParts ?? [];
+            native[i].contentPartCount = (uint)parts.Count;
+            native[i].contentParts = CopyContentParts(parts);
+        }
+
+        return native;
+    }
+
+    private WINML_CONVERSATION_CONTENT_PART* CopyContentParts(IReadOnlyList<ConversationContentPart> parts)
+    {
+        WINML_CONVERSATION_CONTENT_PART* native = Allocate<WINML_CONVERSATION_CONTENT_PART>(parts.Count);
+        for (int i = 0; i < parts.Count; ++i)
+        {
+            ConversationContentPart part = parts[i] ?? throw new ArgumentException("A content part is null.");
+            native[i].type = Copy(part.Type ?? throw new ArgumentException("A content part has no type."));
+            native[i].text = Copy(part.Text);
+            native[i].jsonValue = Copy(part.JsonValue);
         }
 
         return native;

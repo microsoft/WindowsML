@@ -15,13 +15,15 @@ namespace WinMLSamples.Runtime.Tasks;
 
 // One event of a completion, copied from the Runtime. Text is the delta of a
 // content, reasoning, or tool-arguments event; CallId and ToolName are set on
-// a ToolCallStart event; Text is the message of an Error event.
+// a ToolCallStart event; Text is the message and ErrorCode the HRESULT of an
+// Error event.
 public readonly record struct ChatCompletionUpdate(
     ConversationOutputEventType Type,
     string Text,
     uint ToolCallIndex = 0,
     string? CallId = null,
-    string? ToolName = null);
+    string? ToolName = null,
+    int ErrorCode = 0);
 
 // The outcome of a completion, copied from the Runtime's result.
 public sealed record ChatCompletionOutcome(
@@ -63,8 +65,9 @@ public sealed class ChatGenerator : IAsyncDisposable, IDisposable
         Capabilities = capabilities;
     }
 
-    // What the text generation session supports. Tool calls and JSON schema
-    // output are reliable only when it supports constraints.
+    // What the text generation session supports, read when the generator was
+    // created; its SequenceState is not updated afterward. Tool calls and JSON
+    // schema output are reliable only when it supports constraints.
     public TextGenerationCapabilities Capabilities { get; }
 
     // The outcome of the most recent completion that ran to completion or was
@@ -74,11 +77,15 @@ public sealed class ChatGenerator : IAsyncDisposable, IDisposable
     // Creates a text generation session for configuration, and a chat session
     // over it, on a new SessionThread. The session consumes the configuration.
     // tokenizer must be the configuration's tokenizer, which task also uses.
+    // sessionCreated, if given, runs on the session thread once the text
+    // generation session exists and before the chat task is created; an
+    // exception it throws fails creation.
     public static async Task<ChatGenerator> CreateAsync(
         WinMLTasks tasks,
         TextGenerationTask task,
         TextGenerationConfiguration configuration,
-        Tokenizer tokenizer)
+        Tokenizer tokenizer,
+        Action<TextGenerationSession>? sessionCreated = null)
     {
         ArgumentNullException.ThrowIfNull(tasks);
         ArgumentNullException.ThrowIfNull(task);
@@ -93,6 +100,7 @@ public sealed class ChatGenerator : IAsyncDisposable, IDisposable
                 ChatCompletionTask? chatTask = null;
                 try
                 {
+                    sessionCreated?.Invoke(textSession);
                     chatTask = tasks.ChatCompletion.CreateChatCompletionTask(tokenizer);
                     ChatCompletionSession session = chatTask.CreateSession(textSession);
                     return new ChatGenerator(thread, tasks, textSession, chatTask, session, textSession.Capabilities);
@@ -287,8 +295,8 @@ public sealed class ChatGenerator : IAsyncDisposable, IDisposable
             case ConversationOutputEventType.ToolCallEnd:
                 return new ChatCompletionUpdate(type, string.Empty, outputEvent.ToolCallIndex);
             case ConversationOutputEventType.Error:
-                outputEvent.GetError(out string message);
-                return new ChatCompletionUpdate(type, message);
+                int errorCode = outputEvent.GetError(out string message);
+                return new ChatCompletionUpdate(type, message, ErrorCode: errorCode);
             default:
                 return new ChatCompletionUpdate(type, string.Empty);
         }

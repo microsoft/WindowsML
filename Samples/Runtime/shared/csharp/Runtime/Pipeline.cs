@@ -58,6 +58,8 @@ public sealed unsafe class Pipeline : WinMLObject, IWinMLInterface<Pipeline>
 
     static Pipeline IWinMLInterface<Pipeline>.CreateFromOwnedPointer(nint pointer) => new((IWinMLPipeline*)pointer);
 
+    internal IWinMLPipeline* Raw => (IWinMLPipeline*)ThisPtr;
+
     public void Run()
     {
         Check(((IWinMLPipeline*)ThisPtr)->Run());
@@ -82,6 +84,8 @@ public sealed unsafe class Stage : WinMLObject, IWinMLInterface<Stage>
     static Stage IWinMLInterface<Stage>.CreateFromOwnedPointer(nint pointer) => new((IWinMLStage*)pointer);
 
     private IWinMLStage* Self => (IWinMLStage*)ThisPtr;
+
+    internal IWinMLStage* Raw => Self;
 
     // The Runtime publishes only outputs requested before Build.
     public void RequestOutput(uint index)
@@ -144,6 +148,12 @@ public sealed unsafe class StageSchema : WinMLObject, IWinMLInterface<StageSchem
     }
 }
 
+public enum SequenceCapacityDisclosure
+{
+    Unknown = 0,
+    ArtifactDeclared = 1,
+}
+
 // Sequence state of a built stateful stage, such as a decoder.
 public sealed unsafe class StatefulStage : WinMLObject, IWinMLInterface<StatefulStage>
 {
@@ -165,6 +175,17 @@ public sealed unsafe class StatefulStage : WinMLObject, IWinMLInterface<Stateful
             Check(((IWinMLStatefulStage*)ThisPtr)->GetSequenceCapacity(&capacity));
             return capacity;
         }
+    }
+
+    // The capacity the model artifact declares, if it declares one; the
+    // returned capacity is meaningful only when disclosure is ArtifactDeclared.
+    public ulong GetDeclaredSequenceCapacity(out SequenceCapacityDisclosure disclosure)
+    {
+        WINML_SEQUENCE_CAPACITY_DISCLOSURE declared;
+        ulong capacity;
+        Check(((IWinMLStatefulStage*)ThisPtr)->GetDeclaredSequenceCapacity(&declared, &capacity));
+        disclosure = (SequenceCapacityDisclosure)declared;
+        return capacity;
     }
 
     // The number of positions the stage holds.

@@ -79,6 +79,26 @@ public sealed class TextGenerator : IAsyncDisposable, IDisposable
         return StreamAsync((session, o, c) => session.GenerateTokens(tokenIds.Span, o, c), options, cancellationToken);
     }
 
+    // Appends tokenIds to the sequence the session retains and generates from
+    // it. Check the session's Capabilities.SupportsContinuation first, through
+    // InvokeAsync. The memory must not change until the enumeration completes.
+    public IAsyncEnumerable<TextGenerationUpdate> ContinueTokensAsync(ReadOnlyMemory<uint> tokenIds, TextGenerationOptions options, CancellationToken cancellationToken = default)
+    {
+        return StreamAsync((session, o, c) => session.ContinueTokens(tokenIds.Span, o, c), options, cancellationToken);
+    }
+
+    // Streams a generation that start begins on the session thread, such as
+    // one through TextGenerationConstraintSession or GenerateSegments. start
+    // receives the session, options, and the cancellation source to pass on.
+    public IAsyncEnumerable<TextGenerationUpdate> GenerateAsync(
+        Func<TextGenerationSession, TextGenerationOptions, CancellationSource, TextGenerationPullStream> start,
+        TextGenerationOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(start);
+        return StreamAsync(start, options, cancellationToken);
+    }
+
     public void Dispose()
     {
         DisposeAsync().AsTask().GetAwaiter().GetResult();

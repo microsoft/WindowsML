@@ -100,7 +100,19 @@ public sealed unsafe class ChatCompletionTask : WinMLObject, IWinMLInterface<Cha
         GC.KeepAlive(textGenerationSession);
         return new ChatCompletionSession(Required(session));
     }
+
+    // The tokenizer whose chat template the task applies.
+    public Tokenizer GetTokenizer()
+    {
+        IWinMLTokenizer* tokenizer = null;
+        Check(((IWinMLChatCompletionTask*)ThisPtr)->GetTokenizer(&tokenizer));
+        return new Tokenizer(Required(tokenizer));
+    }
 }
+
+// An image tensor for an image content part of a request: the part at
+// ContentPartIndex of the message at MessageIndex.
+public sealed record ChatMediaBinding(uint MessageIndex, uint ContentPartIndex, Tensor Tensor);
 
 // Completes conversations. Call it only on its thread; Dispose closes it.
 public sealed unsafe class ChatCompletionSession : WinMLObject, IWinMLInterface<ChatCompletionSession>
@@ -131,6 +143,74 @@ public sealed unsafe class ChatCompletionSession : WinMLObject, IWinMLInterface<
         GC.KeepAlive(options);
         GC.KeepAlive(cancellation);
         return new ChatCompletionPullStream(Required(stream));
+    }
+
+    // Like Generate, with an image tensor for each image content part of the
+    // request. Bindings need a media encoder; see SetMediaEncoder.
+    public ChatCompletionPullStream GenerateWithMedia(
+        ConversationRequest request,
+        IReadOnlyList<ChatMediaBinding> bindings,
+        TextGenerationOptions options,
+        CancellationSource? cancellation = null)
+    {
+        ArgumentNullException.ThrowIfNull(bindings);
+        ArgumentNullException.ThrowIfNull(options);
+        using NativeConversationRequest native = new(request);
+        WINML_CHAT_MEDIA_BINDING[] nativeBindings = new WINML_CHAT_MEDIA_BINDING[bindings.Count];
+        for (int i = 0; i < bindings.Count; ++i)
+        {
+            ChatMediaBinding binding = bindings[i] ?? throw new ArgumentException("A media binding is null.", nameof(bindings));
+            nativeBindings[i] = new WINML_CHAT_MEDIA_BINDING
+            {
+                messageIndex = binding.MessageIndex,
+                contentPartIndex = binding.ContentPartIndex,
+                tensor = (binding.Tensor ?? throw new ArgumentException("A media binding has no tensor.", nameof(bindings))).Raw,
+            };
+        }
+
+        IWinMLChatCompletionPullStream* stream = null;
+        fixed (WINML_CHAT_MEDIA_BINDING* bindingPointer = nativeBindings)
+        {
+            Check(Self->GenerateWithMedia(
+                native.Pointer,
+                (uint)nativeBindings.Length,
+                nativeBindings.Length == 0 ? null : bindingPointer,
+                options.Raw,
+                cancellation is null ? null : cancellation.Raw,
+                &stream));
+        }
+
+        GC.KeepAlive(bindings);
+        GC.KeepAlive(options);
+        GC.KeepAlive(cancellation);
+        return new ChatCompletionPullStream(Required(stream));
+    }
+
+    // The encoder that turns bound images into embeddings for later requests,
+    // such as one TextGenerationSession.CreateMediaEncoderFromFile created.
+    // Null clears it.
+    public void SetMediaEncoder(MediaEncoder? encoder)
+    {
+        Check(Self->SetMediaEncoder(encoder is null ? null : encoder.Raw));
+        GC.KeepAlive(encoder);
+    }
+
+    // Null when no encoder is set.
+    public MediaEncoder? GetMediaEncoder()
+    {
+        IWinMLMediaEncoder* encoder = null;
+        Check(Self->GetMediaEncoder(&encoder));
+        return encoder == null ? null : new MediaEncoder(encoder);
+    }
+
+    // The text generation session the chat session wraps. The caller that
+    // created it still owns it: disposing the returned object releases a
+    // reference without closing the session.
+    public TextGenerationSession GetTextGenerationSession()
+    {
+        IWinMLTextGenerationSession* session = null;
+        Check(Self->GetTextGenerationSession(&session));
+        return new TextGenerationSession(Required(session), borrowed: true);
     }
 
     // Does not close the text generation session or outstanding streams.
@@ -200,6 +280,51 @@ public sealed unsafe class ChatCompletionPullStream : WinMLObject, IWinMLInterfa
         IWinMLChatCompletionResult* result = null;
         Check(Self->GetResult(&result));
         return new ChatCompletionResult(Required(result));
+    }
+
+    // The formatted prompt the stream generates from: its tokens, additional
+    // stop strings, and any constraint it describes.
+    public ConversationFormatResult GetFormatResult()
+    {
+        IWinMLConversationFormatResult* result = null;
+        Check(Self->GetFormatResult(&result));
+        return new ConversationFormatResult(Required(result));
+    }
+
+    // The parser that turns the generated text into the stream's events.
+    public ConversationOutputParser GetOutputParser()
+    {
+        IWinMLConversationOutputParser* parser = null;
+        Check(Self->GetOutputParser(&parser));
+        return new ConversationOutputParser(Required(parser));
+    }
+
+    // Returns false when the request needs no constraint, such as a text
+    // response without tools.
+    public bool TryGetConstraint([NotNullWhen(true)] out TokenConstraint? constraint)
+    {
+        WINML_CONVERSATION_CONSTRAINT_PRESENCE presence;
+        IWinMLTokenConstraint* native = null;
+        Check(Self->GetConstraint(&presence, &native));
+        if (presence != WINML_CONVERSATION_CONSTRAINT_PRESENCE.WINML_CONVERSATION_CONSTRAINT_PRESENCE_PRESENT || native == null)
+        {
+            Release(native);
+            constraint = null;
+            return false;
+        }
+
+        constraint = new TokenConstraint(native);
+        return true;
+    }
+
+    // The text generation stream under this stream. The chat stream reads and
+    // closes it: disposing the returned object releases a reference without
+    // closing the stream, and reading from it takes tokens from the chat stream.
+    public TextGenerationPullStream GetTextGenerationStream()
+    {
+        IWinMLTextGenerationPullStream* stream = null;
+        Check(Self->GetTextGenerationStream(&stream));
+        return new TextGenerationPullStream(Required(stream), borrowed: true);
     }
 
     public void Close()
@@ -402,10 +527,55 @@ public sealed unsafe class ChatCompletionResult : WinMLObject, IWinMLInterface<C
         return calls;
     }
 
+    // The text generation result under the chat result: the raw generated
+    // text and token IDs, with any reasoning and tool-call markup. Query it
+    // for TextGenerationSpeculativeResult or TextGenerationWatermarkResult.
+    public TextGenerationResult GetTextGenerationResult()
+    {
+        IWinMLTextGenerationResult* result = null;
+        Check(Self->GetTextGenerationResult(&result));
+        return new TextGenerationResult(Required(result));
+    }
+
     private string Copy(PCWSTR text)
     {
         string result = text.Value == null ? string.Empty : new string(text.Value);
         GC.KeepAlive(this);
         return result;
+    }
+}
+
+// The generated tokens that one event of a chat completion stream came from.
+// Query a ConversationOutputEvent from ChatCompletionPullStream for it.
+public sealed unsafe class ChatCompletionEventProvenance : WinMLObject, IWinMLInterface<ChatCompletionEventProvenance>
+{
+    private ChatCompletionEventProvenance(IWinMLChatCompletionEventProvenance* pointer)
+        : base(pointer)
+    {
+    }
+
+    public static Guid InterfaceId => IWinMLChatCompletionEventProvenance.IID_Guid;
+
+    static ChatCompletionEventProvenance IWinMLInterface<ChatCompletionEventProvenance>.CreateFromOwnedPointer(nint pointer) =>
+        new((IWinMLChatCompletionEventProvenance*)pointer);
+
+    // The event's tokens: TokenCount completion tokens from FirstTokenIndex on.
+    public (uint FirstTokenIndex, uint TokenCount) SourceTokenRange
+    {
+        get
+        {
+            uint first;
+            uint count;
+            Check(((IWinMLChatCompletionEventProvenance*)ThisPtr)->GetSourceTokenRange(&first, &count));
+            return (first, count);
+        }
+    }
+
+    public uint[] GetSourceTokenIds()
+    {
+        uint count = 0;
+        uint* tokens = null;
+        Check(((IWinMLChatCompletionEventProvenance*)ThisPtr)->GetSourceTokenIds(&count, &tokens));
+        return Tokenizer.TakeTokenIds(tokens, count);
     }
 }

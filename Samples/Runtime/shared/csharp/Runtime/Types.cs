@@ -217,7 +217,14 @@ public sealed class ConversationMessage
     public string? ToolCallId { get; init; }
 
     public string? ToolName { get; init; }
+
+    // Typed parts, such as text and an image, in place of Content. An image
+    // part carries no text; ChatCompletionSession.GenerateWithMedia binds its pixels.
+    public IReadOnlyList<ConversationContentPart>? ContentParts { get; init; }
 }
+
+// One part of a message. Type is a part type such as "text" or "image".
+public sealed record ConversationContentPart(string Type, string? Text = null, string? JsonValue = null);
 
 // A tool call that an assistant message made. ArgumentsJson is a JSON object.
 public sealed record ConversationToolCall(string Id, string Name, string ArgumentsJson);

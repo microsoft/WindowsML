@@ -19,11 +19,19 @@ Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStatefulStageOptions
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStageExecutionDiagnostics
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStageWorkShare
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLOrtStageDiagnostics
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLOnnxSymbolicDimensionOverrides
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLOrtStageOptions
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLOrtModelSchema
 
 // Tensor factories, and the lock that stages a device tensor's data.
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLRawTensorFactory
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLImageTensorFactory
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLAudioTensorFactory
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTensorSynchronizedDataLock
+
+// Media encoders and segment layouts for multimodal prompts.
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLMediaEncoder
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLSequenceSegmentLayout
 
 // Tokenizer and chat-template formatting (WinMLTokenizer.dll).
 Microsoft.Windows.AI.MachineLearning.Runtime.WinMLCreateTokenizerFromFile
@@ -31,17 +39,39 @@ Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTokenizer
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTokenizerDecoder
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTokenizerMetadata
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLStructuredConversationFormatter
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTokenizerConstraintFactory
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLTokenConstraint
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLConversationOutputParser
 
 // Text generation Task API (WinMLTasks.dll).
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.WinMLCreateTasks
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTasks
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTaskRuntimeIdentity
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationTaskFactory
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLModelTextGenerationConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSequenceDisclosure
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationConstraintSession
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationConstraintContinuation
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeSupport
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationSpeculativeResult
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationWatermarkConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationWatermarkResult
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLTextGenerationWatermarkDetector
 
 // Chat completion Task API (WinMLTasks.dll).
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLChatCompletionTaskFactory
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLChatCompletionEventProvenance
+
+// Automatic speech recognition Task API (WinMLTasks.dll).
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLAutomaticSpeechRecognitionTaskFactory
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLEncoderDecoderAutomaticSpeechRecognitionConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLModelAutomaticSpeechRecognitionConfiguration
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLAutomaticSpeechRecognitionEncoderInput
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLAutomaticSpeechRecognitionLiveSession
+
+// Typed decision Task API (WinMLTasks.dll).
+Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLDecisionTaskFactory
 
 // DXCore adapter ranking for --device gpu|npu and --performance|--efficiency.
 DXCoreCreateAdapterFactory
