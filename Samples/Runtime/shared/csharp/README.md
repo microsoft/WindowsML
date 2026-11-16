@@ -51,11 +51,11 @@ await foreach (TextGenerationUpdate update in generator.GenerateTokensAsync(prom
 
 > [!IMPORTANT]
 > The wrapper is sample code, not a supported API. It is not shipped in a
-> package and may change with the samples. It covers what these samples call,
-> plus `TextGenerator.GenerateTextAsync` and the synchronous pull-stream loop
-> described below. Only the CPU paths of the samples have been compared
-> against their previous output. You can copy the wrapper into an app, but you
-> then maintain it.
+> package and may change with the samples. It covers every interface of the
+> Task API (see [Task API coverage](#task-api-coverage)) and the parts of the
+> Runtime API that the samples call. Not every member has run: the
+> coverage table says which sample exercises each interface. You can
+> copy the wrapper into an app, but you then maintain it.
 
 What the wrapper provides:
 
@@ -111,6 +111,32 @@ What the wrapper provides:
   from the previous turn. `TextGenerationOptionValues` sets sampling options
   and stop tokens, and `TextGenerationSession.Capabilities` reports whether a
   session can constrain its tokens, which tool calls need.
+- **Speech recognition and decisions.** `SpeechRecognizer` owns a speech
+  recognition session on a `SessionThread` and streams
+  `IAsyncEnumerable<SpeechRecognitionUpdate>` values; `LastOutcome` copies
+  the result. `Decider.DecideAsync` runs a decision on its session's thread.
+  Both map a `CancellationToken` to a `CancellationSource`, cancel on dispose,
+  and offer `CloseAsync`. Live speech input and the optional text generation
+  views, such as `TextGenerationSequenceDisclosure`, are bound to the session's
+  thread: run them through `InvokeAsync`, as the
+  [text generation features sample](../../../Tasks/model-backed/text-generation-features/csharp/)
+  does.
+- **Optional interfaces.** Interfaces that the Task API exposes through
+  `QueryInterface`, such as `TextGenerationSpeculativeSupport` on a
+  configuration or `ChatCompletionEventProvenance` on a chat event, are
+  wrapper types that you get with `As<T>()` or `TryAs<T>(out T)`.
+- **Three kinds of ownership.** Most objects are owned: `Dispose` releases
+  them, and closes a session, stream, or live input that was not closed. A
+  property that returns a related object, such as `WinMLTasks.TextGeneration`,
+  returns one its parent owns, and disposing it does nothing. An object that
+  another object owns, such as the text generation session that
+  `ChatCompletionSession.GetTextGenerationSession` returns, is borrowed:
+  `Dispose` releases it without closing it, and `Close` throws. `As<T>()`
+  returns an owned object, so don't query a session view, such as
+  `SpeechRecognitionLiveSession`, back to its session type and dispose the
+  result: that closes the session. Descriptors that a `Get` method returns,
+  such as `TextGenerationDraftPipeline`, own their objects; ones you create
+  don't, and disposing them does nothing.
 - **Devices.** `DXCoreAdapter.FindBest` ranks the GPUs or NPUs that DXCore
   reports, and `WinMLRuntime.CreateExecutionTarget` has overloads for a device
   class, an adapter, and a registered ONNX Runtime execution provider. A
@@ -151,12 +177,88 @@ collide.
 
 Some members have no native counterpart: `DXCoreAdapter`, `SessionThread`,
 `TextGenerator`, `ChatGenerator` and its `ChatCompletionUpdate` and
-`ChatCompletionOutcome` records, `TensorLock<T>`, the adapter and provider overloads of
-`WinMLRuntime.CreateExecutionTarget`, `TryCreateExecutionTarget`,
-`TokenizerMetadata.TryGetBosTokenId`, and `WinMLException.NotSupported`,
-`InvalidData`, and `NoInterface`. The last three create the .NET exception for
-a condition the sample detects itself, with the `HRESULT` the C++ samples
-report for it, so the C# and C++ samples exit and report alike.
+`ChatCompletionOutcome` records, `SpeechRecognizer` and its
+`SpeechRecognitionUpdate` and `SpeechRecognitionOutcome` records, `Decider`,
+`TensorLock<T>`, `MediaEncoding`, `TextGenerationOutputBinding`,
+`TextGenerationDraftPipeline`, `GenerationSegment`, the adapter and provider
+overloads of `WinMLRuntime.CreateExecutionTarget`, `TryCreateExecutionTarget`,
+`TokenizerMetadata.TryGetBosTokenId`, `WinMLObject.IsSameObject`, and
+`WinMLException.NotSupported`, `InvalidData`, `NoInterface`, and
+`Unexpected`. The last four create the .NET exception for a condition the
+sample detects itself, with the `HRESULT` the C++ samples report for it, so
+the C# and C++ samples exit and report alike.
+
+The speech recognition types drop `Automatic` after the factory and the task:
+`IWinMLAutomaticSpeechRecognitionSession` is `SpeechRecognitionSession`, and
+`IWinMLModelAutomaticSpeechRecognitionConfiguration` is
+`ModelSpeechRecognitionConfiguration`. An `[out] BOOL` that says whether
+another out value is present becomes a nullable value, such as
+`SpeechRecognitionLiveInput.LifetimeWatermark`.
+
+## Task API coverage
+
+Every interface of the Task API in Windows ML 2.9 has a wrapper type. The
+samples column names the C# samples that call it, directly or through
+`TextGenerator`, `ChatGenerator`, `SpeechRecognizer`, or `Decider`:
+chat ([chat completion](../../../Tasks/language/chat-completion/csharp/)),
+text ([Models-backed text generation](../../../Tasks/model-backed/text-generation/csharp/)),
+features ([text generation features](../../../Tasks/model-backed/text-generation-features/csharp/)),
+model ASR ([Models-backed speech recognition](../../../Tasks/model-backed/automatic-speech-recognition/csharp/)),
+ASR ([speech recognition](../../../Tasks/speech/automatic-speech-recognition/csharp/)), and
+decision ([typed decisions](../../../Tasks/model-backed/decision/csharp/)).
+The model ASR and decision samples need a GPU target.
+
+| Interface | Wrapper | Samples |
+|---|---|---|
+| `IWinMLTasks` | `WinMLTasks` | all |
+| `IWinMLCancellationSource` | `CancellationSource` | all that stream or decide |
+| `IWinMLTaskRuntimeIdentity` | `TaskRuntimeIdentity` | features, ASR |
+| `IWinMLTextGenerationTaskFactory` | `TextGenerationTaskFactory` | chat, text, features |
+| `IWinMLTextGenerationOptions` | `TextGenerationOptions` | chat, text, features |
+| `IWinMLTextGenerationConfiguration` | `TextGenerationConfiguration` | chat, text, features |
+| `IWinMLModelTextGenerationConfiguration` | `ModelTextGenerationConfiguration` | text, features (`SetModel`; `SetComposition` is not run) |
+| `IWinMLTextGenerationTask` | `TextGenerationTask` | chat, text, features |
+| `IWinMLTextGenerationSession` | `TextGenerationSession` | chat, text, features (`CreateMediaEncoderFromFile` is not run) |
+| `IWinMLTextGenerationSequenceDisclosure` | `TextGenerationSequenceDisclosure` | features |
+| `IWinMLTextGenerationConstraintSession` | `TextGenerationConstraintSession` | features (token prompts) |
+| `IWinMLTextGenerationConstraintContinuation` | `TextGenerationConstraintContinuation` | features |
+| `IWinMLTextGenerationPullStream` | `TextGenerationPullStream` | text, features |
+| `IWinMLTextGenerationResult` | `TextGenerationResult` | text, features |
+| `IWinMLTextGenerationSpeculativeConfiguration` | `TextGenerationSpeculativeConfiguration` | text with `--draft-model`, features |
+| `IWinMLTextGenerationSpeculativeSupport` | `TextGenerationSpeculativeSupport` | features |
+| `IWinMLTextGenerationSpeculativeResult` | `TextGenerationSpeculativeResult` | text with `--draft-model`, features |
+| `IWinMLTextGenerationWatermarkConfiguration` | `TextGenerationWatermarkConfiguration` | features |
+| `IWinMLTextGenerationWatermarkResult` | `TextGenerationWatermarkResult` | features |
+| `IWinMLTextGenerationWatermarkDetector` | `TextGenerationWatermarkDetector` | features |
+| `IWinMLChatCompletionTaskFactory` | `ChatCompletionTaskFactory` | chat, features |
+| `IWinMLChatCompletionTask` | `ChatCompletionTask` | chat, features |
+| `IWinMLChatCompletionSession` | `ChatCompletionSession` | chat, features (`GenerateWithMedia` and the media encoder are not run) |
+| `IWinMLChatCompletionPullStream` | `ChatCompletionPullStream` | chat, features |
+| `IWinMLChatCompletionResult` | `ChatCompletionResult` | chat, features |
+| `IWinMLChatCompletionEventProvenance` | `ChatCompletionEventProvenance` | features |
+| `IWinMLAutomaticSpeechRecognitionTaskFactory` | `AutomaticSpeechRecognitionTaskFactory` | model ASR, ASR |
+| `IWinMLAutomaticSpeechRecognitionConfiguration` | `SpeechRecognitionConfiguration` | model ASR, ASR |
+| `IWinMLEncoderDecoderAutomaticSpeechRecognitionConfiguration` | `EncoderDecoderSpeechRecognitionConfiguration` | ASR |
+| `IWinMLModelAutomaticSpeechRecognitionConfiguration` | `ModelSpeechRecognitionConfiguration` | model ASR |
+| `IWinMLAutomaticSpeechRecognitionTask` | `AutomaticSpeechRecognitionTask` | model ASR, ASR |
+| `IWinMLAutomaticSpeechRecognitionSession` | `SpeechRecognitionSession` | model ASR, ASR |
+| `IWinMLAutomaticSpeechRecognitionEncoderInput` | `SpeechRecognitionEncoderInput` | ASR (queried; no sample computes log-mel input) |
+| `IWinMLAutomaticSpeechRecognitionLiveSession` | `SpeechRecognitionLiveSession` | model ASR with `--live` |
+| `IWinMLAutomaticSpeechRecognitionLiveInput` | `SpeechRecognitionLiveInput` | model ASR with `--live` |
+| `IWinMLAutomaticSpeechRecognitionPullStream` | `SpeechRecognitionPullStream` | model ASR, ASR |
+| `IWinMLAutomaticSpeechRecognitionResult` | `SpeechRecognitionResult` | model ASR, ASR |
+| `IWinMLDecisionTaskFactory` | `DecisionTaskFactory` | decision |
+| `IWinMLDecisionTask` | `DecisionTask` | decision |
+| `IWinMLDecisionSession` | `DecisionSession` | decision |
+| `IWinMLDecisionResult` | `DecisionResult` | decision |
+
+The members that no sample runs need a model the sample catalog lacks: a
+multimodal model and projector for the media encoder, `GenerateWithMedia`,
+and embedding segments, and an exported ONNX decoder for `SetComposition`.
+The Task API also returns Runtime objects that the wrapper covers only as far
+as the Task API needs them: `MediaEncoder`, `SequenceSegmentLayout`,
+`TokenConstraint`, `TokenizerConstraintFactory`, `ConversationOutputParser`,
+and `AudioTensorFactory`.
 
 ## Files
 
@@ -168,14 +270,24 @@ report for it, so the C# and C++ samples exit and report alike.
 | `Runtime\WinMLRuntime.cs` | `WinMLRuntime`, `ExecutionTarget`, `Model`, `ModelSchema`, `OrtCompatibility`, `LlamaModelLoader`. |
 | `Runtime\DXCoreAdapter.cs` | DXCore adapter enumeration and ranking. |
 | `Runtime\Pipeline.cs` | `PipelineBuilder`, `Pipeline`, `Stage`, and the stage schema, state, and diagnostics interfaces. |
+| `Runtime\StageOptions.cs` | ONNX symbolic dimension overrides and ONNX Runtime session entries for a stage. |
+| `Runtime\OrtModelSchema.cs` | Finds an ONNX model's inputs and outputs by name. |
 | `Runtime\Tensors.cs` | `Tensor`, `TensorLock<T>`, `RawTensorFactory`, `ImageTensorFactory`. |
+| `Runtime\AudioTensors.cs` | `AudioTensorFactory`: PCM audio to tensors, such as speech recognition waveforms. |
+| `Runtime\MediaEncoder.cs` | `MediaEncoder` and `SequenceSegmentLayout`, for multimodal prompts. |
 | `Runtime\Tokenizers.cs` | `Tokenizer`, `TokenizerDecoder`, `TokenizerMetadata`, `StructuredConversationFormatter`. |
+| `Runtime\Constraints.cs` | `TokenizerConstraintFactory`, `TokenConstraint`, `ConversationOutputParser`. |
 | `Runtime\Conversation.cs` | Copies a `ConversationRequest` into the native request that the formatter and chat sessions take. |
 | `Runtime\SessionThread.cs` | A thread that owns thread-bound objects such as text generation sessions. |
-| `Runtime\Tasks\TextGeneration.cs` | The text generation Task API: configurations, options, tasks, sessions, pull streams, and results. |
+| `Runtime\Tasks\TextGeneration.cs` | The text generation Task API: the `WinMLTasks` root, configurations, options, tasks, sessions, pull streams, and results. |
+| `Runtime\Tasks\TextGenerationFeatures.cs` | The optional text generation interfaces: sequence disclosure, constraints, speculative support, watermarks, segments, compositions, and `TaskRuntimeIdentity`. |
 | `Runtime\Tasks\TextGenerator.cs` | `IAsyncEnumerable` token streaming with cancellation. |
-| `Runtime\Tasks\ChatCompletion.cs` | The chat completion Task API: tasks, sessions, event streams, and results. |
+| `Runtime\Tasks\ChatCompletion.cs` | The chat completion Task API: tasks, sessions, event streams, results, and event provenance. |
 | `Runtime\Tasks\ChatGenerator.cs` | `IAsyncEnumerable` chat completion events with cancellation. |
+| `Runtime\Tasks\SpeechRecognition.cs` | The speech recognition Task API: configurations, sessions, encoder and live input, pull streams, and results. |
+| `Runtime\Tasks\SpeechRecognizer.cs` | `IAsyncEnumerable` speech recognition with cancellation. |
+| `Runtime\Tasks\Decision.cs` | The typed decision Task API: tasks, sessions, and results. |
+| `Runtime\Tasks\Decider.cs` | Decisions from any thread, with cancellation. |
 | `NativeMethods.txt` | The Runtime, Task, DXCore, and COM APIs that the wrapper calls. |
 | `NativeMethods.json` | CsWin32 options: unmanaged interface structs whose methods return their `HRESULT`. |
 | `DeviceOptions.cs` | Parses `--device`, `--ep`, `--performance`, `--efficiency`, and `--verbose`. |
@@ -183,6 +295,7 @@ report for it, so the C# and C++ samples exit and report alike.
 | `ExecutionTargets.cs` | Creates CPU, GPU, and NPU targets from ranked DXCore adapters, and provider-pinned targets. Matches `execution_target_utils.h`. |
 | `StageDiagnostics.cs` | Enables and prints a stage's execution diagnostics and ONNX Runtime provider. |
 | `SampleAssets.cs` | Finds files under the catalog's `models` directory. |
+| `WhisperAudio.cs` | Reads a WAV file and creates a Whisper waveform tensor. Matches `LoadWavFile` in `audio_utils.h` and `CreateWhisperWaveformTensorFromPcm`. |
 
 The samples require CsWin32 0.3.369 or later. Earlier versions generate some
 `IUnknown*` parameters, such as the adapter that

@@ -16,6 +16,16 @@ A PCM WAV file of at most 30 seconds. Defaults to the Runtime samples' test clip
 
 .PARAMETER Language
 Language tag, such as en. Omit for the model's default.
+
+.PARAMETER SampleLanguage
+cpp runs the C++ sample; csharp runs the C# sample in
+model-backed\automatic-speech-recognition\csharp. Build it first with
+.\build.ps1 -Sample model-speech-recognition-csharp. (-Language is the spoken
+language.)
+
+.PARAMETER Live
+Write the audio to a live session in chunks. C# sample only, and only for a
+model that accepts live input.
 #>
 
 [CmdletBinding()]
@@ -30,10 +40,19 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
+    [ValidateSet("cpp", "csharp")]
+    [string]$SampleLanguage = "cpp",
+    [switch]$Live,
     [switch]$NonInteractive
 )
 
 $ErrorActionPreference = "Stop"
+if ($Language -in @("cpp", "csharp")) {
+    throw "-Language is the spoken language. Use -SampleLanguage $Language to select the sample."
+}
+if ($Live -and $SampleLanguage -ne "csharp") {
+    throw "-Live requires -SampleLanguage csharp."
+}
 Import-Module (Join-Path $PSScriptRoot "..\shared\SampleArtifacts.psm1") -Force
 if (-not $ModelPath) {
     Assert-SampleArtifactsReady `
@@ -68,9 +87,19 @@ $sampleArguments = @(
 if ($Language) {
     $sampleArguments += @("--language", $Language)
 }
+if ($Live) {
+    $sampleArguments += "--live"
+}
+
+$projectName = if ($SampleLanguage -eq "csharp") {
+    "task-model-speech-recognition-csharp"
+}
+else {
+    "task-model-speech-recognition"
+}
 
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
-    -ProjectName task-model-speech-recognition `
+    -ProjectName $projectName `
     -SampleArguments $sampleArguments `
     -Platform $Platform `
     -Configuration $Configuration

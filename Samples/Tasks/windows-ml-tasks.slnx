@@ -2,27 +2,37 @@
 <Solution>
   <Project Path="language\text-generation\task-text-generation.vcxproj" />
   <Project Path="language\chat-completion\task-chat-completion.vcxproj" />
+  <Project Path="language\chat-completion\csharp\task-chat-completion-csharp.csproj" />
   <Project Path="speech\automatic-speech-recognition\task-automatic-speech-recognition.vcxproj" />
+  <Project Path="speech\automatic-speech-recognition\csharp\task-automatic-speech-recognition-csharp.csproj" />
   <Project Path="composition\speech-to-text-generation\task-speech-to-text-generation.vcxproj" />
   <Project Path="model-backed\text-generation\task-model-text-generation.vcxproj" />
   <Project Path="model-backed\text-generation\csharp\task-model-text-generation-csharp.csproj" />
+  <Project Path="model-backed\text-generation-features\csharp\task-text-generation-features-csharp.csproj" />
   <Project Path="model-backed\composed-text-generation\task-composed-text-generation.vcxproj" />
   <Project Path="model-backed\llama-text-generation\task-llama-text-generation.vcxproj" />
   <Project Path="model-backed\automatic-speech-recognition\task-model-speech-recognition.vcxproj" />
+  <Project Path="model-backed\automatic-speech-recognition\csharp\task-model-speech-recognition-csharp.csproj" />
   <Project Path="model-backed\decision\task-decision.vcxproj" />
+  <Project Path="model-backed\decision\csharp\task-decision-csharp.csproj" />
   <Folder Name="/Documentation/">
     <File Path="README.md" />
     <File Path="language\text-generation\README.md" />
     <File Path="language\chat-completion\README.md" />
+    <File Path="language\chat-completion\csharp\README.md" />
     <File Path="speech\automatic-speech-recognition\README.md" />
+    <File Path="speech\automatic-speech-recognition\csharp\README.md" />
     <File Path="composition\speech-to-text-generation\README.md" />
     <File Path="model-backed\README.md" />
     <File Path="model-backed\text-generation\README.md" />
     <File Path="model-backed\text-generation\csharp\README.md" />
+    <File Path="model-backed\text-generation-features\csharp\README.md" />
     <File Path="model-backed\composed-text-generation\README.md" />
     <File Path="model-backed\llama-text-generation\README.md" />
     <File Path="model-backed\automatic-speech-recognition\README.md" />
+    <File Path="model-backed\automatic-speech-recognition\csharp\README.md" />
     <File Path="model-backed\decision\README.md" />
+    <File Path="model-backed\decision\csharp\README.md" />
   </Folder>
   <Folder Name="/Scripts/">
     <File Path="check_artifacts.ps1" />
@@ -36,6 +46,7 @@
     <File Path="run_llama_text_generation.ps1" />
     <File Path="run_model_speech_recognition.ps1" />
     <File Path="run_decision.ps1" />
+    <File Path="run_text_generation_features.ps1" />
     <File Path="scripts\verify_python_environment.py" />
   </Folder>
 </Solution>

@@ -18,6 +18,14 @@ Runtime.
 ..\..\run_automatic_speech_recognition.ps1
 ```
 
+A [C# version](csharp/) makes the same calls through the C# sample wrapper in
+[`Runtime/shared/csharp`](../../../Runtime/shared/csharp/README.md):
+
+```powershell
+..\..\build.ps1 -Sample automatic-speech-recognition-csharp -PackageOnly
+..\..\run_automatic_speech_recognition.ps1 -Language csharp
+```
+
 The input tensor contains mono floating-point samples plus sample-rate and
 valid-length metadata. Transcription is a pull stream just like text
 generation: updates are incremental, while the final result contains the

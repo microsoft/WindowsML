@@ -1,5 +1,16 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 
+<#
+.SYNOPSIS
+Runs the chat completion sample: a two-turn conversation through the Chat
+Completion Task.
+
+.PARAMETER Language
+cpp runs the C++ sample; csharp runs the C# sample in
+language\chat-completion\csharp. Build it first with
+.\build.ps1 -Sample chat-completion-csharp.
+#>
+
 [CmdletBinding()]
 param(
     [ValidateSet("ort", "llama")]
@@ -14,6 +25,8 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
+    [ValidateSet("cpp", "csharp")]
+    [string]$Language = "cpp",
     [switch]$NonInteractive
 )
 
@@ -72,8 +85,15 @@ if ($Backend -ne "llama") {
     $resolvedTokenizer = (Resolve-Path -LiteralPath $TokenizerSource).Path
 }
 
+$projectName = if ($Language -eq "csharp") {
+    "task-chat-completion-csharp"
+}
+else {
+    "task-chat-completion"
+}
+
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
-    -ProjectName task-chat-completion `
+    -ProjectName $projectName `
     -SampleArguments @(
         $ModelPath,
         $resolvedTokenizer,
