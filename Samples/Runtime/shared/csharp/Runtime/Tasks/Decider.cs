@@ -50,8 +50,12 @@ public sealed class Decider : IAsyncDisposable, IDisposable
         ThrowIfDisposed();
         cancellationToken.ThrowIfCancellationRequested();
         using CancellationSource cancellation = _tasks.CreateCancellationSource();
+        // DisposeAsync marks the object disposed before it takes the gate, so
+        // recheck under the gate: either this decision fails here, or
+        // DisposeAsync sees its source and cancels it.
         lock (_gate)
         {
+            ThrowIfDisposed();
             if (_activeCancellation is not null)
             {
                 throw new InvalidOperationException("The decider is already deciding. Await the previous decision first.");

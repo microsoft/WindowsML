@@ -160,8 +160,12 @@ public sealed class TextGenerator : IAsyncDisposable, IDisposable
             Interlocked.Exchange(ref _lastResult, null)?.Dispose();
             CancellationSource source = _tasks.CreateCancellationSource();
             cancellation = source;
+            // DisposeAsync marks the object disposed before it takes the gate, so
+            // recheck under the gate: either this operation fails here, or
+            // DisposeAsync sees its source and cancels it.
             lock (_gate)
             {
+                ThrowIfDisposed();
                 _activeCancellation = source;
             }
 
