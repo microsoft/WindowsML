@@ -127,7 +127,8 @@ public sealed partial class MainWindow : Window
             await LoadGenerationDefaultsAsync(ModelPath.Text.Trim());
             var loadTimer = System.Diagnostics.Stopwatch.StartNew();
             var speculation = SelectedSpeculation();
-            var device = await runtime.LoadAsync(ModelPath.Text.Trim(), TokenizerPath.Text.Trim(), contextTokens, RequireGpu(), speculation);
+            var prefill = (PrefillProfileChoice.SelectedItem as ComboBoxItem)?.Tag as string == "compact" ? PrefillProfile.Compact : PrefillProfile.Default;
+            var device = await runtime.LoadAsync(ModelPath.Text.Trim(), TokenizerPath.Text.Trim(), contextTokens, RequireGpu(), speculation, prefill);
             lastLoadTime = loadTimer.Elapsed;
             loaded = true;
             ShowActiveDevice(device);
@@ -140,6 +141,7 @@ public sealed partial class MainWindow : Window
             ShowSpeculativeSupport();
             ShowStatus("Task sessions ready", $"CGC / {device.Name}{(gguf ? " / GGUF" : "")} / {context} / " +
                 (speculation.Mode == SpeculativeMode.Off ? "" : $"speculative decoding: {TaskRuntime.Describe(speculation.Mode)} / ") +
+                (prefill == PrefillProfile.Compact ? "compact prefill / " : "") +
                 (runtime.TextProgramCacheUsed ? "compiled programs reused across runs (weights from model files)" : "compiled per session") +
                 ". Chat uses the model's structured conversation formatter.", InfoBarSeverity.Success);
         }

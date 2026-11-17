@@ -8,14 +8,14 @@ using TaskStudio.Runtime;
 internal static class SpeculativeSmoke
 {
     public static async Task<int> RunAsync(string modelPath, string tokenizerPath, SpeculativeMode mode, string? drafterPath,
-        uint contextTokens = 0, uint maxTokens = 128, bool ignoreEndOfText = false)
+        uint contextTokens = 0, uint maxTokens = 128, bool ignoreEndOfText = false, PrefillProfile prefill = PrefillProfile.Default)
     {
         await using var runtime = new TaskRuntime();
         var device = (await runtime.GetGpuDevicesAsync()).First();
         var choice = new SpeculativeChoice(mode, drafterPath);
         // The window holds the coding context plus the generated tokens.
         uint window = Math.Max(4096u, contextTokens + maxTokens + 1024);
-        await runtime.LoadAsync(modelPath, tokenizerPath, window, device, choice);
+        await runtime.LoadAsync(modelPath, tokenizerPath, window, device, choice, prefill);
         var support = runtime.SpeculativeSupport;
         Console.WriteLine($"Model: {Path.GetFileName(modelPath.TrimEnd('\\'))}  method: {TaskRuntime.Describe(mode)}" +
             (drafterPath is null ? "" : $"  drafter: {Path.GetFileName(drafterPath.TrimEnd('\\'))}"));

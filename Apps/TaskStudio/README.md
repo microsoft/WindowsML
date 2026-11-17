@@ -271,6 +271,23 @@ such as code that repeats its input, and smallest for free prose. A
 verification step evaluates several positions at once, which can differ
 numerically from single steps, so greedy text can diverge after a near tie.
 
+### Prefill programs
+
+**Advanced model options** > **Prefill programs**, above **Create task
+sessions**, sets `WINML_TEXT_GENERATION_MODEL_OPTIONS::prefillProfile` at
+`SetModel`. The app leaves the field unset for Default, so the Runtime keeps
+its own choice.
+
+- **Default.** The model provider's choice. For a dense decoder, a 512-token
+  program reads long prompts and a 128-token program reads short prompts and
+  prompt tails.
+- **Compact.** One 128-token program, so there is less to compile and keep on
+  the GPU. Prompts longer than 128 tokens take more time to read.
+
+Generated tokens are the same under both. Try Compact when a model fails to
+load or runs out of GPU memory with Default. The smoke tests take
+`--compact-prefill` in any mode that loads a text model.
+
 ## Speech: recorded and live
 
 The Speech tab has its own model and tokenizer, for example:
@@ -390,6 +407,7 @@ $smoke = '.\Apps\TaskStudio\SmokeTests\bin\ARM64\Debug\net8.0-windows10.0.19041.
 & $smoke --speech C:\models\whisper-tiny C:\models\whisper-tiny\tokenizer_config.json C:\path\to\speech.wav
 & $smoke --decision C:\models\laya
 & $smoke --bench C:\models\Qwen3-0.6B-Q4_0.gguf
+& $smoke --bench C:\models\Qwen3-0.6B-Q4_0.gguf --compact-prefill
 # Speculative decoding with lookup, layers, or companion <drafter>
 #   [--context 4096|8192|16384|32768] [--tokens N] [--no-eos]
 & $smoke --spec C:\models\Qwen3-0.6B C:\models\Qwen3-0.6B\tokenizer_config.json lookup

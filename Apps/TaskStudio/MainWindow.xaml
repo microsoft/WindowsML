@@ -204,6 +204,26 @@
                                             <FontIcon Glyph="&#xE8B7;" FontSize="15" />
                                         </Button>
                                     </Grid>
+                                    <Expander x:Name="AdvancedModelOptions" Header="Advanced model options" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                              AutomationProperties.AutomationId="AdvancedModelOptions">
+                                        <StackPanel Spacing="8">
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="120" /></Grid.ColumnDefinitions>
+                                                <StackPanel VerticalAlignment="Center" Spacing="4">
+                                                    <TextBlock Text="Prefill programs" FontSize="12" />
+                                                    <TextBlock Text="How prompts are read" FontSize="10" Foreground="{StaticResource StudioMuted}" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                                <ComboBox x:Name="PrefillProfileChoice" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Stretch" FontSize="12"
+                                                          AutomationProperties.AutomationId="PrefillProfile" AutomationProperties.Name="Prefill programs">
+                                                    <ComboBoxItem Content="Default" Tag="default"
+                                                                  ToolTipService.ToolTip="The model provider's choice: a 512-token program for long prompts and a 128-token program for short prompts and tails." />
+                                                    <ComboBoxItem Content="Compact" Tag="compact"
+                                                                  ToolTipService.ToolTip="One 128-token program: less to compile and less GPU memory. Prompts past 128 tokens read slower." />
+                                                </ComboBox>
+                                            </Grid>
+                                            <TextBlock Text="Applies on the next Create task sessions. Try Compact if a model fails to load or runs out of GPU memory with Default. Output is the same under both." Style="{StaticResource HintText}" />
+                                        </StackPanel>
+                                    </Expander>
                                     <Button x:Name="LoadButton" AutomationProperties.AutomationId="LoadButton" Content="Create task sessions"
                                             Click="Load_Click" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch"
                                             Background="{StaticResource StudioAccent}" Foreground="White"

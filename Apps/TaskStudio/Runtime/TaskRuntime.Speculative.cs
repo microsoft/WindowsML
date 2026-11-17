@@ -77,6 +77,7 @@ internal sealed partial class TaskRuntime
     private unsafe IWinMLModel* textModel;
     private unsafe IWinMLModel* textDraftModel;
     private uint? textContextTokens;
+    private PrefillProfile textPrefill;
     private unsafe IWinMLTextGenerationTask* textTask;
     private unsafe IWinMLTextGenerationTask* textTaskNoEos;
     private unsafe IWinMLChatCompletionTask* chatTask;

@@ -52,6 +52,16 @@ internal sealed record GenerationSettings(uint MaxTokens = 256, float Temperatur
     }
 }
 
+// The prefill programs the model provider compiles to read a prompt. Generated tokens are the same under both.
+internal enum PrefillProfile
+{
+    // The provider's choice. For a dense decoder, a 512-token program reads long prompts
+    // and a 128-token program reads short prompts and prompt tails.
+    Default,
+    // One 128-token program, with less to compile and keep on the GPU, but slower on prompts longer than 128 tokens.
+    Compact
+}
+
 internal sealed partial class TaskRuntime : IAsyncDisposable
 {
     private readonly BlockingCollection<Action> work = new();
@@ -91,7 +101,7 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
     }
 
     public unsafe Task<GpuDevice> LoadAsync(string modelPath, string tokenizerPath, uint? contextTokens, GpuDevice device,
-        SpeculativeChoice? speculation = null) => Run(() =>
+        SpeculativeChoice? speculation = null, PrefillProfile prefill = PrefillProfile.Default) => Run(() =>
     {
         speculation ??= SpeculativeChoice.Off;
         bool gguf = IsGgufFile(modelPath);
@@ -140,6 +150,7 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
             if (companion)
                 textDraftModel = drafterGguf ? runtime->LoadModelFromFile(drafterPath, null) : runtime->LoadModelFromPath(drafterPath, null);
             textContextTokens = contextTokens;
+            textPrefill = prefill;
             try { configuration = BindConfiguration(tryProgramCache: true); }
             catch (Exception error) when (companion && error.HResult == unchecked((int)0x80070032))
             {
@@ -213,8 +224,13 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
         {
             if (tokenizer != null) configuration->SetTokenizer(tokenizer);
             configuration->QueryInterface(out modelConfiguration).ThrowOnFailure();
-            var draftField = draft != null ? WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_DRAFT_MODEL
+            var modelFields = draft != null ? WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_DRAFT_MODEL
                 : WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_NONE;
+            // The default profile is left unset so the Runtime keeps its own choice.
+            bool compact = textPrefill == PrefillProfile.Compact;
+            if (compact) modelFields |= WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_PREFILL_PROFILE;
+            var prefillProfile = compact ? WINML_TEXT_GENERATION_PREFILL_PROFILE.WINML_TEXT_GENERATION_PREFILL_PROFILE_COMPACT
+                : WINML_TEXT_GENERATION_PREFILL_PROFILE.WINML_TEXT_GENERATION_PREFILL_PROFILE_DEFAULT;
             bool cached = false;
             if (tryProgramCache)
             {
@@ -225,10 +241,11 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
                         var modelOptions = new WINML_TEXT_GENERATION_MODEL_OPTIONS
                         {
                             presentFields = WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_COMPILED_PROGRAM_DIRECTORY
-                                | WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_COMPILED_PROGRAM_STORAGE | draftField,
+                                | WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_COMPILED_PROGRAM_STORAGE | modelFields,
                             compiledProgramDirectory = new PCWSTR(directory),
                             compiledProgramStorage = WINML_COMPILED_PROGRAM_STORAGE.WINML_COMPILED_PROGRAM_STORAGE_PROGRAMS,
-                            draftModel = draft
+                            draftModel = draft,
+                            prefillProfile = prefillProfile
                         };
                         modelConfiguration->SetModel(textTarget, textModel, &modelOptions);
                     }
@@ -240,8 +257,8 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
             }
             if (!cached)
             {
-                var modelOptions = new WINML_TEXT_GENERATION_MODEL_OPTIONS { presentFields = draftField, draftModel = draft };
-                modelConfiguration->SetModel(textTarget, textModel, draft != null ? &modelOptions : null);
+                var modelOptions = new WINML_TEXT_GENERATION_MODEL_OPTIONS { presentFields = modelFields, draftModel = draft, prefillProfile = prefillProfile };
+                modelConfiguration->SetModel(textTarget, textModel, draft != null || compact ? &modelOptions : null);
             }
             TextProgramCacheUsed = cached;
             if (textContextTokens is uint capacity) configuration->SetLogicalCapacity(capacity);
@@ -492,6 +509,7 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
             Release(textModel); textModel = null;
             Release(textTarget); textTarget = null;
             textContextTokens = null;
+            textPrefill = PrefillProfile.Default;
             Release(textFactory); textFactory = null;
             Release(tokenizer); tokenizer = null;
             Release(tasks); tasks = null;

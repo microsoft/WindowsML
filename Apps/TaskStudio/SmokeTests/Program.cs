@@ -4,11 +4,15 @@ using TaskStudio.Runtime;
 using System.Runtime.InteropServices;
 using Microsoft.Windows.AI.MachineLearning.Runtime;
 
+// --compact-prefill, in any mode that loads a text model, compiles only the 128-token prefill program.
+var prefill = args.Contains("--compact-prefill") ? PrefillProfile.Compact : PrefillProfile.Default;
+args = args.Where(arg => arg != "--compact-prefill").ToArray();
+
 if (args.Length >= 2 && args[0] == "--bench")
 {
     await using var bench = new TaskRuntime();
     var gpu = (await bench.GetGpuDevicesAsync()).First();
-    await bench.LoadAsync(args[1], args.Length > 2 ? args[2] : "", null, gpu);
+    await bench.LoadAsync(args[1], args.Length > 2 ? args[2] : "", null, gpu, null, prefill);
     Console.WriteLine($"| model | backend | test | t/s | ms |\n| --- | --- | --- | ---: | ---: |");
     foreach (var test in new BenchmarkTest[] { new(512, 0, 0), new(0, 128, 0), new(512, 0, 512), new(0, 128, 512) })
     {
@@ -65,7 +69,7 @@ if (args.Length >= 4 && args[0] == "--spec")
     var rest = args.Skip(4).ToList();
     string? drafter = rest.Count > 0 && !rest[0].StartsWith("--", StringComparison.Ordinal) ? rest[0] : null;
     uint Option(string name, uint fallback) => rest.IndexOf(name) is int at and >= 0 ? uint.Parse(rest[at + 1]) : fallback;
-    return await SpeculativeSmoke.RunAsync(args[1], args[2], mode, drafter, Option("--context", 0), Option("--tokens", 128), rest.Contains("--no-eos"));
+    return await SpeculativeSmoke.RunAsync(args[1], args[2], mode, drafter, Option("--context", 0), Option("--tokens", 128), rest.Contains("--no-eos"), prefill);
 }
 
 // A GGUF file may omit the tokenizer argument and use the file's own tokenizer.
@@ -82,7 +86,7 @@ await using var runtime = new TaskRuntime();
 var devices = await runtime.GetGpuDevicesAsync();
 var device = devices.First();
 Console.WriteLine($"Selected GPU: {device.Name} ({device.Identity}), CGC backend.");
-var actual = await runtime.LoadAsync(args[0], args[1], 2048, device);
+var actual = await runtime.LoadAsync(args[0], args[1], 2048, device, null, prefill);
 if (actual.Identity != device.Identity) throw new InvalidOperationException("The Runtime target did not use the selected GPU.");
 Console.WriteLine($"Actual Runtime GPU: {actual.Name} ({actual.Identity}).");
 var updates = new InlineProgress();
@@ -180,7 +184,7 @@ if (!stopped.FinishReason.EndsWith("_STOP_TOKEN", StringComparison.Ordinal) || s
     throw new InvalidOperationException("Configured stop-token IDs did not stop generation.");
 Console.WriteLine("\nPASS: explicit stop-token IDs and invalid option rejection.");
 await runtime.UnloadAsync();
-await runtime.LoadAsync(args[0], args[1], 2048, device);
+await runtime.LoadAsync(args[0], args[1], 2048, device, null, prefill);
 Console.WriteLine("PASS: completion, two chat turns, reset, mid-stream/pre-cancellation, recovery, unload/reload.");
 return 0;
 
