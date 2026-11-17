@@ -15,6 +15,11 @@ tokens that the model verifies.
 
 .PARAMETER Device
 Execution target: cpu, or gpu when a llama.cpp GPU backend is deployed.
+
+.PARAMETER Language
+cpp runs the C++ sample; csharp runs the C# sample in
+model-backed\text-generation\csharp with --llama. Build it first with
+.\build.ps1 -Sample model-text-generation-csharp.
 #>
 
 [CmdletBinding()]
@@ -30,6 +35,8 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
+    [ValidateSet("cpp", "csharp")]
+    [string]$Language = "cpp",
     [switch]$NonInteractive
 )
 
@@ -61,8 +68,15 @@ if ($DraftModel) {
     $sampleArguments += @("--draft-model", (Resolve-Path -LiteralPath $DraftModel).Path)
 }
 
+# The C# sample covers the llama.cpp route of this sample behind --llama.
+$projectName = "task-llama-text-generation"
+if ($Language -eq "csharp") {
+    $projectName = "task-model-text-generation-csharp"
+    $sampleArguments = @("--llama") + $sampleArguments
+}
+
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
-    -ProjectName task-llama-text-generation `
+    -ProjectName $projectName `
     -SampleArguments $sampleArguments `
     -Platform $Platform `
     -Configuration $Configuration

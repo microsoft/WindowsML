@@ -8,7 +8,9 @@ Restores and builds one or all Windows ML Task API samples.
 Target architecture. Defaults to the host architecture.
 
 .PARAMETER Sample
-The sample project to build, or all.
+The sample project to build, or all. C++ projects need Visual Studio with
+Desktop development with C++. model-text-generation-csharp needs the .NET 8
+SDK or later; -Sample all skips it with a warning when the SDK is missing.
 
 .PARAMETER RuntimePackageVersion
 Overrides the centrally pinned Microsoft.Windows.AI.MachineLearning version.
@@ -28,8 +30,8 @@ param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
     [ValidateSet("all", "text-generation", "chat-completion", "automatic-speech-recognition", "speech-to-text-generation",
-                 "model-text-generation", "composed-text-generation", "llama-text-generation",
-                 "model-speech-recognition", "decision")]
+                 "model-text-generation", "model-text-generation-csharp", "composed-text-generation",
+                 "llama-text-generation", "model-speech-recognition", "decision")]
     [string]$Sample = "all",
     [string]$RuntimePackageVersion,
     [string]$LibLlamaPackageVersion,
@@ -64,6 +66,7 @@ $projects = [ordered]@{
     "automatic-speech-recognition" = "speech\automatic-speech-recognition\task-automatic-speech-recognition.vcxproj"
     "speech-to-text-generation" = "composition\speech-to-text-generation\task-speech-to-text-generation.vcxproj"
     "model-text-generation" = "model-backed\text-generation\task-model-text-generation.vcxproj"
+    "model-text-generation-csharp" = "model-backed\text-generation\csharp\task-model-text-generation-csharp.csproj"
     "composed-text-generation" = "model-backed\composed-text-generation\task-composed-text-generation.vcxproj"
     "llama-text-generation" = "model-backed\llama-text-generation\task-llama-text-generation.vcxproj"
     "model-speech-recognition" = "model-backed\automatic-speech-recognition\task-model-speech-recognition.vcxproj"
@@ -75,6 +78,26 @@ $selectedProjects = if ($Sample -eq "all") {
 else {
     @($projects[$Sample])
 }
+
+# C++ projects build first. C# projects need the .NET SDK: when it is missing,
+# -Sample all skips them with a warning, and naming one fails.
+$cppProjects = @($selectedProjects | Where-Object { -not $_.EndsWith(".csproj") })
+$csharpProjects = @($selectedProjects | Where-Object { $_.EndsWith(".csproj") })
+# dotnet.exe also ships with the .NET runtime alone, so look for an SDK.
+$hasDotNetSdk = $false
+if ($csharpProjects.Count -gt 0 -and (Get-Command dotnet.exe -ErrorAction SilentlyContinue)) {
+    $hasDotNetSdk = [bool](@(& dotnet.exe --list-sdks 2>$null) |
+        Where-Object { $_ -match '^(\d+)\.' -and [int]$Matches[1] -ge 8 })
+}
+if ($csharpProjects.Count -gt 0 -and -not $hasDotNetSdk) {
+    if ($Sample -ne "all") {
+        throw "The .NET 8 SDK or later was not found. Install it to build the C# samples."
+    }
+
+    Write-Warning "The .NET 8 SDK or later was not found, so the C# samples are skipped. Install it to build them."
+    $csharpProjects = @()
+}
+$msbuild = if ($cppProjects.Count -gt 0) { Find-MSBuild } else { $null }
 
 $restoreArgs = @(
     "/t:Restore",
@@ -89,13 +112,25 @@ $buildArgs = @(
     "/m",
     "/v:minimal"
 )
+# C# samples build with the .NET SDK, as Samples\Server\build.ps1 does.
+$dotnetArgs = @(
+    "-c", $Configuration,
+    "/p:Platform=$Platform",
+    "--nologo",
+    "-v:minimal"
+)
+if ($Rebuild) {
+    $dotnetArgs += "--no-incremental"
+}
 if ($RuntimePackageVersion) {
     $restoreArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
     $buildArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
+    $dotnetArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
 }
 if ($LibLlamaPackageVersion) {
     $restoreArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
     $buildArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
+    $dotnetArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
 }
 if ($NuGetPackagesDir) {
     New-Item -ItemType Directory -Force -Path $NuGetPackagesDir | Out-Null
@@ -111,6 +146,7 @@ if ($NuGetPackagesDir) {
         "/p:RestoreAdditionalProjectFallbackFolders="
     )
     $buildArgs += "/p:RestorePackagesPath=$resolvedPackagesDir"
+    $dotnetArgs += @("--packages", $resolvedPackagesDir)
 }
 if ($PackageOnly) {
     $packageOnlyArgs = @(
@@ -121,16 +157,16 @@ if ($PackageOnly) {
     )
     $restoreArgs += $packageOnlyArgs
     $buildArgs += $packageOnlyArgs
+    $dotnetArgs += $packageOnlyArgs
 }
 
-$msbuild = Find-MSBuild
 Write-Host "Building Windows ML Task API samples" -ForegroundColor Cyan
 Write-Host "Platform: $Platform"
 Write-Host "Configuration: $Configuration"
 Write-Host "Sample: $Sample"
 Write-Host "Backends: all backends provided by the package"
 
-foreach ($relativeProject in $selectedProjects) {
+foreach ($relativeProject in $cppProjects) {
     $project = Join-Path $PSScriptRoot $relativeProject
     Write-Host "`nRestoring $relativeProject" -ForegroundColor Yellow
     & $msbuild $project @restoreArgs
@@ -138,6 +174,13 @@ foreach ($relativeProject in $selectedProjects) {
 
     Write-Host "Building $relativeProject" -ForegroundColor Yellow
     & $msbuild $project @buildArgs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
+foreach ($relativeProject in $csharpProjects) {
+    $project = Join-Path $PSScriptRoot $relativeProject
+    Write-Host "`nBuilding $relativeProject" -ForegroundColor Yellow
+    & dotnet build $project @dotnetArgs
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 

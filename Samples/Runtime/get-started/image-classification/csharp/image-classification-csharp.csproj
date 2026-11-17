@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Copyright (C) Microsoft Corporation. All rights reserved.
+    Image classification - Windows ML Runtime API from C#
+  -->
+  <PropertyGroup>
+    <AssemblyName>image-classification-csharp</AssemblyName>
+    <RootNamespace>ImageClassification</RootNamespace>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shared\csharp\WinMLSamples.CSharp.props" />
+</Project>

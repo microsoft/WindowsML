@@ -8,6 +8,10 @@ Runs the minimal ONNX or GGUF LanguageModel sample.
 Acquires the selected language assets and streams one response. Both backends
 use one decoder stage from a unified model.
 
+.PARAMETER Language
+Sample implementation to run: cpp (default) or csharp. Both accept the same
+options and print the same reply.
+
 .PARAMETER Backend
 Language execution path: ort loads the unified ONNX decoder through ONNX
 Runtime; llama loads the pinned GGUF decoder.
@@ -41,6 +45,9 @@ Configuration of the previously built executable.
 
 .EXAMPLE
 .\run_hello_language_model.ps1 -Prompt "The sky is" -Raw
+
+.EXAMPLE
+.\run_hello_language_model.ps1 -Language csharp -Backend llama -Device cpu
 #>
 
 [CmdletBinding()]
@@ -57,7 +64,9 @@ param(
     [ValidateSet("ARM64", "x64")]
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
-    [string]$Configuration = "Release"
+    [string]$Configuration = "Release",
+    [ValidateSet("cpp", "csharp")]
+    [string]$Language = "cpp"
 )
 
 $ErrorActionPreference = "Stop"
@@ -96,8 +105,9 @@ if ($Ep) { $arguments += @("--ep", $Ep) }
 if ($TokenizerSource) { $arguments += @("--tokenizer", $TokenizerSource) }
 if ($Raw) { $arguments += "--raw" }
 
+$projectName = if ($Language -eq "csharp") { "hello-language-model-csharp" } else { "hello-language-model" }
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
-    -ProjectName hello-language-model `
+    -ProjectName $projectName `
     -SampleArguments $arguments `
     -Platform $Platform `
     -Configuration $Configuration

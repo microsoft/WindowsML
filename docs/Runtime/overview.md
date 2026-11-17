@@ -364,11 +364,16 @@ The `Microsoft.Windows.AI.MachineLearning` package includes Win32 metadata for
 the Runtime and Task APIs, `metadata\win32\Microsoft.Windows.AI.MachineLearning.Runtime.winmd`,
 with documentation that CsWin32 turns into XML documentation comments. A C#
 project that references [CsWin32](https://github.com/microsoft/CsWin32)
-0.3.335 or later generates bindings for the APIs it lists. The package adds the
-metadata to CsWin32 and lets the generated imports load the Runtime DLLs from
-the application directory. Set `WinMLEnableRuntimeCsWin32Metadata` to `false`
-to opt out. The Server API isn't included in the metadata. No sample in this
-repository uses the bindings yet.
+0.3.369 or later generates bindings for the APIs it lists. Earlier versions
+generate `IUnknown*` parameters, such as the adapter that
+`CreateExecutionTargetFromAdapter` takes, as `IUnknown` values instead of
+pointers. The package adds the metadata to CsWin32 and lets the generated
+imports load the Runtime DLLs from the application directory. Set
+`WinMLEnableRuntimeCsWin32Metadata` to `false` to opt out. The Server API isn't
+included in the metadata. The C# samples under `Samples\Runtime` and
+`Samples\Tasks` call these bindings through a sample wrapper that gives them
+an idiomatic C# surface; see
+[`Samples\Runtime\shared\csharp`](../../Samples/Runtime/shared/csharp/README.md).
 
 ```xml
 <PropertyGroup>
@@ -377,7 +382,7 @@ repository uses the bindings yet.
 </PropertyGroup>
 <ItemGroup>
   <PackageReference Include="Microsoft.Windows.AI.MachineLearning" Version="..." />
-  <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.335" PrivateAssets="all" />
+  <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.369" PrivateAssets="all" />
 </ItemGroup>
 ```
 
@@ -431,7 +436,8 @@ unsafe
 Interface methods throw the exception that `Marshal.ThrowExceptionForHR` maps
 from a failure `HRESULT`, and return the `[out, retval]` value. A method that
 reports a condition through `S_FALSE` needs its `HRESULT`: list it under
-`comInterop.preserveSigMethods` in `NativeMethods.json`.
+`comInterop.preserveSigMethods` in `NativeMethods.json`. The sample wrapper
+lists every method (`"*"`), so it decides itself which codes are errors.
 
 ## Where to go next
 

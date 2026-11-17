@@ -46,4 +46,14 @@ holds; without it the session uses the model's default.
 python.exe .\main.py ..\..\models\qwen2.5-0.5b-instruct
 ```
 
+A [C# version](csharp/) makes the same calls through the C# sample wrapper in
+[`Runtime/shared/csharp`](../../../Runtime/shared/csharp/README.md) and also
+covers the llama.cpp route behind `--llama`:
+
+```powershell
+..\..\build.ps1 -Sample model-text-generation-csharp -PackageOnly
+..\..\run_model_text_generation.ps1 -Language csharp -Format gguf
+..\..\run_llama_text_generation.ps1 -Language csharp
+```
+
 See [Models-backed Tasks](../README.md) for package and model requirements.
