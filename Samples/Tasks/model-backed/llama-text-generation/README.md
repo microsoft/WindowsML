@@ -32,8 +32,9 @@ Use this sample for a GGUF file that Windows ML does not plan for the GPU, or
 when you want llama.cpp itself. The llama.cpp packages carry the CPU backend:
 `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` for C++ and the
 `windowsml-llama-core` wheel for Python. The sample runs on the CPU, its
-default target. `--device gpu` needs a llama.cpp GPU backend that you build
-and deploy yourself (see [GPU backends](../../../../docs/Runtime/gguf-models.md#gpu-backends));
+default target. `--device gpu` needs a llama.cpp GPU backend, such as the
+opt-in CUDA backend for NVIDIA GPUs that `build.ps1 -LlamaCuda` deploys and the
+`windowsml-llama-cuda` wheel installs (see [GPU backends](../../../../docs/Runtime/gguf-models.md#gpu-backends));
 without one, session creation returns `HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)`
 and the sample says so.
 

@@ -26,6 +26,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.AI.MachineLearning" />
     <PackageReference Include="Microsoft.Windows.AI.MachineLearning.LibLlama.Core" />
+    <!-- build.ps1 -LlamaCuda sets WinMLSamplesLlamaCuda to also deploy the CUDA backend. -->
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning.LibLlama" Condition="'$(WinMLSamplesLlamaCuda)' == 'true'" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!-- A Utility project skips the step that copies package files to the output

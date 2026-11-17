@@ -95,6 +95,9 @@ python.exe .\language\hello-language-model\main.py `
   --backend llama --device cpu --prompt "Name three primary colors."
 ```
 
+To run on an NVIDIA GPU, also install the opt-in `windowsml-llama-cuda` wheel
+and pass `--device gpu`. See [NVIDIA CUDA](gguf-models.md#nvidia-cuda).
+
 ## Differences from C++
 
 - The speech-to-language Python sample accepts an existing transcript. Use the

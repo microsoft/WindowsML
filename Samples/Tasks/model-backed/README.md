@@ -71,6 +71,9 @@ $windowsmlVersion = $runtimeVersion -replace '-dev(-g[0-9a-f]+)?$', '.dev0' -rep
 python.exe -m pip install "windowsml[with-ort]==$windowsmlVersion" "windowsml-llama-core==$windowsmlVersion" numpy
 ```
 
+To run the llama.cpp sample on an NVIDIA GPU, also install
+`"windowsml-llama-cuda==$windowsmlVersion"`, which adds the opt-in CUDA backend.
+
 Because the command names exact `windowsml` versions, pip accepts those
 pre-releases without `--pre` and keeps the other dependencies on their stable
 releases.

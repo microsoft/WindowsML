@@ -16,6 +16,12 @@ Overrides the Microsoft.Windows.AI.MachineLearning package version.
 .PARAMETER LibLlamaPackageVersion
 Overrides the centrally pinned Microsoft.Windows.AI.MachineLearning.LibLlama
 version. It must come from the same Windows ML release as the Runtime package.
+
+.PARAMETER LlamaCuda
+Also deploys the llama.cpp CUDA backend for NVIDIA GPUs to the server hosts,
+from the Microsoft.Windows.AI.MachineLearning.LibLlama package. The backend
+needs NVIDIA cuBLAS, which the package doesn't include. See
+docs\Runtime\gguf-models.md for the sources the build copies it from.
 #>
 
 [CmdletBinding()]
@@ -28,6 +34,7 @@ param(
     [string]$Sample = "all",
     [string]$RuntimePackageVersion,
     [string]$LibLlamaPackageVersion,
+    [switch]$LlamaCuda,
     [string]$NuGetPackagesDir,
     [switch]$Rebuild
 )
@@ -96,6 +103,10 @@ if ($LibLlamaPackageVersion) {
     $restoreArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
     $buildArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
 }
+if ($LlamaCuda) {
+    $restoreArgs += "/p:WinMLSamplesLlamaCuda=true"
+    $buildArgs += "/p:WinMLSamplesLlamaCuda=true"
+}
 if ($NuGetPackagesDir) {
     New-Item -ItemType Directory -Force -Path $NuGetPackagesDir | Out-Null
     $resolvedPackagesDir =
@@ -127,6 +138,7 @@ Write-Host "Building Windows ML Server samples" -ForegroundColor Cyan
 Write-Host "Platform: $Platform"
 Write-Host "Configuration: $Configuration"
 Write-Host "Sample: $Sample"
+Write-Host "llama.cpp backends: $(if ($LlamaCuda) { "CPU and CUDA" } else { "CPU" })"
 
 foreach ($relativeProject in $selectedProjects) {
     $project = Join-Path $PSScriptRoot $relativeProject

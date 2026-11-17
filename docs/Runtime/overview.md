@@ -339,6 +339,9 @@ See the [Server samples](../../Samples/Server/README.md).
 
 The C++ samples use the `Microsoft.Windows.AI.MachineLearning` NuGet package
 and add `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` for llama.cpp.
+`build.ps1 -LlamaCuda` also adds `Microsoft.Windows.AI.MachineLearning.LibLlama`
+for the opt-in llama.cpp CUDA backend; see
+[NVIDIA CUDA](gguf-models.md#nvidia-cuda).
 The Runtime package depends on the Direct3D 12 Agility SDK package
 `Microsoft.Direct3D.D3D12`, which NuGet restores with it and which deploys
 `D3D12\D3D12Core.dll` beside the application for the CGC backend.
@@ -347,7 +350,8 @@ versions.
 
 Python applications use `windowsml.runtime` and `windowsml.tasks`. Install the
 `with-ort` extra for the matching ONNX Runtime package, and install the
-`windowsml-llama-core` wheel for llama.cpp:
+`windowsml-llama-core` wheel for llama.cpp. The `windowsml-llama-cuda` wheel
+adds the CUDA backend:
 
 ```powershell
 python.exe -m pip install --pre "windowsml[with-ort]"

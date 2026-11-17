@@ -7,16 +7,18 @@
 Builds a llama.cpp backend for a ggml family, such as CUDA, that matches a LibLlama.Core package.
 
 .DESCRIPTION
-Windows ML ships only the CPU backend, in
-Microsoft.Windows.AI.MachineLearning.LibLlama.Core. It does not ship or
-redistribute GPU backends or vendor runtimes. Use this script to build a
-ggml backend family such as cuda, vulkan, or opencl from upstream llama.cpp.
+Windows ML ships the CPU backend in
+Microsoft.Windows.AI.MachineLearning.LibLlama.Core and an opt-in CUDA backend
+in the Microsoft.Windows.AI.MachineLearning.LibLlama.Cuda packages. It does not
+ship other GPU backends or redistribute vendor runtimes. Use this script to
+build a ggml backend family such as vulkan or opencl, or your own cuda backend,
+from upstream llama.cpp.
 
-For cuda, you install the NVIDIA CUDA Toolkit yourself, and you are responsible
-for accepting and complying with NVIDIA's license terms for the toolkit and for
-any NVIDIA runtime libraries (such as cuBLAS) that you copy next to the backend
-or distribute with your application. Windows ML does not accept those terms for
-you.
+For a cuda backend that you build, you install the NVIDIA CUDA Toolkit
+yourself, and you are responsible for accepting and complying with NVIDIA's
+license terms for the toolkit and for any NVIDIA runtime libraries (such as
+cuBLAS) that you copy next to the backend or distribute with your application.
+Windows ML does not accept those terms for you.
 
 The script reads the llama.cpp build and backend contract from an exact
 Microsoft.Windows.AI.MachineLearning.LibLlama.Core NuGet, builds upstream
