@@ -14,7 +14,7 @@ namespace WinMLSamples.Runtime;
 // The Runtime: the factory for models, targets, and pipeline builders.
 public sealed unsafe class WinMLRuntime : WinMLObject, IWinMLInterface<WinMLRuntime>
 {
-    private WinMLRuntime(IWinMLRuntime* pointer)
+    internal WinMLRuntime(IWinMLRuntime* pointer)
         : base(pointer)
     {
     }

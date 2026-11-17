@@ -24,14 +24,15 @@ the [Runtime API reference](../../docs/api-reference/README.md).
 
 | Area | Sample | Languages | What it demonstrates |
 | --- | --- | --- | --- |
-| Models-backed | [Text generation](model-backed/text-generation/) | C++, Python | Run published weights, a checkpoint folder or a GGUF file, with no pipeline and no tokenizer argument, and stream a reply. |
+| Models-backed | [Text generation](model-backed/text-generation/) | C++, [C#](model-backed/text-generation/csharp/), Python | Run published weights, a checkpoint folder or a GGUF file, with no pipeline and no tokenizer argument, and stream a reply. |
 | Models-backed | [Composed text generation](model-backed/composed-text-generation/) | C++, Python | Describe an exported decoder as a composition with `SetComposition` and stream a reply. |
 | Models-backed | [llama.cpp text generation](model-backed/llama-text-generation/) | C++, Python | Load a GGUF file with the llama.cpp loader, optionally with a draft model for speculative decoding. |
-| Models-backed | [Speech recognition](model-backed/automatic-speech-recognition/) | C++, Python | Bind a speech model, set language/mode and stream a transcript. |
-| Models-backed | [Typed decisions](model-backed/decision/) | C++, Python | Ask a choice question and read probabilities, confidence and a recommendation. |
+| Models-backed | [Speech recognition](model-backed/automatic-speech-recognition/) | C++, [C#](model-backed/automatic-speech-recognition/csharp/), Python | Bind a speech model, set language/mode and stream a transcript. |
+| Models-backed | [Typed decisions](model-backed/decision/) | C++, [C#](model-backed/decision/csharp/), Python | Ask a choice question and read probabilities, confidence and a recommendation. |
+| Models-backed | [Text generation features](model-backed/text-generation-features/csharp/) | C# | Continue a retained sequence, constrain tokens to a tool call, report speculative method support, decode speculatively, watermark and detect, and send a segmented prompt. |
 | Language | [Text generation](language/text-generation/) | C++, Python | Stream text from an ONNX, ORT, or GGUF model and print token counts and the finish reason. GGUF models can use speculative decoding. The C++ sample also prints timing and context capacity. |
-| Language | [Chat completion](language/chat-completion/) | C++, Python | Hold a two-turn conversation. The application keeps the message history; the Task applies the model's chat template, streams each reply, and reports how many prompt tokens it reused. |
-| Speech | [Automatic speech recognition](speech/automatic-speech-recognition/) | C++, Python | Bind Whisper encoder and decoder pipelines to the typed ASR Task and transcribe a waveform. |
+| Language | [Chat completion](language/chat-completion/) | C++, [C#](language/chat-completion/csharp/), Python | Hold a two-turn conversation. The application keeps the message history; the Task applies the model's chat template, streams each reply, and reports how many prompt tokens it reused. |
+| Speech | [Automatic speech recognition](speech/automatic-speech-recognition/) | C++, [C#](speech/automatic-speech-recognition/csharp/), Python | Bind Whisper encoder and decoder pipelines to the typed ASR Task and transcribe a waveform. |
 | Composition | [Speech to text generation](composition/speech-to-text-generation/) | C++, Python | Send an ASR transcript to a separate text-generation Task as a chat turn. |
 
 The composition sample connects two Tasks in application code; it does not
@@ -56,8 +57,13 @@ Every sample builds against the package versions pinned in
 Models-backed Task samples need Windows ML 2.9 or later; see
 [their package requirements](model-backed/README.md#package-requirements).
 The C++ samples need Visual Studio with Desktop development with C++. The C#
-model-backed text generation sample builds with the .NET 8 SDK or later;
-without it, `-Sample all` skips that sample with a warning.
+samples build with the .NET 8 SDK or later; without it, `-Sample all` skips
+them with a warning. Their run scripts take `-Language csharp`, except the
+Models-backed speech recognition script, which takes `-SampleLanguage csharp`
+because its `-Language` names the spoken language, and
+`run_text_generation_features.ps1`, which runs a C#-only sample. The C# samples share the
+[sample wrapper](../Runtime/shared/csharp/README.md), which covers the whole
+Task API.
 
 Builds default to the host architecture, restore the
 `Microsoft.Windows.AI.MachineLearning` package from nuget.org or the
@@ -93,6 +99,16 @@ build and run scripts when targeting a different architecture.
 .\run_speech_to_text_generation.ps1 -LanguageBackend ort
 ```
 
+The chat completion and speech recognition samples also have C# versions:
+
+```powershell
+.\build.ps1 -Sample chat-completion-csharp
+.\run_chat_completion.ps1 -Backend llama -Language csharp
+
+.\build.ps1 -Sample automatic-speech-recognition-csharp
+.\run_automatic_speech_recognition.ps1 -Language csharp
+```
+
 The Models-backed Task samples have their own checks and run scripts, described in
 [Models-backed Tasks](model-backed/README.md#run-the-c-samples):
 
@@ -103,6 +119,9 @@ The Models-backed Task samples have their own checks and run scripts, described 
 .\run_llama_text_generation.ps1
 .\run_model_speech_recognition.ps1
 .\run_decision.ps1
+
+.\build.ps1 -Sample text-generation-features-csharp
+.\run_text_generation_features.ps1
 ```
 
 `check_artifacts.ps1` reads `Samples\shared\SampleArtifacts.psd1`, checks

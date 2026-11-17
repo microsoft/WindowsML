@@ -35,8 +35,9 @@ streaming, cancellation, token counts and finish reasons work the same way.
 | [Text generation](text-generation/) | Bring your own weights | C++, [C#](text-generation/csharp/), Python | A checkpoint folder or a GGUF file, no tokenizer argument, a streamed chat reply and an optional program cache. The C# version also covers the llama.cpp pattern behind `--llama`. |
 | [Composed text generation](composed-text-generation/) | Bring your own model | C++, Python | `SetTokenizer`, then a `UNIFIED` composition of an exported ONNX decoder with an explicit state pair. |
 | [llama.cpp text generation](llama-text-generation/) | llama.cpp | C++, [C#](text-generation/csharp/), Python | The llama.cpp loader, and speculative decoding with a draft model loaded the same way. |
-| [Speech recognition](automatic-speech-recognition/) | Bring your own weights | C++, Python | A Whisper checkpoint folder with its tokenizer, streamed into a transcript, with an optional language. |
-| [Typed decisions](decision/) | Bring your own weights | C++, Python | A choice question answered with probabilities, confidence and a recommendation. No tokenizer argument, and an optional program cache. |
+| [Speech recognition](automatic-speech-recognition/) | Bring your own weights | C++, [C#](automatic-speech-recognition/csharp/), Python | A Whisper checkpoint folder with its tokenizer, streamed into a transcript, with an optional language. The C# version can also feed the waveform as live input with `--live`. |
+| [Typed decisions](decision/) | Bring your own weights | C++, [C#](decision/csharp/), Python | A choice question answered with probabilities, confidence and a recommendation. No tokenizer argument, and an optional program cache. |
+| [Text generation features](text-generation-features/csharp/) | llama.cpp | [C#](text-generation-features/csharp/) | The optional text generation interfaces: retained sequences and continuation, constrained generation, speculative method support, watermarking and segmented prompts, plus chat completion event provenance. |
 
 ## Package requirements
 
@@ -135,17 +136,33 @@ The executables are under `out\<platform>\<configuration>\<project-name>`:
 | `task-model-speech-recognition` | `<model-folder> <tokenizer.json> <input.wav> [--language <tag>] [--mode transcribe or translate]` |
 | `task-decision` | `<model-folder> [state] [--program-cache <directory> [--cache-weights]]` |
 
-## Run the C# sample
+## Run the C# samples
 
-The [C# text generation sample](text-generation/csharp/) needs the .NET 8 SDK.
-It runs the model provider route by default and the llama.cpp route with
-`--llama`. Build it, then pass `-Language csharp` to either run script:
+The C# samples need the .NET 8 SDK. The
+[C# text generation sample](text-generation/csharp/) runs the model provider
+route by default and the llama.cpp route with `--llama`. The speech
+recognition and decision samples need a GPU target, as their C++ versions do.
+Build a sample, then pass `-Language csharp` to its run script
+(`-SampleLanguage csharp` for speech recognition, whose `-Language` names the
+spoken language):
 
 ```powershell
 .\build.ps1 -Sample model-text-generation-csharp -PackageOnly
 .\run_model_text_generation.ps1 -Language csharp -Format gguf
 .\run_llama_text_generation.ps1 -Language csharp -DraftModel <draft.gguf>
+
+.\build.ps1 -Sample model-speech-recognition-csharp -PackageOnly
+.\run_model_speech_recognition.ps1 -SampleLanguage csharp
+
+.\build.ps1 -Sample decision-csharp -PackageOnly
+.\run_decision.ps1 -Language csharp
+
+.\build.ps1 -Sample text-generation-features-csharp -PackageOnly
+.\run_text_generation_features.ps1 -Scenario all
 ```
+
+The [text generation features sample](text-generation-features/csharp/) is
+C# only and runs on the CPU.
 
 ## Run the Python samples
 

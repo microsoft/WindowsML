@@ -18,6 +18,11 @@ later runs start faster.
 .PARAMETER CacheWeights
 Also keep the weights prepared for each program in the program cache. Requires
 -ProgramCache.
+
+.PARAMETER Language
+cpp runs the C++ sample; csharp runs the C# sample in
+model-backed\decision\csharp. Build it first with
+.\build.ps1 -Sample decision-csharp.
 #>
 
 [CmdletBinding()]
@@ -30,6 +35,8 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
+    [ValidateSet("cpp", "csharp")]
+    [string]$Language = "cpp",
     [switch]$NonInteractive
 )
 
@@ -61,8 +68,15 @@ if ($ProgramCache) {
     }
 }
 
+$projectName = if ($Language -eq "csharp") {
+    "task-decision-csharp"
+}
+else {
+    "task-decision"
+}
+
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
-    -ProjectName task-decision `
+    -ProjectName $projectName `
     -SampleArguments $sampleArguments `
     -Platform $Platform `
     -Configuration $Configuration

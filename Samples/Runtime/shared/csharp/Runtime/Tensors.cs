@@ -322,5 +322,6 @@ public sealed unsafe partial class ExecutionTarget
     {
         DisposeCached(_rawTensorFactory);
         DisposeCached(_imageTensorFactory);
+        DisposeCached(_audioTensorFactory);
     }
 }

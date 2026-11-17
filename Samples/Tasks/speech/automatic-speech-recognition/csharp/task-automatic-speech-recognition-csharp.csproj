@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Copyright (C) Microsoft Corporation. All rights reserved.
+    Automatic speech recognition with Whisper pipelines - Windows ML Task API from C#
+  -->
+  <PropertyGroup>
+    <AssemblyName>task-automatic-speech-recognition-csharp</AssemblyName>
+    <RootNamespace>AutomaticSpeechRecognition</RootNamespace>
+    <!-- Build into Samples\Tasks\out, beside the C++ Task samples. -->
+    <WinMLSampleOutputRoot>$(MSBuildThisFileDirectory)..\..\..\out\</WinMLSampleOutputRoot>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\Runtime\shared\csharp\WinMLSamples.CSharp.props" />
+</Project>

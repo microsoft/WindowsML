@@ -1,5 +1,16 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 
+<#
+.SYNOPSIS
+Runs the automatic speech recognition sample: Whisper encoder and decoder
+pipelines on the CPU transcribe a WAV file.
+
+.PARAMETER Language
+cpp runs the C++ sample; csharp runs the C# sample in
+speech\automatic-speech-recognition\csharp. Build it first with
+.\build.ps1 -Sample automatic-speech-recognition-csharp.
+#>
+
 [CmdletBinding()]
 param(
     [string]$ModelDir,
@@ -8,6 +19,8 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
+    [ValidateSet("cpp", "csharp")]
+    [string]$Language = "cpp",
     [switch]$NonInteractive
 )
 
@@ -45,8 +58,15 @@ foreach ($path in @(
     }
 }
 
+$projectName = if ($Language -eq "csharp") {
+    "task-automatic-speech-recognition-csharp"
+}
+else {
+    "task-automatic-speech-recognition"
+}
+
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
-    -ProjectName task-automatic-speech-recognition `
+    -ProjectName $projectName `
     -SampleArguments @(
         (Resolve-Path -LiteralPath $ModelDir).Path,
         (Resolve-Path -LiteralPath $WavPath).Path
