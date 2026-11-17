@@ -21,7 +21,8 @@ public sealed class DecisionQuestionItem
     {
         string title = string.IsNullOrWhiteSpace(Name) ? "A question" : $"'{Name.Trim()}'";
         if (string.IsNullOrWhiteSpace(Instructions)) throw new ArgumentException($"{title} needs instructions.");
-        string[] lines = OptionsText.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        // A WinUI TextBox separates lines with '\r' once the user edits it; the examples use '\n'.
+        string[] lines = OptionsText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         DecisionOption[] options = Kind switch
         {
             DecisionKind.Choice => lines.Select(line =>
