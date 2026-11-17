@@ -49,6 +49,18 @@ errors from model execution errors.
 For the progression from this one-stage sample to the split ONNX pipeline, see
 [Tutorial 3: language models](../../../../docs/Runtime/tutorials/03-language-models.md).
 
+## C#
+
+[`csharp\`](csharp/README.md) is a C# version of this sample that calls the
+same Runtime, tokenizer, and stateful-stage APIs through the C# sample wrapper
+in [`shared/csharp`](../../shared/csharp/README.md). It covers both backends and
+prints the same greedy reply:
+
+```powershell
+.\build.ps1 -Sample hello-language-model-csharp -PackageOnly
+.\run_hello_language_model.ps1 -Language csharp -Backend llama -Device cpu
+```
+
 ## Python
 
 [`main.py`](main.py) runs the same ONNX/ORT or GGUF model through
@@ -62,6 +74,6 @@ python.exe .\language\hello-language-model\main.py `
 For GGUF, install the llama.cpp backend with
 `python.exe -m pip install --pre windowsml-llama-core`, then run
 `main.py --backend llama`. The wheel installs the CPU llama.cpp backend. To run
-on a GPU, add a backend you build yourself; see
+on an NVIDIA GPU, also install the opt-in `windowsml-llama-cuda` wheel; see
 [Python payload install](../../../../docs/Runtime/gguf-models.md#python-payload-install)
 and [GPU backends](../../../../docs/Runtime/gguf-models.md#gpu-backends).

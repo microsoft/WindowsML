@@ -5,8 +5,9 @@
 Restores and builds one or all Windows ML Runtime sample projects.
 
 .DESCRIPTION
-Builds the selected native C++ project through MSBuild. Builds never download
-models; use check_artifacts.ps1 or a run script to prepare assets separately.
+Builds the selected C++ projects through MSBuild and C# projects through the
+.NET SDK. Builds never download models; use check_artifacts.ps1 or a run
+script to prepare assets separately.
 PackageOnly clears any local include, library, or native payload overrides.
 
 .PARAMETER Platform
@@ -16,7 +17,11 @@ Target architecture: x64 or ARM64. Defaults to the host architecture.
 Build configuration: Debug or Release. Defaults to Release.
 
 .PARAMETER Sample
-The project to build, or all for the complete Runtime sample solution.
+The project to build, or all for every C++ and C# Runtime sample. C++
+projects need Visual Studio with Desktop development with C++. The C# samples
+(image-classification-csharp and hello-language-model-csharp) build after them
+with the .NET 8 SDK or later; -Sample all skips them with a warning when the
+SDK is missing.
 
 .PARAMETER RuntimePackageVersion
 Overrides the centrally pinned Microsoft.Windows.AI.MachineLearning version.
@@ -24,6 +29,12 @@ Overrides the centrally pinned Microsoft.Windows.AI.MachineLearning version.
 .PARAMETER LibLlamaPackageVersion
 Overrides the centrally pinned Microsoft.Windows.AI.MachineLearning.LibLlama
 version. It must come from the same Windows ML release as the Runtime package.
+
+.PARAMETER LlamaCuda
+Also deploys the llama.cpp CUDA backend for NVIDIA GPUs to the GGUF samples,
+from the Microsoft.Windows.AI.MachineLearning.LibLlama package. The backend
+needs NVIDIA cuBLAS, which the package doesn't include. See
+docs\Runtime\gguf-models.md for the sources the build copies it from.
 
 .PARAMETER PackageOnly
 Clears local Runtime include/library/native overrides so the build uses only
@@ -42,6 +53,12 @@ Uses the MSBuild Rebuild target instead of incremental Build.
 .\build.ps1 -Sample all -Platform ARM64 -Configuration Debug -PackageOnly
 
 .EXAMPLE
+.\build.ps1 -Sample image-classification-csharp -PackageOnly
+
+.EXAMPLE
+.\build.ps1 -Sample llm-chat -LlamaCuda -PackageOnly
+
+.EXAMPLE
 Get-Help .\build.ps1 -Examples
 #>
 
@@ -51,10 +68,11 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
-    [ValidateSet("all", "image-classification", "super-resolution", "whisper", "hello-language-model", "llm-chat", "speech-to-language-model", "model-compilation", "managed-shared-context")]
+    [ValidateSet("all", "image-classification", "image-classification-csharp", "super-resolution", "whisper", "hello-language-model", "hello-language-model-csharp", "llm-chat", "speech-to-language-model", "model-compilation", "managed-shared-context", "onnx-runtime-winmlcgep", "llama-upstream-api")]
     [string]$Sample = "all",
     [string]$RuntimePackageVersion,
     [string]$LibLlamaPackageVersion,
+    [switch]$LlamaCuda,
     [switch]$PackageOnly,
     [string]$NuGetPackagesDir,
     [switch]$Rebuild
@@ -80,28 +98,40 @@ function Find-MSBuild {
     throw "MSBuild was not found. Install Visual Studio with Desktop development with C++."
 }
 
-$msbuild = Find-MSBuild
-$allProjects = @(
-    "get-started\image-classification\image-classification.vcxproj",
-    "vision\super-resolution\webcam-super-resolution.vcxproj",
-    "speech\whisper\whisper-speech-to-text.vcxproj",
-    "language\hello-language-model\hello-language-model.vcxproj",
-    "language\llm-chat\llm-chat.vcxproj",
-    "language\speech-to-language-model\speech-to-language-model.vcxproj",
-    "compile-and-deploy\model-compilation\model-compilation.vcxproj",
-    "interop\managed-shared-context\managed-shared-context.vcxproj"
-)
-$projects = switch ($Sample) {
-    "image-classification" { @($allProjects[0]); break }
-    "super-resolution" { @($allProjects[1]); break }
-    "whisper" { @($allProjects[2]); break }
-    "hello-language-model" { @($allProjects[3]); break }
-    "llm-chat" { @($allProjects[4]); break }
-    "speech-to-language-model" { @($allProjects[5]); break }
-    "model-compilation" { @($allProjects[6]); break }
-    "managed-shared-context" { @($allProjects[7]); break }
-    default { $allProjects }
+$sampleProjects = [ordered]@{
+    "image-classification" = "get-started\image-classification\image-classification.vcxproj"
+    "image-classification-csharp" = "get-started\image-classification\csharp\image-classification-csharp.csproj"
+    "super-resolution" = "vision\super-resolution\webcam-super-resolution.vcxproj"
+    "whisper" = "speech\whisper\whisper-speech-to-text.vcxproj"
+    "hello-language-model" = "language\hello-language-model\hello-language-model.vcxproj"
+    "hello-language-model-csharp" = "language\hello-language-model\csharp\hello-language-model-csharp.csproj"
+    "llm-chat" = "language\llm-chat\llm-chat.vcxproj"
+    "speech-to-language-model" = "language\speech-to-language-model\speech-to-language-model.vcxproj"
+    "model-compilation" = "compile-and-deploy\model-compilation\model-compilation.vcxproj"
+    "managed-shared-context" = "interop\managed-shared-context\managed-shared-context.vcxproj"
+    "onnx-runtime-winmlcgep" = "interop\onnx-runtime-winmlcgep\onnx-runtime-winmlcgep.vcxproj"
+    "llama-upstream-api" = "interop\llama-upstream-api\llama-upstream-api.vcxproj"
 }
+$projects = if ($Sample -eq "all") { @($sampleProjects.Values) } else { @($sampleProjects[$Sample]) }
+# C++ projects build first. C# projects need the .NET SDK: when it is missing,
+# -Sample all skips them with a warning, and naming one fails.
+$cppProjects = @($projects | Where-Object { -not $_.EndsWith(".csproj") })
+$csharpProjects = @($projects | Where-Object { $_.EndsWith(".csproj") })
+# dotnet.exe also ships with the .NET runtime alone, so look for an SDK.
+$hasDotNetSdk = $false
+if ($csharpProjects.Count -gt 0 -and (Get-Command dotnet.exe -ErrorAction SilentlyContinue)) {
+    $hasDotNetSdk = [bool](@(& dotnet.exe --list-sdks 2>$null) |
+        Where-Object { $_ -match '^(\d+)\.' -and [int]$Matches[1] -ge 8 })
+}
+if ($csharpProjects.Count -gt 0 -and -not $hasDotNetSdk) {
+    if ($Sample -ne "all") {
+        throw "The .NET 8 SDK or later was not found. Install it to build the C# samples."
+    }
+
+    Write-Warning "The .NET 8 SDK or later was not found, so the C# samples are skipped. Install it to build them."
+    $csharpProjects = @()
+}
+$msbuild = if ($cppProjects.Count -gt 0) { Find-MSBuild } else { $null }
 
 $restoreArgs = @(
     "/t:Restore",
@@ -116,13 +146,29 @@ $buildArgs = @(
     "/m",
     "/v:minimal"
 )
+# C# samples build with the .NET SDK, as Samples\Server\build.ps1 does.
+$dotnetArgs = @(
+    "-c", $Configuration,
+    "/p:Platform=$Platform",
+    "--nologo",
+    "-v:minimal"
+)
+if ($Rebuild) {
+    $dotnetArgs += "--no-incremental"
+}
 if ($RuntimePackageVersion) {
     $restoreArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
     $buildArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
+    $dotnetArgs += "/p:WinMLRuntimePackageVersion=$RuntimePackageVersion"
 }
 if ($LibLlamaPackageVersion) {
     $restoreArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
     $buildArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
+    $dotnetArgs += "/p:WinMLLibLlamaPackageVersion=$LibLlamaPackageVersion"
+}
+if ($LlamaCuda) {
+    $restoreArgs += "/p:WinMLSamplesLlamaCuda=true"
+    $buildArgs += "/p:WinMLSamplesLlamaCuda=true"
 }
 if ($NuGetPackagesDir) {
     New-Item -ItemType Directory -Force -Path $NuGetPackagesDir | Out-Null
@@ -138,6 +184,7 @@ if ($NuGetPackagesDir) {
         "/p:RestoreAdditionalProjectFallbackFolders="
     )
     $buildArgs += "/p:RestorePackagesPath=$resolvedPackagesDir"
+    $dotnetArgs += @("--packages", $resolvedPackagesDir)
 }
 if ($PackageOnly) {
     $packageOnlyArgs = @(
@@ -147,6 +194,7 @@ if ($PackageOnly) {
     )
     $restoreArgs += $packageOnlyArgs
     $buildArgs += $packageOnlyArgs
+    $dotnetArgs += $packageOnlyArgs
 }
 
 Write-Host "Building Windows ML Runtime samples" -ForegroundColor Cyan
@@ -154,6 +202,7 @@ Write-Host "Platform: $Platform"
 Write-Host "Configuration: $Configuration"
 Write-Host "Sample: $Sample"
 Write-Host "Backends: all backends provided by the package"
+Write-Host "llama.cpp backends: $(if ($LlamaCuda) { "CPU and CUDA" } else { "CPU" })"
 if ($NuGetPackagesDir) {
     Write-Host "NuGet packages: $resolvedPackagesDir"
 }
@@ -167,7 +216,7 @@ if ($PackageOnly) {
     Write-Host "Runtime source: NuGet package only"
 }
 
-foreach ($relativeProject in $projects) {
+foreach ($relativeProject in $cppProjects) {
     $project = Join-Path $PSScriptRoot $relativeProject
     Write-Host "`nRestoring $relativeProject" -ForegroundColor Yellow
     & $msbuild $project @restoreArgs
@@ -177,6 +226,15 @@ foreach ($relativeProject in $projects) {
 
     Write-Host "Building $relativeProject" -ForegroundColor Yellow
     & $msbuild $project @buildArgs
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
+}
+
+foreach ($relativeProject in $csharpProjects) {
+    $project = Join-Path $PSScriptRoot $relativeProject
+    Write-Host "`nBuilding $relativeProject" -ForegroundColor Yellow
+    & dotnet build $project @dotnetArgs
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }

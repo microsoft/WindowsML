@@ -357,7 +357,7 @@ private:
         // provider; availability depends on installed packages and hardware.
         wprintf(L"\nSelect an execution target:\n");
         wprintf(L"  1) CPU                          (always available)\n");
-        wprintf(L"  2) GPU                          (Runtime-owned provider)\n");
+        wprintf(L"  2) GPU                          (default GPU provider)\n");
         wprintf(L"  3) GPU with an execution provider (enter a catalog name)\n");
         wprintf(L"  4) NPU with an execution provider (enter a catalog name)\n");
 
@@ -413,8 +413,7 @@ private:
         wprintf(L"Common options:\n");
         wprintf(L"  --device cpu|gpu|npu   Execution device (default: cpu)\n");
         wprintf(L"  --ep <name>            Pin one installed execution provider\n");
-        wprintf(
-            L"                          Use --device gpu without --ep for Runtime-owned WebGPU\n");
+        wprintf(L"                          Use --ep webgpu to acquire and pin WebGPU\n");
         wprintf(
             L"  --verbose              Verbose Runtime logging (execution-provider node placement)\n");
         wprintf(L"  --help, -h             Show this message\n\n");

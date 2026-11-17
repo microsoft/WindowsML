@@ -57,3 +57,14 @@ python.exe .\language\chat-completion\main.py .\models\llm\task_model.onnx
 ```
 
 Pass the `.gguf` model instead to run on llama.cpp.
+
+## C#
+
+The [C# version](csharp/README.md) holds the same conversation and prints the
+same output. It calls the Task API through the C# sample wrapper and streams
+each turn with `await foreach`. Build it, then run it with `-Language csharp`:
+
+```powershell
+..\..\build.ps1 -Sample chat-completion-csharp -PackageOnly
+..\..\run_chat_completion.ps1 -Language csharp -Backend llama
+```

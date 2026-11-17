@@ -340,6 +340,7 @@ The server reads these request fields:
 | `response_format` | `text`, `json_object`, or `json_schema`. |
 | `reasoning_effort` | One of the values in the model's `reasoning_effort_mask`. |
 | `temperature`, `top_p`, `min_p`, `top_k`, `presence_penalty`, `frequency_penalty`, `seed` | Sampling options. |
+| `watermark` | Boolean. `false` asks to generate the request without the lane's watermark; omitted or `true` uses it. A request cannot add a watermark that the lane does not have. |
 
 `n` must be 1 when present, and `stop` isn't supported. Requests that use either
 one return HTTP 422 `unsupported_parameter`.
@@ -356,6 +357,29 @@ reason, a usage chunk with no choices when `include_usage` is set, and then
 `data: [DONE]`. If generation fails after the stream starts, the server sends an
 error event and then `data: [DONE]`.
 
+### Watermarked responses
+
+A lane watermarks its completions when its text generation configuration has a
+watermark (see [Watermarking](IWinMLTextGenerationTask.md#watermarking)). The
+`WinMLServer.exe` host sets one with `--watermark gumbel`, `dual-key-gumbel`, or
+`synthid` and `--watermark-key`, or with a recipe's `watermark` member, which
+also sets the enforcement, key identifier, and the other options. A recipe
+keeps the key off the command line; protect the recipe file, because it holds
+the key in plain text. `--print-recipe` prints the key as `<redacted>`.
+
+When at least one token was selected with a watermark key, the response, and
+the finish chunk of a stream, carry a top-level `watermark` object with the
+`algorithm`, `prf`, `key_id`, `context_width`, `generated_tokens`, and
+`watermarked_tokens`, plus `alpha` or `depth` for the algorithms that use them.
+Its presence does not measure detection strength; use the counts and a detector.
+
+A watermark applies only to tokens sampled with a positive `temperature`. An
+omitted `temperature` resolves to 0 (greedy), which a best-effort lane serves
+without a watermark. A lane that requires the watermark returns HTTP 403
+`forbidden_by_policy` for `watermark: false` and HTTP 422
+`unsupported_capability` for a greedy request, before it changes any retained
+state.
+
 ### Errors
 
 Errors use the OpenAI error shape:
@@ -366,7 +390,7 @@ Errors use the OpenAI error shape:
 |---|---|
 | 400 | `invalid_json`, `invalid_type`, `invalid_value`, `invalid_messages`, `invalid_message`, `invalid_model`, `invalid_tool_choice`, `conflicting_parameters`, `invalid_host`, `invalid_request`, `context_length_exceeded` |
 | 401 | `invalid_api_key` |
-| 403 | `loopback_required`, `browser_origin_rejected` |
+| 403 | `loopback_required`, `browser_origin_rejected`, `forbidden_by_policy` |
 | 404 | `model_not_found`, `not_found` |
 | 405 | `method_not_allowed` |
 | 408 | `request_cancelled` |
@@ -386,7 +410,10 @@ the request id, the formatted prompt token count, the generated token ids, and
 timings for queueing, the first token, and the whole generation. When a request
 decodes speculatively, the object also has `speculative_decoding`, with the
 `WINML_TEXT_GENERATION_SPECULATIVE_METHOD` value and the verification step,
-drafted token, and accepted draft token counts.
+drafted token, and accepted draft token counts. When the lane has a watermark,
+it also has `watermark`, with the secondary-key, repeated-context,
+partial-context, greedy, and other unwatermarked token counts, even when no
+token was watermarked.
 
 ## Ownership and threading
 

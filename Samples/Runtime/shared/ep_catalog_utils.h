@@ -188,13 +188,13 @@ static BOOL CALLBACK PrepareEpCallback(WinMLEpHandle ep, const WinMLEpInfo* info
     if (IsWebGpuEpName(epName))
     {
         // If the user explicitly asked for this provider, explain that it is
-        // Runtime-owned; otherwise count it and continue.
+        // registered by the Runtime; otherwise count it and continue.
         if (ctx->filterEpName &&
             (_stricmp(epName, ctx->filterEpName) == 0 ||
              _stricmp(epName, ResolveExecutionProviderName(ctx->filterEpName)) == 0))
         {
             wprintf(
-                L"  WebGPU is Runtime-owned and needs no app registration. Request the GPU device without a provider name.\n");
+                L"  WebGPU is registered by the Runtime when a target pins it; the sample does not register it.\n");
         }
 
         ++stats->skippedWebGpu;
@@ -301,7 +301,7 @@ static HRESULT PrepareExecutionProviders(WINML_EXECUTION_TARGET_KIND deviceType,
 
     if (stats.skippedWebGpu > 0)
     {
-        wprintf(L", webgpuRuntimeOwned=%u", stats.skippedWebGpu);
+        wprintf(L", webgpuSkipped=%u", stats.skippedWebGpu);
     }
 
     wprintf(L"\n");
@@ -504,7 +504,7 @@ static HRESULT PrepareAndValidateExecutionProviders(WINML_EXECUTION_TARGET_KIND 
             return E_INVALIDARG;
         }
 
-        wprintf(L"  WebGPU is Runtime-owned; using the default GPU target.\n");
+        wprintf(L"  WebGPU: the Runtime acquires and registers it for the pinned GPU target.\n");
         return S_OK;
     }
 

@@ -27,6 +27,7 @@ the check again after acquisition so the catalog verifies every file.
 | `llm-chat-gguf` | Cataloged GGUF language model. |
 | `speech-to-language-model` | Whisper artifacts plus exported ONNX language artifacts. |
 | `model-compilation` | Image-classification artifacts reused by the compiler sample. |
+| `onnx-runtime-winmlcgep` | The same SqueezeNet artifacts, used through the CG execution provider. |
 
 Use `Get-Help .\check_artifacts.ps1 -Full` to see every accepted group.
 
@@ -60,6 +61,12 @@ determine whether your use is permitted before downloading or using a model.
 The sample package version is pinned in
 [`Samples\Directory.Packages.props`](../../Samples/Directory.Packages.props).
 
+## Disk space
+
+Models, build outputs, and the model preparation tools can take several GB.
+[Recover disk space](../../Samples/README.md#recover-disk-space) lists where the
+samples keep them and how to remove what you no longer need.
+
 ## Artifact catalog
 
 The table below is generated from `Samples\shared\SampleArtifacts.psd1`, the
@@ -69,6 +76,16 @@ same catalog `check_artifacts.ps1` verifies against. Regenerate it with
 | Asset | Purpose | Source page | Size |
 |---|---|---|---|
 | ImageNet class labels | Maps classifier output indices to human-readable names. | [https://github.com/pytorch/hub](https://github.com/pytorch/hub) | 10 KB |
+| Laya model configuration | Describes the model architecture. | [https://huggingface.co/convaiinnovations/laya](https://huggingface.co/convaiinnovations/laya) | 160 bytes |
+| Laya decision head configuration | Supplies sequence budgets and calibration temperatures. | [https://huggingface.co/convaiinnovations/laya](https://huggingface.co/convaiinnovations/laya) | 745 bytes |
+| Laya encoder configuration | Describes the encoder architecture. | [https://huggingface.co/convaiinnovations/laya](https://huggingface.co/convaiinnovations/laya) | 2 KB |
+| Laya tokenizer | Converts text to token IDs. | [https://huggingface.co/convaiinnovations/laya](https://huggingface.co/convaiinnovations/laya) | 3.4 MB |
+| Laya tokenizer configuration | Supplies the special tokens. | [https://huggingface.co/convaiinnovations/laya](https://huggingface.co/convaiinnovations/laya) | 308 bytes |
+| Laya weights (safetensors) | Supplies the model weights. | [https://huggingface.co/convaiinnovations/laya](https://huggingface.co/convaiinnovations/laya) | 803.6 MB |
+| Qwen2.5 0.5B Instruct model configuration | Describes the model architecture. | [https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) | 659 bytes |
+| Qwen2.5 0.5B Instruct tokenizer | Converts between text and token IDs. | [https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) | 6.7 MB |
+| Qwen2.5 0.5B Instruct tokenizer configuration | Supplies the special tokens and chat template. | [https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) | 7 KB |
+| Qwen2.5 0.5B Instruct weights (safetensors) | Supplies the model weights. | [https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) | 942.3 MB |
 | Qwen2.5 0.5B Instruct (GGUF, Q4_K_M) | Supplies a quantized language model for the GGUF backend. | [https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF) | 468.6 MB |
 | SESR x2 super resolution (ONNX, FP32) | Upscales an image by two times. | [https://huggingface.co/amd/ryzenai-sesr](https://huggingface.co/amd/ryzenai-sesr) | 92 KB |
 | Sample photograph | Provides a default low-resolution input image. | [https://github.com/pytorch/hub](https://github.com/pytorch/hub) | 646 KB |
@@ -76,6 +93,11 @@ same catalog `check_artifacts.ps1` verifies against. Regenerate it with
 | Sample photograph | Provides a default input image for classification. | [https://github.com/pytorch/hub](https://github.com/pytorch/hub) | 646 KB |
 | Whisper medium decoder (ONNX, Q4F16) | Decodes encoded audio into transcript tokens. | [https://huggingface.co/onnx-community/whisper-medium-ONNX](https://huggingface.co/onnx-community/whisper-medium-ONNX) | 319.8 MB |
 | Whisper medium encoder (ONNX, Q4F16) | Encodes audio features for speech recognition. | [https://huggingface.co/onnx-community/whisper-medium-ONNX](https://huggingface.co/onnx-community/whisper-medium-ONNX) | 172.3 MB |
+| Whisper tiny model configuration | Describes the model architecture. | [https://huggingface.co/openai/whisper-tiny](https://huggingface.co/openai/whisper-tiny) | 2 KB |
+| Whisper tiny generation configuration | Supplies the decoder start and language tokens. | [https://huggingface.co/openai/whisper-tiny](https://huggingface.co/openai/whisper-tiny) | 4 KB |
+| Whisper tiny tokenizer | Converts between text and token IDs. | [https://huggingface.co/openai/whisper-tiny](https://huggingface.co/openai/whisper-tiny) | 2.4 MB |
+| Whisper tiny tokenizer configuration | Supplies the special tokens. | [https://huggingface.co/openai/whisper-tiny](https://huggingface.co/openai/whisper-tiny) | 276 KB |
+| Whisper tiny weights (safetensors) | Supplies the model weights. | [https://huggingface.co/openai/whisper-tiny](https://huggingface.co/openai/whisper-tiny) | 144.1 MB |
 | Whisper tokenizer | Supplies the Task API tokenizer definition. | [https://huggingface.co/onnx-community/whisper-medium-ONNX](https://huggingface.co/onnx-community/whisper-medium-ONNX) | 3.7 MB |
 | Whisper tokenizer configuration | Supplies special tokens and decoding defaults. | [https://huggingface.co/onnx-community/whisper-medium-ONNX](https://huggingface.co/onnx-community/whisper-medium-ONNX) | 276 KB |
 | Whisper vocabulary | Maps decoder tokens back to text. | [https://huggingface.co/onnx-community/whisper-medium-ONNX](https://huggingface.co/onnx-community/whisper-medium-ONNX) | 1,012 KB |

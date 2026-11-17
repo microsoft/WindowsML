@@ -1,0 +1,8 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<!--
+  The Windows ML package and the shared C# sample wrapper, shared by the app and the smoke harness. The app calls the
+  Runtime and Task APIs through the wrapper, the same one the C# samples use; see Samples\Runtime\shared\csharp\README.md.
+-->
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\Samples\Runtime\shared\csharp\WinMLSamples.Runtime.props" />
+</Project>

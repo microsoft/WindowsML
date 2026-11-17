@@ -68,6 +68,53 @@ from the caller's working directory.
 Pass `-OutputDirectory <new-or-empty-directory>` with file or all mode to
 retain the artifact and sidecars for deployment.
 
+## 5. Compile for the CGC backend
+
+A GPU target that isn't pinned to an execution provider compiles an ONNX model
+for the [CGC backend](../backends.md#the-cgc-backend). The sample above always
+compiles through a provider, so this step uses a few lines of Python from
+`Samples\Runtime`:
+
+```python
+from windowsml.runtime import (
+    CompiledModelForm,
+    ExecutionTargetKind,
+    Runtime,
+)
+
+with (
+    Runtime() as runtime,
+    runtime.create_target(ExecutionTargetKind.GPU) as target,
+    runtime.load_model(r"models\squeezenet\SqueezeNet.onnx") as model,
+    target.model_compiler() as compiler,
+):
+    # Device-targeted: loads fastest, on this device and software version only.
+    compiler.compile_to_file(model, "squeezenet.oir")
+    # Durable: finishes compiling when it loads, on any supported device.
+    if compiler.supports_form(CompiledModelForm.DURABLE):
+        compiler.compile_to_file(
+            model, "squeezenet.mlirbc", form=CompiledModelForm.DURABLE
+        )
+```
+
+In C++, set the form on the options object from
+`IWinMLModelCompiler::CreateCompileOptions` with `SetCompiledModelForm`, then
+call `CompileToFileWithOptions`. See
+[`IWinMLModelCompiler`](../../api-reference/IWinMLModelCompiler.md#compiled-model-form).
+
+Keep the `.oir` and `.mlirbc` extensions; `LoadModelFromFile` recognizes a CGC
+artifact by them. Load the artifact with `runtime.load_model` and add it to a
+pipeline stage on a GPU target like any other model. The image-classification
+sample checks that its stage runs on ONNX Runtime, so don't pass the artifact
+to its `--model` option. Numeric results can differ slightly from the ONNX
+source, as with any change of backend. With execution diagnostics enabled, the
+stage reports its work as compiled subgraphs on the `D3D12_DRIVER` and
+`DIRECTML` technologies.
+
+A durable artifact keeps loading after a driver or Windows ML update. A
+device-targeted artifact from another device or software version fails to load;
+compile it again, or ship the durable form and accept the longer first load.
+
 ## Next
 
 Continue to [GGUF language models](07-gguf-language-models.md).

@@ -71,6 +71,8 @@ if (-not $ModelPath) {
 if (-not (Test-Path -LiteralPath $ModelPath)) {
     throw "Language model was not found: $ModelPath"
 }
+# A bare file name has no parent path, so resolve it before looking beside it.
+$ModelPath = (Resolve-Path -LiteralPath $ModelPath).Path
 
 $extension = if (Test-Path -LiteralPath $ModelPath -PathType Leaf) {
     [IO.Path]::GetExtension($ModelPath).ToLowerInvariant()
@@ -108,7 +110,7 @@ else {
 }
 
 $sampleArguments = @(
-    (Resolve-Path -LiteralPath $ModelPath).Path,
+    $ModelPath,
     $resolvedTokenizer,
     $Prompt,
     $MaxNewTokens.ToString(),
@@ -126,11 +128,11 @@ if ($Greedy) { $sampleArguments += "--greedy" }
 # An instruct model ends its reply on its own only when the prompt uses its chat
 # format. -Chat has the sample apply the model's chat template.
 if ($Chat) { $sampleArguments += "--chat" }
-if ($Device -ne "cpu") { $sampleArguments += @("--device", $Device) }
+if ($Device -ne "cpu") { $sampleArguments += @("--device", $Device.ToLowerInvariant()) }
 # Speculative decoding applies to GGUF models on the llama backend. With
 # -Speculative model, -DraftModel names an optional block draft model trained
 # for the target; with -Speculative draft-model, it names the required draft.
-if ($Speculative -ne "none") { $sampleArguments += @("--speculative", $Speculative) }
+if ($Speculative -ne "none") { $sampleArguments += @("--speculative", $Speculative.ToLowerInvariant()) }
 if ($DraftTokens -ge 0) { $sampleArguments += @("--draft-tokens", $DraftTokens.ToString($culture)) }
 if ($DraftModel) {
     if (-not (Test-Path -LiteralPath $DraftModel -PathType Leaf)) {

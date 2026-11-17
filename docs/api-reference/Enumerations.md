@@ -27,6 +27,15 @@ full value/behavior coverage for these families remains to be expanded.
 | [`WINML_TEXT_GENERATION_EOS_POLICY`](IWinMLTextGenerationTask.md#task-and-session) | Tokenizer defaults or explicit EOS set. |
 | [`WINML_TEXT_GENERATION_SEQUENCE_DISCLOSURE`](IWinMLTextGenerationTask.md#capabilities-and-sequence-state) | Whether the retained sequence can be extended. |
 | [`WINML_TEXT_GENERATION_SPECULATIVE_METHOD`](IWinMLTextGenerationTask.md#speculative-decoding) | Draft token source for speculative decoding, or none. |
+| [`WINML_TEXT_GENERATION_DRAFT_SOURCE`](IWinMLTextGenerationTask.md#speculative-method-support) | Where a supported speculative method draws its draft tokens. |
+| [`WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS`](IWinMLTextGenerationTask.md#sessions-from-a-model) | Present-field flags for model options: program cache directory, its storage, and draft model. |
+| [`WINML_TEXT_GENERATION_COMPOSITION_KIND`](IWinMLTextGenerationTask.md#composed-models) | `UNIFIED`, `EMBEDDING_DECODER`, or `PREFILL_DECODE` composition. |
+| [`WINML_TEXT_GENERATION_COMPOSED_MODEL_FIELDS`](IWinMLTextGenerationTask.md#composed-models) | Present-field flags for a composition: decode input mode and logical capacity. |
+| [`WINML_TEXT_GENERATION_WATERMARK_MODE`](IWinMLTextGenerationTask.md#watermarking) | Use the configuration's watermark, or disable it for one request. |
+| [`WINML_TEXT_GENERATION_WATERMARK_ALGORITHM`](IWinMLTextGenerationTask.md#watermarking) | None, Gumbel, dual-key Gumbel, or SynthID. |
+| [`WINML_TEXT_GENERATION_WATERMARK_PRF`](IWinMLTextGenerationTask.md#watermarking) | Keyed pseudorandom function (Philox4x32-10, version 1). |
+| [`WINML_TEXT_GENERATION_WATERMARK_ENFORCEMENT`](IWinMLTextGenerationTask.md#watermarking) | Best effort, or required. |
+| [`WINML_TEXT_GENERATION_WATERMARK_CONTEXT_SCOPE`](IWinMLTextGenerationTask.md#watermarking) | Which history is searched for a repeated context. |
 
 ### Chat Completion - `WinMLChatCompletionTask.h`
 
@@ -42,7 +51,33 @@ full value/behavior coverage for these families remains to be expanded.
 |---|---|
 | [`WINML_AUTOMATIC_SPEECH_RECOGNITION_SESSION_STATE`](IWinMLAutomaticSpeechRecognitionTask.md#threading-and-teardown) | Session lifecycle. |
 | [`WINML_AUTOMATIC_SPEECH_RECOGNITION_FINISH_REASON`](IWinMLAutomaticSpeechRecognitionTask.md#streaming-and-results) | Terminal transcription reason. |
-| [`WINML_AUTOMATIC_SPEECH_RECOGNITION_READ_STATUS`](IWinMLAutomaticSpeechRecognitionTask.md#streaming-and-results) | Update, need input, or completion. |
+| [`WINML_AUTOMATIC_SPEECH_RECOGNITION_READ_STATUS`](IWinMLAutomaticSpeechRecognitionTask.md#streaming-and-results) | Update, need input, completion, or a prediction when predictions are enabled. |
+| [`WINML_AUTOMATIC_SPEECH_RECOGNITION_MODE`](IWinMLAutomaticSpeechRecognitionTask.md#language-mode-and-predictions) | Transcribe or translate. |
+| [`WINML_AUTOMATIC_SPEECH_RECOGNITION_MODEL_OPTION_FIELDS`](IWinMLAutomaticSpeechRecognitionTask.md#models-backed-configuration) | Present-field flags for model options. |
+
+### Decision - `WinMLDecisionTask.h`
+
+| Enumeration | Purpose |
+|---|---|
+| [`WINML_DECISION_QUESTION_KIND`](IWinMLDecisionTask.md#questions) | Choice, score, or yes/no question. |
+| [`WINML_DECISION_QUESTION_FIELDS`](IWinMLDecisionTask.md#questions) | Present-field flags for a question: act threshold. |
+| [`WINML_DECISION_RECOMMENDATION`](IWinMLDecisionTask.md#answers) | Act or escalate. |
+| [`WINML_DECISION_MODEL_OPTION_FIELDS`](IWinMLDecisionTask.md#model-options) | Present-field flags for model options: program cache directory and its storage. |
+
+### Task runtime - `WinMLTasksRuntime.h`
+
+| Enumeration | Purpose |
+|---|---|
+| [`WINML_COMPILED_PROGRAM_STORAGE`](IWinMLTasks.md#compiled-programs-and-stored-weights) | Whether a program cache directory keeps only the compiled programs or also their prepared weights. |
+
+### Runtime diagnostics and weights - `WinMLRuntime.h`
+
+| Enumeration | Purpose |
+|---|---|
+| [`WINML_STAGE_PLACEMENT_COVERAGE`](IWinMLStageExecutionDiagnostics.md#coverage-and-work-shares) | Full, partial, none, or unknown placement on the target's device. |
+| [`WINML_STAGE_WORK_IMPLEMENTATION`](IWinMLStageExecutionDiagnostics.md#coverage-and-work-shares) | Execution technology of a work share; an open set. |
+| [`WINML_STAGE_WORK_UNIT`](IWinMLStageExecutionDiagnostics.md#coverage-and-work-shares) | Unit in which a stage counts its work shares. |
+| [`WINML_WEIGHT_ENCODING`](IWinMLModelWeightFormats.md) | Float, integer, codebook, or unknown weight encoding; an open set. |
 
 ### Conversation and constraints - `WinMLConversation.h`
 
@@ -142,8 +177,8 @@ typedef enum WINML_COMPILED_MODEL_FORM
 
 | Value | Enum | Description |
 |---|---|---|
-| 0 | `DEVICE_TARGETED` | Device-specific artifact for the bound target and current software stack. |
-| 1 | `DURABLE` | Hardware-independent artifact completed for the target when loaded. |
+| 0 | `DEVICE_TARGETED` | Device-specific artifact for the bound target and current software stack. Loads fastest; a different device, driver, or runtime version rejects it. |
+| 1 | `DURABLE` | Hardware-independent artifact completed for the target when loaded. Keeps loading across devices and software updates. |
 
 See [IWinMLModelCompiler](IWinMLModelCompiler.md).
 

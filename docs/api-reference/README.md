@@ -20,7 +20,10 @@ The native NuGet integration and the `WindowsML::Runtime` and
 for C and C++ consumers. C++ callers may also use `__uuidof`; applications do not
 need to redeclare IID values or register the Runtime DLLs. The Server interfaces
 are linked when the project sets `WinMLCopyServerRuntime` or links
-`WindowsML::Server`; see [IWinMLServer](IWinMLServer.md#activation).
+`WindowsML::Server`; see [IWinMLServer](IWinMLServer.md#activation). C#
+applications generate bindings for the Runtime and Task APIs from the metadata
+in the package with CsWin32; see
+[C# bindings with CsWin32](../Runtime/overview.md#c-bindings-with-cswin32).
 
 D3D12 types (`ID3D12Resource`, `ID3D12Device`, `ID3D12CommandQueue`) are
 returned as `IUnknown*` in the IDL. Callers
@@ -32,8 +35,11 @@ Agility SDK `d3d12.h`.
 | Interface | IID |
 |---|---|
 | `IWinMLRuntime` | `6954707d-3987-491a-ada9-2bea9b0e13f9` |
+| `IWinMLLlamaModelLoader` | `b9725a87-e502-4be6-a9ae-1185fd9b77cc` |
 | `IWinMLModel` | `2453f1b4-81ce-4fd4-99ce-b83136883ff4` |
 | `IWinMLModelSchema` | `7696a11b-6f39-478a-b33d-c69850dbc2dc` |
+| `IWinMLModelWeightFormats` | `56066f5a-079a-4890-8b2f-24c0cddd549c` |
+| `IWinMLModelWeightFormat` | `f2bde5d5-80b2-4268-9e99-ba5fd1d87195` |
 | `IWinMLExecutionTarget` | `21a4ed3a-0ab3-441c-b9d8-f7d962001774` |
 | `IWinMLD3D12ExecutionTarget` | `b243d097-07d0-4f3c-8519-370df6321e43` |
 | `IWinMLModelCompiler` | `906a0175-188e-403f-a0ef-5caa0692db9e` |
@@ -41,6 +47,11 @@ Agility SDK `d3d12.h`.
 | `IWinMLOnnxSymbolicDimensionOverrides` | `c117047b-3388-421a-b1ef-4afa36295859` |
 | `IWinMLPipelineBuilder` | `3bcfcf5a-8b40-4931-9812-d84679123006` |
 | `IWinMLStage` | `88596a2b-24fe-476e-bc90-c37161edb477` |
+| `IWinMLStageHostBuffers` | `a53a28b2-b597-4773-9c5f-aadfb1945ad6` |
+| `IWinMLStageExecutionDiagnostics` | `5fd646ac-5f56-42fb-9ea5-cee1c39feb22` |
+| `IWinMLStageWorkShare` | `d6b538b8-2cd8-4875-8647-5ca583f4bf0c` |
+| `IWinMLCallerBoundStageOptions` | `02016154-17f3-4562-8331-b95973a922ba` |
+| `IWinMLLlamaStageOptions` | `516a4e40-9d1a-4ef3-9d4e-fd6de35c5354` |
 | `IWinMLStageSchema` | `41f17eb8-1b18-4eb6-b628-dd93d669f401` |
 | `IWinMLStatefulStage` | `d058a861-844c-435f-b820-2f3dd06754e4` |
 | `IWinMLStatefulStageOptions` | `6a2c9e2b-6a1f-4c3d-9b0e-6f6d6a2f7a5c` |
@@ -54,10 +65,12 @@ Agility SDK `d3d12.h`.
 | `IWinMLProcessor` | `d4a3e8c1-5b72-4f90-a1d3-8c6e2f4a9b05` |
 | `IWinMLD3D12Processor` | `7448b45c-f02d-4dc1-b9fe-4891a1bc087d` |
 | `IWinMLResourceMapReader` | `b188cc3d-b051-453b-8651-ddeef3512a47` |
+| `IWinMLStreamingResourceMapReader` | `35c88c22-4eb8-4f20-a9f2-f235d5aa8343` |
 | `IWinMLCompileOutputSink` | `97c93853-b0d8-4afa-974f-518a3c21ade2` |
 | `IWinMLTensor` | `22f5cf71-27be-4a1b-9087-1a36f7a230ad` |
 | `IWinMLD3D12Tensor` | `37ac4145-5c22-4aa4-bdb2-d70f050849fb` |
 | `IWinMLTensorSynchronization` | `f457998f-22d4-48bf-aba0-a75ae59ab666` |
+| `IWinMLTensorHostReadback` | `63bc927b-9368-4095-b000-5a094fc23151` |
 | `IWinMLTensorDataLock` | `7d2780ed-66b4-4fa5-a935-bae6d28082bd` |
 | `IWinMLTensorSynchronizedDataLock` | `c1754906-62ce-46a2-a2fb-cc13cd10ffcd` |
 | `IWinMLMutableTensor` | `a7c3e1d4-6f82-4b59-9e1a-3d8c5f2a7b94` |
@@ -83,6 +96,7 @@ Agility SDK `d3d12.h`.
 | `IWinMLTextGenerationTaskFactory` | `4692aed4-6ba5-4462-abca-23606474ea5f` |
 | `IWinMLTextGenerationOptions` | `839c9965-9f7b-4ae8-9eb0-3aba860ae4a4` |
 | `IWinMLTextGenerationConfiguration` | `bccfa37d-bdbf-45dd-a05e-bee588569883` |
+| `IWinMLModelTextGenerationConfiguration` | `984e9699-2339-4c7c-88ea-c1b770945ad0` |
 | `IWinMLTextGenerationTask` | `a27d1316-84a7-4c75-9f66-08f0f2a73a04` |
 | `IWinMLTextGenerationSession` | `d7757415-badb-448f-832d-1dcd7aed2e68` |
 | `IWinMLTextGenerationSequenceDisclosure` | `0c1b7e58-5a2d-4f96-8a34-2d6f9e1c4b70` |
@@ -91,7 +105,11 @@ Agility SDK `d3d12.h`.
 | `IWinMLTextGenerationPullStream` | `c3ae34bb-44e4-4262-bf8f-db434def63ff` |
 | `IWinMLTextGenerationResult` | `8b73a588-f47f-46f7-9a17-d9600f2bff83` |
 | `IWinMLTextGenerationSpeculativeConfiguration` | `5d0e7c4a-2f1b-4a86-9c3e-7b4d8e1f6a52` |
+| `IWinMLTextGenerationSpeculativeSupport` | `37825096-9132-47a6-8cc4-63a9d7d31909` |
 | `IWinMLTextGenerationSpeculativeResult` | `9a4f1c6e-3b7d-4e25-8f0a-2c6d5e9b1f47` |
+| `IWinMLTextGenerationWatermarkConfiguration` | `3c6e9d2a-71b4-4f0e-a5d8-2e9b6f1c4a73` |
+| `IWinMLTextGenerationWatermarkResult` | `b84f2e17-5d9a-4c63-8e1b-6a0f3d7c2e95` |
+| `IWinMLTextGenerationWatermarkDetector` | `bb763a50-51f2-4a7b-b241-ccee47e3a17a` |
 | `IWinMLChatCompletionTaskFactory` | `a9862625-4169-44fa-a753-eb8fb375ac82` |
 | `IWinMLChatCompletionTask` | `d316e3c4-f994-4923-a0b7-a7ae051fbdf2` |
 | `IWinMLChatCompletionSession` | `5220796d-7ee9-4999-bcde-a4d5b2fc5585` |
@@ -100,14 +118,19 @@ Agility SDK `d3d12.h`.
 | `IWinMLChatCompletionEventProvenance` | `d51fb276-e76a-4ae7-bffd-eb1281fa2627` |
 | `IWinMLAutomaticSpeechRecognitionTaskFactory` | `249c4554-2f03-4625-9147-601b271bee71` |
 | `IWinMLAutomaticSpeechRecognitionConfiguration` | `672e7f18-75de-4cbd-8194-33122f55b795` |
-| `IWinMLWhisperAutomaticSpeechRecognitionConfiguration` | `ca2d4314-63e0-4b6a-a9aa-f928addb4d38` |
+| `IWinMLEncoderDecoderAutomaticSpeechRecognitionConfiguration` | `ca2d4314-63e0-4b6a-a9aa-f928addb4d38` |
+| `IWinMLModelAutomaticSpeechRecognitionConfiguration` | `3b6932a2-a570-4b23-9781-78b6ae4c7071` |
 | `IWinMLAutomaticSpeechRecognitionTask` | `7bab82df-7026-45e0-898d-53c40e3962a8` |
 | `IWinMLAutomaticSpeechRecognitionSession` | `b0ce1ef5-1778-4448-87b4-b800ea45dbcd` |
-| `IWinMLWhisperLogMelInput` | `db6df926-1c60-45da-91ea-a92c81d13095` |
+| `IWinMLAutomaticSpeechRecognitionEncoderInput` | `db6df926-1c60-45da-91ea-a92c81d13095` |
 | `IWinMLAutomaticSpeechRecognitionLiveSession` | `3cc89611-57fb-46bf-8d48-e4092763a7cc` |
 | `IWinMLAutomaticSpeechRecognitionLiveInput` | `eef894c7-7861-43bf-92e4-5899e5439f9a` |
 | `IWinMLAutomaticSpeechRecognitionPullStream` | `9ed7fe5e-0730-4890-a956-7b9c2f5c697b` |
 | `IWinMLAutomaticSpeechRecognitionResult` | `4f8b347d-8c8d-4d18-a50c-8b4615773208` |
+| `IWinMLDecisionTaskFactory` | `a87f6ca1-2a69-43ac-baa2-56c6508d8edd` |
+| `IWinMLDecisionTask` | `18856433-4413-4ae1-8291-ab62cd3908ea` |
+| `IWinMLDecisionSession` | `21f65408-39b3-4244-85f1-ad0707fbafcb` |
+| `IWinMLDecisionResult` | `e3ef04d2-61e7-47a2-a41b-fce6f9f59bc8` |
 | `IWinMLOrtModelSchema` | `9451e992-e86b-411a-a4c0-f83d2a0e2a22` |
 | `IWinMLOrtNamedBindings` | `dc39b5f1-ba7a-48f1-b6d3-a3eebbf4b352` |
 | `IWinMLOrtCompatibility` | `a7a04319-3b8a-496c-af93-96de30311f82` |
@@ -142,10 +165,18 @@ Each public interface from the headers is listed exactly once. Some related inte
 | Interface | Page |
 |---|---|
 | `IWinMLRuntime` | [IWinMLRuntime](IWinMLRuntime.md) |
+| `IWinMLLlamaModelLoader` | [IWinMLLlamaModelLoader](IWinMLLlamaModelLoader.md) |
 | `IWinMLModel` | [IWinMLModel](IWinMLModel.md) |
 | `IWinMLModelSchema` | [IWinMLModelSchema](IWinMLModelSchema.md) |
+| `IWinMLModelWeightFormats` | [IWinMLModelWeightFormats](IWinMLModelWeightFormats.md) |
+| `IWinMLModelWeightFormat` | [IWinMLModelWeightFormats](IWinMLModelWeightFormats.md) |
 | `IWinMLPipelineBuilder` | [IWinMLPipelineBuilder](IWinMLPipelineBuilder.md) |
 | `IWinMLStage` | [IWinMLStage](IWinMLStage.md) |
+| `IWinMLStageHostBuffers` | [IWinMLStageHostBuffers](IWinMLStageHostBuffers.md) |
+| `IWinMLStageExecutionDiagnostics` | [IWinMLStageExecutionDiagnostics](IWinMLStageExecutionDiagnostics.md) |
+| `IWinMLStageWorkShare` | [IWinMLStageExecutionDiagnostics](IWinMLStageExecutionDiagnostics.md) |
+| `IWinMLCallerBoundStageOptions` | [IWinMLCallerBoundStageOptions](IWinMLCallerBoundStageOptions.md) |
+| `IWinMLLlamaStageOptions` | [IWinMLLlamaModelLoader](IWinMLLlamaModelLoader.md#iwinmlllamastageoptions) |
 | `IWinMLStageSchema` | [IWinMLStageSchema](IWinMLStageSchema.md) |
 | `IWinMLStatefulStage` | [IWinMLStatefulStage](IWinMLStatefulStage.md) |
 | `IWinMLStatefulStageOptions` | [IWinMLStatefulStageOptions](IWinMLStatefulStageOptions.md) |
@@ -159,6 +190,7 @@ Each public interface from the headers is listed exactly once. Some related inte
 | `IWinMLOnnxSymbolicDimensionOverrides` | [IWinMLModelCompiler](IWinMLModelCompiler.md) |
 | `IWinMLModelCompiler` | [IWinMLModelCompiler](IWinMLModelCompiler.md) |
 | `IWinMLResourceMapReader` | [IWinMLResourceMapReader](IWinMLResourceMapReader.md) |
+| `IWinMLStreamingResourceMapReader` | [IWinMLStreamingResourceMapReader](IWinMLStreamingResourceMapReader.md) |
 | `IWinMLCompileOutputSink` | [IWinMLCompileOutputSink](IWinMLCompileOutputSink.md) |
 | `IWinMLProcessor` | [IWinMLProcessor](IWinMLProcessor.md) |
 | `IWinMLD3D12Processor` | [IWinMLD3D12Processor](IWinMLD3D12Processor.md) |
@@ -171,6 +203,7 @@ Each public interface from the headers is listed exactly once. Some related inte
 | `IWinMLTensor` | [IWinMLTensor](IWinMLTensor.md) |
 | `IWinMLD3D12Tensor` | [IWinMLD3D12Tensor](IWinMLD3D12Tensor.md) |
 | `IWinMLTensorSynchronization` | [IWinMLTensorSynchronization](IWinMLTensorSynchronization.md) |
+| `IWinMLTensorHostReadback` | [IWinMLTensorHostReadback](IWinMLTensorHostReadback.md) |
 | `IWinMLMutableTensor` | [IWinMLMutableTensor](IWinMLMutableTensor.md) |
 | `IWinMLRawTensorFactory` | [IWinMLRawTensorFactory](IWinMLRawTensorFactory.md) |
 | `IWinMLImageTensorFactory` | [IWinMLImageTensorFactory](IWinMLImageTensorFactory.md) |
@@ -193,6 +226,7 @@ Each public interface from the headers is listed exactly once. Some related inte
 | `IWinMLTextGenerationTaskFactory` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
 | `IWinMLTextGenerationOptions` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
 | `IWinMLTextGenerationConfiguration` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
+| `IWinMLModelTextGenerationConfiguration` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md#sessions-from-a-model) |
 | `IWinMLTextGenerationTask` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
 | `IWinMLTextGenerationSession` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
 | `IWinMLTextGenerationSequenceDisclosure` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
@@ -201,7 +235,11 @@ Each public interface from the headers is listed exactly once. Some related inte
 | `IWinMLTextGenerationPullStream` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
 | `IWinMLTextGenerationResult` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
 | `IWinMLTextGenerationSpeculativeConfiguration` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
+| `IWinMLTextGenerationSpeculativeSupport` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md#speculative-method-support) |
 | `IWinMLTextGenerationSpeculativeResult` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md) |
+| `IWinMLTextGenerationWatermarkConfiguration` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md#watermarking) |
+| `IWinMLTextGenerationWatermarkResult` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md#watermarking) |
+| `IWinMLTextGenerationWatermarkDetector` | [IWinMLTextGenerationTask](IWinMLTextGenerationTask.md#watermarking) |
 | `IWinMLChatCompletionTaskFactory` | [IWinMLChatCompletionTask](IWinMLChatCompletionTask.md) |
 | `IWinMLChatCompletionTask` | [IWinMLChatCompletionTask](IWinMLChatCompletionTask.md) |
 | `IWinMLChatCompletionSession` | [IWinMLChatCompletionTask](IWinMLChatCompletionTask.md) |
@@ -210,14 +248,19 @@ Each public interface from the headers is listed exactly once. Some related inte
 | `IWinMLChatCompletionEventProvenance` | [IWinMLChatCompletionTask](IWinMLChatCompletionTask.md) |
 | `IWinMLAutomaticSpeechRecognitionTaskFactory` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
 | `IWinMLAutomaticSpeechRecognitionConfiguration` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
-| `IWinMLWhisperAutomaticSpeechRecognitionConfiguration` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
+| `IWinMLEncoderDecoderAutomaticSpeechRecognitionConfiguration` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md#encoder-decoder-configuration) |
+| `IWinMLModelAutomaticSpeechRecognitionConfiguration` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md#models-backed-configuration) |
 | `IWinMLAutomaticSpeechRecognitionTask` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
 | `IWinMLAutomaticSpeechRecognitionSession` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
-| `IWinMLWhisperLogMelInput` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
+| `IWinMLAutomaticSpeechRecognitionEncoderInput` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
 | `IWinMLAutomaticSpeechRecognitionLiveSession` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
 | `IWinMLAutomaticSpeechRecognitionLiveInput` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
 | `IWinMLAutomaticSpeechRecognitionPullStream` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
 | `IWinMLAutomaticSpeechRecognitionResult` | [IWinMLAutomaticSpeechRecognitionTask](IWinMLAutomaticSpeechRecognitionTask.md) |
+| `IWinMLDecisionTaskFactory` | [IWinMLDecisionTask](IWinMLDecisionTask.md) |
+| `IWinMLDecisionTask` | [IWinMLDecisionTask](IWinMLDecisionTask.md) |
+| `IWinMLDecisionSession` | [IWinMLDecisionTask](IWinMLDecisionTask.md) |
+| `IWinMLDecisionResult` | [IWinMLDecisionTask](IWinMLDecisionTask.md) |
 | `IWinMLOrtModelSchema` | [IWinMLOrtModelSchema](IWinMLOrtModelSchema.md) |
 | `IWinMLOrtNamedBindings` | [IWinMLOrtNamedBindings](IWinMLOrtNamedBindings.md) |
 | `IWinMLOrtCompatibility` | [IWinMLOrtCompatibility](IWinMLOrtCompatibility.md) |

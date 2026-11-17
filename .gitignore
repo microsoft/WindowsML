@@ -214,8 +214,10 @@ Samples/Runtime/models/
 Samples/Runtime/profiles/
 Samples/Runtime/localpackages/*.nupkg
 Samples/Runtime/localpackages/*.whl
+Samples/Tasks/out/
 Samples/Tasks/models/
 Samples/Tasks/localpackages/*.nupkg
+Samples/Tasks/localpackages/*.whl
 Samples/Server/models/
 Samples/Server/localpackages/*.nupkg
 Samples/Runtime/language/llm-chat/.export-venv/
@@ -225,6 +227,10 @@ Samples/Runtime/**/*.engine
 Samples/Runtime/artifact*.onnx
 Samples/Runtime/*.bin
 Samples/Runtime/**/super-resolution-*.png
+
+# Task Studio local packages and published builds
+Apps/TaskStudio/localpackages/*.nupkg
+Apps/TaskStudio/dist/
 
 # Model-compilation artifacts when the executable is launched from repo root
 /artifact.onnx

@@ -412,3 +412,54 @@ for (UINT32 step = 0; step < maxSteps; ++step)
 
 See [IWinMLOrtNamedBindings](IWinMLOrtNamedBindings.md) and
 [IWinMLOrtModelSchema](IWinMLOrtModelSchema.md).
+
+---
+
+## Pattern 12: Give a Task a Model
+
+A Models-backed Task takes a loaded model instead of a pipeline. How the
+application loads the model is the whole decision: Windows ML runs a model from
+`LoadModelFromPath` or `LoadModelFromFile` on the target the application
+picked, a model from `IWinMLLlamaModelLoader` runs on llama.cpp, and a
+composition runs each model on the backend its load selected.
+
+```cpp
+wil::com_ptr<IWinMLTextGenerationConfiguration> configuration;
+THROW_IF_FAILED(textFactory->CreateTextGenerationConfiguration(configuration.put()));
+wil::com_ptr<IWinMLModelTextGenerationConfiguration> modelConfiguration;
+THROW_IF_FAILED(configuration->QueryInterface(IID_PPV_ARGS(modelConfiguration.put())));
+
+wil::com_ptr<IWinMLModel> model;
+if (useLlamaCpp)
+{
+    // An explicit, engine-specific choice for a GGUF file.
+    wil::com_ptr<IWinMLLlamaModelLoader> loader;
+    THROW_IF_FAILED(runtime->QueryInterface(IID_PPV_ARGS(loader.put())));
+    THROW_IF_FAILED(loader->LoadModelFromFile(ggufPath, nullptr, model.put()));
+}
+else
+{
+    // Published weights: a checkpoint folder or a GGUF file.
+    THROW_IF_FAILED(runtime->LoadModelFromPath(modelPath, nullptr, model.put()));
+}
+
+// Without SetTokenizer, SetModel creates the model's own tokenizer.
+THROW_IF_FAILED(modelConfiguration->SetModel(target.get(), model.get(), nullptr));
+wil::com_ptr<IWinMLTokenizer> tokenizer;
+THROW_IF_FAILED(configuration->GetTokenizer(tokenizer.put()));
+
+wil::com_ptr<IWinMLTextGenerationTask> task;
+THROW_IF_FAILED(textFactory->CreateTextGenerationTask(
+    tokenizer.get(), WINML_TEXT_GENERATION_EOS_POLICY_TOKENIZER_DEFAULT, 0, nullptr, task.put()));
+wil::com_ptr<IWinMLTextGenerationSession> session;
+THROW_IF_FAILED(task->CreateSession(configuration.get(), session.put()));
+```
+
+To describe exported graphs instead, call `SetTokenizer` and then
+`SetComposition` with a `WINML_TEXT_GENERATION_COMPOSED_MODEL`. Speech
+recognition (`IWinMLModelAutomaticSpeechRecognitionConfiguration::SetModel`) and
+typed decisions (`IWinMLDecisionTaskFactory::CreateDecisionTaskFromModel`) take
+a model the same way. See
+[Sessions from a model](IWinMLTextGenerationTask.md#sessions-from-a-model),
+[IWinMLDecisionTask](IWinMLDecisionTask.md), and the
+[Models-backed Task samples](../../Samples/Tasks/model-backed/README.md).

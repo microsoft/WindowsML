@@ -2,12 +2,16 @@
 
 # llama.cpp backends
 
-Windows ML ships only the llama.cpp CPU backend, in
+Windows ML ships the llama.cpp CPU backend in
 `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` and the
-`windowsml-llama-core` wheel. It doesn't ship or redistribute GPU backends or
-vendor runtimes, including NVIDIA CUDA components. The language samples run on
-the CPU with that package alone. To run a GGUF model on a GPU, build a backend
-with this folder's script.
+`windowsml-llama-core` wheel. The CUDA backend for NVIDIA GPUs is opt-in and
+ships in the `LibLlama.Cuda.win-x64` and `LibLlama.Cuda.win-arm64` packages and
+the `windowsml-llama-cuda` wheel; see
+[NVIDIA CUDA](../../docs/Runtime/gguf-models.md#nvidia-cuda). Windows ML doesn't
+ship other GPU backends or redistribute vendor runtimes. The language samples
+run on the CPU with the Core package alone. To run a GGUF model on another GPU
+backend, or on a CUDA backend that you build yourself, build it with this
+folder's script.
 
 `Build-LlamaBackend.ps1` builds a standard upstream `ggml-<family>.dll`, such as
 `cuda` for NVIDIA GPUs, `vulkan`, or `opencl`, that matches the Core package.
@@ -15,9 +19,15 @@ The output is loaded by `WinMLRuntimeLlama.dll`; it is not a WinML-specific
 backend fork. Run the commands below from the repository root, and use the
 script from the same branch as the samples you build.
 
+Don't build a family that the application also gets from a package, such as
+`cuda` in a sample built with `-LlamaCuda` or in a Python environment with
+`windowsml-llama-cuda`. The package replaces that `LlamaBackends\<family>`
+folder.
+
 ## NVIDIA CUDA responsibilities
 
-The `cuda` backend depends on NVIDIA software that Windows ML doesn't provide:
+A `cuda` backend that you build yourself depends on NVIDIA software that
+Windows ML doesn't provide:
 
 - You install the NVIDIA CUDA Toolkit yourself, and the script builds against
   it.
@@ -65,8 +75,8 @@ The script:
 - The SDK that the backend family's upstream build requires. For `cuda`, the
   NVIDIA CUDA Toolkit (set `CUDA_PATH` or pass
   `-CMakeOption '-DCUDAToolkit_ROOT=<toolkit directory>'`). For example, Vulkan
-  needs a Vulkan SDK that supplies headers, the loader import library, and
-  `glslc`.
+  needs a Vulkan SDK that supplies the Vulkan and SPIR-V headers, the loader
+  import library, and `glslc`.
 - The `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` NuGet package that the
   application references, and an application output built with it.
 
@@ -178,9 +188,11 @@ The script reads these values from the Core package's own
 `WinMLLlamaCoreManifest.json` and CPU backend manifest, so the package is the
 source of truth rather than anything restated here. Core's source patches are
 Windows ML fixes to the core; they don't change the ggml backend interface, so
-the script builds the backend from the unpatched upstream commit. Tensor types
-that only those patches add, such as `W3_G32`, aren't supported by the built
-backend, so the runtime runs them on a backend that ships in the packages.
+the script builds the backend from the unpatched upstream commit. A Core
+package from a newer Windows ML release can move to a newer llama.cpp commit and
+backend API version; Windows ML 2.9, for example, moved to llama.cpp build 11847
+and backend API version 3. Rebuild every backend you add when you update the
+Core package, because the runtime rejects a backend built for another one.
 
 Pass the package SHA-256 as `-ExpectedPackageSha256`; the script refuses to
 proceed if the package does not match. It also verifies the NuGet signature with

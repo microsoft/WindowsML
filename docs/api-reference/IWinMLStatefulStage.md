@@ -125,7 +125,17 @@ HRESULT StepAllPositions(
 Appends `tokenCount` tokens and writes one logits row per token, when the backend
 supports this operation. On success, `rowsWritten == tokenCount`, `rowStride` is
 the per-row element count, and row `i` contains the distribution after consuming
-token `i`. Any failure leaves the sequence position unchanged.
+token `i`.
+
+Only a buffer-size refusal before the sequence changes is guaranteed to leave
+it unchanged: `HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)` reports the required
+`rowStride` and row count, so the caller can size its buffer and retry. After an
+execution failure, the Runtime attempts to restore the prior sequence. If it
+cannot confirm the restoration, later mutating calls fail until the sequence is
+reset, and a reported position alone does not prove that the sequence is
+intact. After any other failure, reset the sequence with
+`IWinMLPipeline::ResetExecutionState` before reusing it. Windows ML 2.7
+documented that any failure left the position unchanged.
 
 **Returns:** `S_OK` on success, `E_POINTER` for a null `rowsWritten` or
 `rowStride`, `E_NOT_VALID_STATE` before Build,

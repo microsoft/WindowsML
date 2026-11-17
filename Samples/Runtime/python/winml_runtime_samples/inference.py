@@ -39,12 +39,10 @@ _EXECUTION_PROVIDER_ALIASES = {
     "nvtensorrtrtx": "NvTensorRTRTXExecutionProvider",
     "openvino": "OpenVINOExecutionProvider",
     "qnn": "QNNExecutionProvider",
+    "trtrtx": "NvTensorRTRTXExecutionProvider",
     "vitisai": "VitisAIExecutionProvider",
+    "webgpu": "WebGpuExecutionProvider",
 }
-
-# Runtime-owned providers are reached through the default GPU target rather than
-# pinned as app-registered providers, matching the C++ samples.
-_RUNTIME_OWNED_PROVIDERS = {"webgpu", "webgpuexecutionprovider"}
 
 
 def import_runtime() -> Any:
@@ -136,14 +134,13 @@ def canonical_execution_provider(provider: str | None) -> str | None:
 
 
 def pinned_execution_provider(provider: str | None, device: str) -> str | None:
-    """Return the provider to pin, or None when the Runtime owns the target."""
+    """Return the provider to pin, or None when no provider is requested."""
 
-    if provider is not None and provider.strip().casefold() in _RUNTIME_OWNED_PROVIDERS:
+    canonical = canonical_execution_provider(provider)
+    if canonical is not None and canonical.casefold() == "webgpuexecutionprovider":
         if device.casefold() != "gpu":
             raise ValueError(f"--ep {provider} supports --device gpu only.")
-        print("WebGPU uses the Runtime-owned default GPU target.")
-        return None
-    return canonical_execution_provider(provider)
+    return canonical
 
 
 def _target_kind(runtime_api: Any, device: str) -> Any:

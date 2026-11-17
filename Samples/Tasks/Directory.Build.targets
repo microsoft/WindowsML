@@ -13,6 +13,8 @@
       <_LocalWinMLTaskRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLRuntimeCore.dll" />
       <_LocalWinMLTaskRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLTokenizer.dll" />
       <_LocalWinMLTaskRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLTasks.dll" />
+      <_LocalWinMLTaskRuntime Include="$(WinMLRuntimeLocalNativeDir)\WinMLTasksModels.dll"
+                              Condition="Exists('$(WinMLRuntimeLocalNativeDir)\WinMLTasksModels.dll')" />
     </ItemGroup>
     <Copy SourceFiles="@(_LocalWinMLTaskRuntime)" DestinationFolder="$(OutDir)" />
   </Target>
@@ -21,6 +23,7 @@
       <_LocalWinMLTaskRuntimePayload Include="$(OutDir)WinMLRuntimeCore.dll" />
       <_LocalWinMLTaskRuntimePayload Include="$(OutDir)WinMLTokenizer.dll" />
       <_LocalWinMLTaskRuntimePayload Include="$(OutDir)WinMLTasks.dll" />
+      <_LocalWinMLTaskRuntimePayload Include="$(OutDir)WinMLTasksModels.dll" />
     </ItemGroup>
     <Delete Files="@(_LocalWinMLTaskRuntimePayload)" />
   </Target>

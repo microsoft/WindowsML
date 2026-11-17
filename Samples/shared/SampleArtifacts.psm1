@@ -452,9 +452,9 @@ function Resolve-SampleBackend {
     Shows every backend a sample supports and returns the one to run.
 
     .DESCRIPTION
-    When a backend was requested, it is returned unchanged. Otherwise the
-    supported choices are listed with their readiness, and an interactive session
-    is asked to pick one.
+    When a backend was requested, it is returned with the catalog's spelling,
+    whatever its casing on the command line. Otherwise the supported choices are
+    listed with their readiness, and an interactive session is asked to pick one.
 
     .PARAMETER Requested
     Backend supplied on the command line. Empty selects interactively.
@@ -471,10 +471,12 @@ function Resolve-SampleBackend {
     $options = @(Get-SampleBackendOptions -Scenario $Scenario -ModelsDirectory $ModelsDirectory)
 
     if ($Requested) {
-        if ($options.Id -notcontains $Requested) {
+        $match = $options | Where-Object { $_.Id -eq $Requested } | Select-Object -First 1
+        if (-not $match) {
             throw "Backend '$Requested' is not supported here. Supported: $(($options.Id) -join ', ')"
         }
-        return $Requested
+        # The samples compare backend names case-sensitively.
+        return $match.Id
     }
 
     Write-Host ''

@@ -52,6 +52,7 @@ detected hardware, and the operators the model uses.
 | Symptom | Meaning |
 |---|---|
 | Target creation fails with `ERROR_NOT_FOUND` | No installed provider reports an adapter for the requested device class. |
+| `--device gpu` fails to build the pipeline with `ERROR_NOT_SUPPORTED` | No GPU provider is installed or registered. The default GPU target doesn't download WebGPU, so pin it with `--ep webgpu`, which acquires it. |
 | The requested provider is not found | The provider is not installed, or the catalog does not offer it on this PC. |
 | Pipeline build fails | The model cannot run with the selected provider and device. |
 | The sample succeeds, but the provider prints warnings | The provider declined some or all of the model's operators, and ONNX Runtime runs them on the CPU. `-Diagnostics` shows where each node runs. |

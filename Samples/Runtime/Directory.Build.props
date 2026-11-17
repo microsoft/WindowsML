@@ -3,7 +3,7 @@
   Copyright (C) Microsoft Corporation. All rights reserved.
 
   Shared MSBuild properties for all Windows ML Runtime samples.
-  Automatically imported by MSBuild for all .vcxproj files in child directories.
+  Automatically imported by MSBuild for all projects in child directories.
 
   These samples consume the Windows ML Runtime through the
   Microsoft.Windows.AI.MachineLearning NuGet package (PackageReference +
@@ -17,7 +17,8 @@
   <Import Project="$(MSBuildThisFileDirectory)Directory.Build.props.user"
           Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.props.user')" />
 
-  <PropertyGroup>
+  <!-- Native C++ project settings. C# samples import shared\csharp\WinMLSamples.CSharp.props. -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' != '.csproj'">
     <!-- C++ standard -->
     <LanguageStandard>stdcpp20</LanguageStandard>
     <LanguageStandard_C>stdc17</LanguageStandard_C>

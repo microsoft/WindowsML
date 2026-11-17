@@ -5,7 +5,7 @@
 | Area | Read |
 |---|---|
 | WinML Runtime | [Overview, guides, and tutorials](Runtime/README.md) |
-| Tasks | [Task behavior and lifecycle](Tasks/README.md) |
+| Tasks | [Task behavior, lifecycle, and models given to a Task](Tasks/README.md) |
 | Tensor | [Data, memory, and native integration](Tensor/README.md) |
 | Server | [Hosting and the HTTP contract](Server/README.md) |
 | API reference | [Interfaces, structures, and examples](api-reference/README.md) |

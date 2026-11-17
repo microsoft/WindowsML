@@ -56,6 +56,11 @@ if (-not $LanguageModelPath) {
 if (-not $WavPath) {
     $WavPath = Join-Path $PSScriptRoot "..\Runtime\speech\whisper\test_audio.wav"
 }
+if (-not (Test-Path -LiteralPath $LanguageModelPath -PathType Leaf)) {
+    throw "Language model was not found: $LanguageModelPath"
+}
+# A bare file name has no parent path, so resolve it before looking beside it.
+$LanguageModelPath = (Resolve-Path -LiteralPath $LanguageModelPath).Path
 
 $extension = [IO.Path]::GetExtension($LanguageModelPath).ToLowerInvariant()
 if ($LanguageBackend -eq "llama" -and $extension -ne ".gguf") {
@@ -101,7 +106,7 @@ foreach ($path in @(
     -SampleArguments @(
         (Resolve-Path -LiteralPath $ModelDir).Path,
         (Resolve-Path -LiteralPath $WavPath).Path,
-        (Resolve-Path -LiteralPath $LanguageModelPath).Path,
+        $LanguageModelPath,
         $resolvedTokenizer,
         $Instruction,
         $MaxNewTokens.ToString(),

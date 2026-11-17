@@ -17,7 +17,7 @@ pipeline to language models, speech, accelerators, and compiled artifacts.
 
 | Page | Covers |
 |---|---|
-| [Backends and model formats](backends.md) | How the model file selects ONNX Runtime or llama.cpp, and the unified and split language layouts. |
+| [Backends and model formats](backends.md) | How the model file selects ONNX Runtime, llama.cpp, or the CGC backend in a pipeline, how a model given to a Task runs, the CGC backend and its compiled forms, and the unified and split language layouts. |
 | [Devices and execution providers](providers.md) | Device arguments, provider pinning, adapter preference, and failures. |
 | [Models and artifacts](artifacts.md) | How samples find, verify, and prepare their models, and the model catalog. |
 

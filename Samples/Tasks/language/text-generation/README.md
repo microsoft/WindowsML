@@ -92,7 +92,7 @@ much as verifying one, which is typical on a GPU. On a CPU the verification
 cost grows with the number of positions, so speculation can be slower than
 sequential decoding; compare both on the target device. `-Device gpu` requires
 a matching
-[optional llama.cpp GPU module](../../../../docs/Runtime/gguf-models.md#optional-gpu-modules).
+[llama.cpp GPU backend](../../../../docs/Runtime/gguf-models.md#gpu-backends).
 
 These Hugging Face repositories publish GGUF models that work with each method.
 Review each publisher's terms before downloading.

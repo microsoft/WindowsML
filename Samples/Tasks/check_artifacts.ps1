@@ -36,6 +36,12 @@ param(
         'task-automatic-speech-recognition',
         'task-speech-to-text-generation',
         'task-speech-to-text-generation-gguf',
+        'task-model-text-generation',
+        'task-model-text-generation-gguf',
+        'task-composed-text-generation',
+        'task-llama-text-generation',
+        'task-model-speech-recognition',
+        'task-decision',
         'all')]
     [string]$Sample = 'all',
     [string]$ModelsDir,
@@ -55,7 +61,13 @@ $samples = if ($Sample -eq 'all') {
         'task-text-generation-gguf',
         'task-automatic-speech-recognition',
         'task-speech-to-text-generation',
-        'task-speech-to-text-generation-gguf'
+        'task-speech-to-text-generation-gguf',
+        'task-model-text-generation',
+        'task-model-text-generation-gguf',
+        'task-composed-text-generation',
+        'task-llama-text-generation',
+        'task-model-speech-recognition',
+        'task-decision'
     )
 }
 else {

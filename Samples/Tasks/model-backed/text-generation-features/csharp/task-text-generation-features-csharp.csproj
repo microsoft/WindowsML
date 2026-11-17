@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Copyright (C) Microsoft Corporation. All rights reserved.
+    Text generation features - Windows ML Task API from C#
+  -->
+  <PropertyGroup>
+    <AssemblyName>task-text-generation-features-csharp</AssemblyName>
+    <RootNamespace>TextGenerationFeatures</RootNamespace>
+    <!-- Build into Samples\Tasks\out, beside the C++ Task samples. -->
+    <WinMLSampleOutputRoot>$(MSBuildThisFileDirectory)..\..\..\out\</WinMLSampleOutputRoot>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\Runtime\shared\csharp\WinMLSamples.CSharp.props" />
+
+  <!--
+    The sample loads a GGUF file with the llama.cpp model loader, which needs
+    the llama.cpp engine and its CPU backend beside the app. The package copies
+    them to the output, with the backend under LlamaBackends\cpu.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning.LibLlama.Core" />
+  </ItemGroup>
+</Project>
