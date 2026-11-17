@@ -17,5 +17,7 @@
   -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.AI.MachineLearning.LibLlama.Core" />
+    <!-- build.ps1 -LlamaCuda sets WinMLSamplesLlamaCuda to also deploy the CUDA backend. -->
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning.LibLlama" Condition="'$(WinMLSamplesLlamaCuda)' == 'true'" />
   </ItemGroup>
 </Project>
