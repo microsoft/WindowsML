@@ -77,10 +77,10 @@ the model or the drafter.
 - **Perf tab, Speculative decoding: Off vs on.** The card runs the same greedy
   prompts with speculative decoding off and then with the loaded method, and
   compares the text.
-  - **Prompts.** Keep **Short**, which runs three small prompts. **Coding**
-    asks about this app's own C# source as a plain completion rather than a
-    chat turn, and Qwen3.8-27B ends two of its three prompts without writing
-    anything. **Prompts used** shows the exact text.
+  - **Prompts.** **Short** runs three small prompts. **Coding** asks three
+    questions about this app's own C# source, with 4K to 16K tokens of
+    context, the way a coding assistant would. **Prompts used** shows the exact
+    text.
   - **Generate.** 128 to 32,768 tokens per prompt. The context window must hold
     the prompt plus these tokens.
   - **End of text.** Keep **Stop** for realistic numbers. **Ignore (full
@@ -94,7 +94,7 @@ conversation.
 ## Results
 
 Measured with `TaskStudio.SmokeTests --spec` on an NVIDIA RTX Spark with GPU
-driver 621.24 and Windows ML 2.9.31-experimental, greedy, up to 128 tokens for
+driver 621.24 and Windows ML 2.9.36-experimental, greedy, up to 128 tokens for
 each of the three short prompts, with the decode rate over all three prompts.
 Each method was compared with its own Off run, so the Off rates differ a
 little. The text with speculative decoding matched the text without it on
@@ -102,11 +102,26 @@ every prompt.
 
 | Method | Off (tokens/s) | On (tokens/s) | Speedup | Drafts accepted (rewrite code, explain, count) | Tokens per verify step |
 | --- | ---: | ---: | ---: | --- | --- |
-| Drafter model (DFlash 2) | 14.3 | 49.3 | 3.44x | 75%, 21%, 100% | 6.25, 2.40, 7.94 |
-| Draft layers (MTP) | 11.7 | 24.4 | 2.09x | 92%, 49%, 99% | 3.75, 2.44, 3.97 |
+| Drafter model (DFlash 2) | 14.2 | 47.8 | 3.35x | 75%, 21%, 100% | 6.25, 2.40, 7.94 |
+| Draft layers (MTP) | 13.5 | 26.7 | 1.99x | 92%, 49%, 99% | 3.75, 2.44, 3.97 |
 
 The gain depends on how predictable the text is. Code that repeats its input
 and structured output gain the most, and free prose the least.
+
+With the **Coding** prompts, 8K tokens of context and up to 1,024 generated
+tokens, the drafter took the overall decode rate from 12.8 to 62.3 tokens/s
+(4.87x).
+
+| Coding prompt | Generated, off | Off (tokens/s) | On (tokens/s) | Drafts accepted | Tokens per verify step |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Edit file | 1,024 | 12.6 | 72.3 | 81% | 6.64 |
+| Explain | 305 | 12.9 | 42.2 | 43% | 4.03 |
+| Write tests | 446 | 13.1 | 59.3 | 70% | 5.87 |
+
+Editing a file copies most of it, so most drafts are accepted, and the
+explanation is the least predictable. Its text with speculative decoding
+matched the text without it for the first 334 characters and then took a
+different word at a near tie.
 
 To run the same comparison from the command line, build `TaskStudio.SmokeTests`
 as the README's [Smoke tests](README.md#smoke-tests) section shows, and run it
@@ -117,6 +132,8 @@ $smoke = '.\Apps\TaskStudio\SmokeTests\bin\ARM64\Debug\net8.0-windows10.0.19041.
 $model = 'C:\models\Qwen3.8-27B-NVFP4'
 & $smoke --spec $model "$model\tokenizer_config.json" companion C:\models\Qwen3.8-27B-DFlash2
 & $smoke --spec $model "$model\tokenizer_config.json" layers
+# The Coding prompts, with 8K tokens of context
+& $smoke --spec $model "$model\tokenizer_config.json" companion C:\models\Qwen3.8-27B-DFlash2 --context 8192 --tokens 1024
 ```
 
 ## Troubleshooting

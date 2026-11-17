@@ -244,7 +244,9 @@ characters matched first. **Prompts used** shows the exact prompts.
   `### File: <path>` code blocks up to 4K, 8K, or 16K tokens, or all of it,
   counted with the model's tokenizer, and followed by one of three tasks. The
   tasks add documentation comments to a file and output it in full, explain how
-  a model is loaded, or write unit tests.
+  a model is loaded, or write unit tests. Each Coding prompt goes to the model as
+  one user turn in its chat template, with thinking off, so an instruct model
+  answers it, and still runs as a Completion so the statistics show.
 - **Generate.** 128 to 32,768 tokens for each prompt. Load the model with a
   context window that holds the prompt and these tokens.
 - **End of text.** *Ignore* uses a Task with the `EXPLICIT` end-of-sequence

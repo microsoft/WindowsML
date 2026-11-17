@@ -207,7 +207,7 @@ public sealed partial class MainWindow
             $"(the file that does not fit is cut at a line; Runtime/TaskRuntime.Benchmark.cs is always included last):\n{files}\n\n" +
             "Then \"### Task\" with one of:\n\n" +
             string.Join("\n\n", CodingBenchmark.CodingTasks.Select((t, i) => $"{i + 1}. {t.Label}\n{t.Task}")) +
-            "\n\nand \"### Answer\".";
+            "\n\nand \"### Answer\". Each prompt is sent as one user turn in the model's chat template, with thinking off.";
     }
 
     private void UpdateSpeculativeControls()

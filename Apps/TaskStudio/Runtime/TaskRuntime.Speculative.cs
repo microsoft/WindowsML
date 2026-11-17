@@ -217,12 +217,12 @@ internal sealed partial class TaskRuntime
                 history.Clear();
                 CreateSessions(mode, loadedSpeculation.DraftTokens, ignoreEndOfText: ignoreEndOfText);
                 // One untimed warm-up so the first timed prompt is not paying for program loading.
-                RunCompletion(prompts[0].Text, Math.Min(maxTokens, 16u), cancellation);
+                RunCompletion(prompts[0], Math.Min(maxTokens, 16u), cancellation);
                 for (int i = 0; i < prompts.Count; i++)
                 {
                     cancellation.ThrowIfCancellationRequested();
                     progress.Report($"{Describe(mode)}: {prompts[i].Label} ({i + 1} of {prompts.Count})");
-                    var result = RunCompletion(prompts[i].Text, maxTokens, cancellation);
+                    var result = RunCompletion(prompts[i], maxTokens, cancellation);
                     rows.Add(new(prompts[i].Label, mode, result.Text, result.Timing!, result.Speculation, result.FinishReason, result.PromptTokens));
                 }
             }
@@ -236,7 +236,7 @@ internal sealed partial class TaskRuntime
         }
     });
 
-    private unsafe GenerationResult RunCompletion(string prompt, uint maxTokens, CancellationToken cancellation)
+    private unsafe GenerationResult RunCompletion(BenchmarkPrompt prompt, uint maxTokens, CancellationToken cancellation)
     {
         IWinMLTextGenerationOptions* options = null;
         IWinMLCancellationSource* source = null;
@@ -246,7 +246,7 @@ internal sealed partial class TaskRuntime
             source = tasks->CreateCancellationSource();
             nint sourceAddress = (nint)source;
             using var registration = cancellation.Register(() => ((IWinMLCancellationSource*)sourceAddress)->Cancel());
-            var result = GenerateCompletion(prompt, options, source, NoProgress.Instance, Stopwatch.StartNew());
+            var result = GenerateCompletion(prompt.Text, options, source, NoProgress.Instance, Stopwatch.StartNew(), prompt.TokenIds);
             if (result.Canceled) throw new OperationCanceledException(cancellation);
             return result;
         }

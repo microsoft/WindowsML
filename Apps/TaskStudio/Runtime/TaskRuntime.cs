@@ -344,7 +344,7 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
     }
 
     private unsafe GenerationResult GenerateCompletion(string prompt, IWinMLTextGenerationOptions* options,
-        IWinMLCancellationSource* cancellation, IProgress<GenerationUpdate> progress, Stopwatch stopwatch)
+        IWinMLCancellationSource* cancellation, IProgress<GenerationUpdate> progress, Stopwatch stopwatch, uint[]? tokenIds = null)
     {
         IWinMLTextGenerationPullStream* stream = null;
         IWinMLTextGenerationResult* result = null;
@@ -355,7 +355,15 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
             long start = Stopwatch.GetTimestamp();
             TimeSpan? first = null, last = null;
             uint generated = 0;
-            stream = textSession->GenerateText(prompt, options, cancellation);
+            if (tokenIds is null)
+            {
+                stream = textSession->GenerateText(prompt, options, cancellation);
+            }
+            else
+            {
+                fixed (uint* ids = tokenIds)
+                    stream = textSession->GenerateTokens(checked((uint)tokenIds.Length), ids, options, cancellation);
+            }
             while (true)
             {
                 WINML_TEXT_GENERATION_READ_STATUS status;

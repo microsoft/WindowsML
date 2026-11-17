@@ -2,10 +2,12 @@
 
 using System.Runtime.InteropServices;
 using Microsoft.Windows.AI.MachineLearning.Runtime;
+using Windows.Win32.Foundation;
 
 namespace TaskStudio.Runtime;
 
-internal sealed record BenchmarkPrompt(string Label, string Text);
+// TokenIds, when set, is the prompt already formatted as a chat turn, and Completion generates from it instead of Text.
+internal sealed record BenchmarkPrompt(string Label, string Text, uint[]? TokenIds = null);
 
 // Prompt sets for the speculative decoding comparison.
 internal static class CodingBenchmark
@@ -55,15 +57,17 @@ internal static class CodingBenchmark
 internal sealed partial class TaskRuntime
 {
     // Builds the coding prompts with about targetTokens of source context, counted with the loaded model's tokenizer.
-    // Whole files are added in order; the file that would overflow is cut at a line boundary. Returns the prompts
-    // and the token count of the longest one.
+    // Whole files are added in order; the file that would overflow is cut at a line boundary. Each prompt is formatted
+    // as one user turn with the model's chat template, so an instruct model answers it, and still runs as a Completion,
+    // which reports the speculative statistics. Returns the prompts and the token count of the longest one.
     public unsafe Task<(IReadOnlyList<BenchmarkPrompt> Prompts, uint PromptTokens)> BuildCodingPromptsAsync(uint targetTokens) => Run(() =>
     {
         if (tokenizer == null) throw new InvalidOperationException("Load a text model first.");
         var files = CodingBenchmark.LoadFiles();
         var (targetPath, targetText) = files[^1];
         string targetSection = CodingBenchmark.Section(targetPath, targetText);
-        uint reserved = CountTokens(CodingBenchmark.Header) + CountTokens(targetSection) +
+        uint templateTokens = (uint)Math.Max(0, FormatUserTurn(CodingBenchmark.Header).Length - (int)CountTokens(CodingBenchmark.Header));
+        uint reserved = CountTokens(CodingBenchmark.Header) + CountTokens(targetSection) + templateTokens +
             CodingBenchmark.CodingTasks.Max(t => CountTokens(CodingBenchmark.Ask("", t.Task)));
         long budget = (long)targetTokens - reserved;
         var context = new System.Text.StringBuilder(CodingBenchmark.Header);
@@ -92,9 +96,46 @@ internal sealed partial class TaskRuntime
             break;
         }
         context.Append(targetSection);
-        var prompts = CodingBenchmark.CodingTasks.Select(t => new BenchmarkPrompt(t.Label, CodingBenchmark.Ask(context.ToString(), t.Task))).ToList();
-        return ((IReadOnlyList<BenchmarkPrompt>)prompts, prompts.Max(p => CountTokens(p.Text)));
+        var prompts = CodingBenchmark.CodingTasks.Select(t =>
+        {
+            string text = CodingBenchmark.Ask(context.ToString(), t.Task);
+            return new BenchmarkPrompt(t.Label, text, FormatUserTurn(text));
+        }).ToList();
+        return ((IReadOnlyList<BenchmarkPrompt>)prompts, prompts.Max(p => (uint)p.TokenIds!.Length));
     });
+
+    // The prompt as one user turn in the model's chat template, ready for generation, with thinking off as in the
+    // app's Chat. A loaded model always has a template, because its Chat task needs one.
+    private unsafe uint[] FormatUserTurn(string content)
+    {
+        IWinMLStructuredConversationFormatter* formatter = null;
+        IWinMLConversationFormatResult* result = null;
+        uint* tokens = null;
+        nint role = Marshal.StringToCoTaskMemUni("user");
+        nint text = Marshal.StringToCoTaskMemUni(content);
+        try
+        {
+            tokenizer->QueryInterface(out formatter).ThrowOnFailure();
+            var message = new WINML_CONVERSATION_MESSAGE { role = new PCWSTR((char*)role), content = new PCWSTR((char*)text) };
+            var request = new WINML_CONVERSATION_REQUEST
+            {
+                messageCount = 1, messages = &message, addGenerationPrompt = true,
+                enableThinking = WINML_CONVERSATION_ENABLE_THINKING.WINML_CONVERSATION_ENABLE_THINKING_DISABLED
+            };
+            result = formatter->FormatConversation(&request);
+            uint count;
+            result->GetTokenIds(&count, &tokens);
+            return new ReadOnlySpan<uint>(tokens, checked((int)count)).ToArray();
+        }
+        finally
+        {
+            Marshal.FreeCoTaskMem((nint)tokens);
+            Release(result);
+            Release(formatter);
+            Marshal.FreeCoTaskMem(role);
+            Marshal.FreeCoTaskMem(text);
+        }
+    }
 
     private unsafe uint CountTokens(string text)
     {
