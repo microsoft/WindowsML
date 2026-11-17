@@ -47,7 +47,8 @@ publisher's license and terms before you use them.
 
 1. In the sidebar, choose the model folder `C:\models\Qwen3.8-27B-NVFP4`. The
    tokenizer field fills in with that folder's `tokenizer_config.json`.
-2. Leave **Context window** at **Model default**.
+2. Set **Context window** to **16,384**. Model default holds this model to
+   8,192 tokens, which is too small for the Coding prompts below.
 3. Under **Speculative decoding**, choose **Drafter model**, then browse to the
    drafter folder `C:\models\Qwen3.8-27B-DFlash2`.
 4. Select **Create task sessions**. The first load takes several minutes while
@@ -82,7 +83,8 @@ the model or the drafter.
     context, the way a coding assistant would. **Prompts used** shows the exact
     text.
   - **Generate.** 128 to 32,768 tokens per prompt. The context window must hold
-    the prompt plus these tokens.
+    the prompt plus these tokens, so Coding with 8K tokens of context and 1,024
+    generated tokens needs the 16,384-token window.
   - **End of text.** Keep **Stop** for realistic numbers. **Ignore (full
     count)** generates the full count past the end of the answer, where text
     tends to repeat and inflates acceptance.

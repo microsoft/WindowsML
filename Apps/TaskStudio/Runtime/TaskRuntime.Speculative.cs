@@ -250,6 +250,7 @@ internal sealed partial class TaskRuntime
             if (result.Canceled) throw new OperationCanceledException(cancellation);
             return result;
         }
+        catch (Exception error) when (error.HResult == ContextWindowExceeded) { throw ContextWindowError(error); }
         finally { Release(source); Release(options); }
     }
 

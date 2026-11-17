@@ -89,9 +89,10 @@ internal sealed partial class TaskRuntime
             return new BenchmarkSample(test, generated, first ?? TimeSpan.Zero, last ?? TimeSpan.Zero,
                 name[(name.LastIndexOf("_REASON_", StringComparison.Ordinal) + 8)..], canceled || first is null);
         }
-        catch
+        catch (Exception error)
         {
             textSession->Reset();
+            if (error.HResult == ContextWindowExceeded) throw ContextWindowError(error);
             throw;
         }
         finally

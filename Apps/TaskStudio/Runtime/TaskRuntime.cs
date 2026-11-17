@@ -337,11 +337,18 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
                     throw new AggregateException("Generation failed and the Task session could not be reset. Release the sessions before retrying.",
                         generationError, resetError);
                 }
+                if (generationError.HResult == ContextWindowExceeded) throw ContextWindowError(generationError);
                 throw;
             }
             finally { Release(source); Release(options); }
         });
     }
+
+    // The Runtime refuses a request whose prompt and generated tokens don't fit the session's context window.
+    private const int ContextWindowExceeded = unchecked((int)0x8007007A);
+
+    private static InvalidOperationException ContextWindowError(Exception error) =>
+        new("The prompt and the generated tokens don't fit the context window. Create the task sessions with a larger Context window.", error);
 
     private unsafe GenerationResult GenerateCompletion(string prompt, IWinMLTextGenerationOptions* options,
         IWinMLCancellationSource* cancellation, IProgress<GenerationUpdate> progress, Stopwatch stopwatch, uint[]? tokenIds = null)

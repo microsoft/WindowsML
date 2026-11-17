@@ -161,7 +161,7 @@
                                         </StackPanel>
                                         <ComboBox x:Name="ContextLength" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Stretch" FontSize="12"
                                                   AutomationProperties.AutomationId="ContextLength" AutomationProperties.Name="Context tokens"
-                                                  ToolTipService.ToolTip="Model default keeps the model's own sequence length. A smaller window uses less GPU memory.">
+                                                  ToolTipService.ToolTip="Model default lets the Runtime choose, up to 8,192 tokens in this release. Choose a size for longer prompts. A smaller window uses less GPU memory.">
                                             <ComboBoxItem Content="Model default" />
                                             <ComboBoxItem Content="512" Tag="512" />
                                             <ComboBoxItem Content="1,024" Tag="1024" />
@@ -239,6 +239,9 @@
                                     <TextBlock Text="Text Generation + Chat Completion" FontSize="11" Foreground="{StaticResource StudioSecondary}" TextWrapping="Wrap" />
                                     <TextBlock x:Name="SpeculativeHint" FontSize="11" Foreground="{StaticResource StudioSecondary}" TextWrapping="Wrap"
                                                Visibility="Collapsed" AutomationProperties.AutomationId="SpeculativeHint" />
+                                    <TextBlock x:Name="PrefillHint" Text="Compact prefill programs. Prompts past 128 tokens read slower." FontSize="11"
+                                               Foreground="{StaticResource StudioSecondary}" TextWrapping="Wrap"
+                                               Visibility="Collapsed" AutomationProperties.AutomationId="PrefillHint" />
                                 </StackPanel>
                             </Border>
                             <Button x:Name="UnloadButton" Content="Release sessions" Click="Unload_Click" Visibility="Collapsed"

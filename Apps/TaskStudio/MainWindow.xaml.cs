@@ -121,7 +121,7 @@ public sealed partial class MainWindow : Window
         SessionStatus.Text = "Preparing your model...";
         try
         {
-            // Null keeps the model's default sequence length.
+            // Null lets the Runtime choose the sequence length.
             uint? contextTokens = (ContextLength.SelectedItem as ComboBoxItem)?.Tag is string tag ? uint.Parse(tag, CultureInfo.InvariantCulture) : null;
             UseFolderTokenizerIfEmpty(ModelPath, TokenizerPath);
             await LoadGenerationDefaultsAsync(ModelPath.Text.Trim());
@@ -139,6 +139,7 @@ public sealed partial class MainWindow : Window
             loadedContext = contextTokens is uint size ? $"{size:N0} tokens" : "Model default";
             UpdatePerfSession();
             ShowSpeculativeSupport();
+            PrefillHint.Visibility = prefill == PrefillProfile.Compact ? Visibility.Visible : Visibility.Collapsed;
             ShowStatus("Task sessions ready", $"CGC / {device.Name}{(gguf ? " / GGUF" : "")} / {context} / " +
                 (speculation.Mode == SpeculativeMode.Off ? "" : $"speculative decoding: {TaskRuntime.Describe(speculation.Mode)} / ") +
                 (prefill == PrefillProfile.Compact ? "compact prefill / " : "") +
@@ -160,6 +161,7 @@ public sealed partial class MainWindow : Window
             ClearOutput();
             UpdatePerfSession();
             ShowSpeculativeSupport();
+            PrefillHint.Visibility = Visibility.Collapsed;
             ShowStatus("Sessions released", "Select a model to start again.", InfoBarSeverity.Informational);
         }
         catch (Exception error) { ShowError(error); }

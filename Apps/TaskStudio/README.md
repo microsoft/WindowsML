@@ -136,9 +136,12 @@ Tokenizer: C:\models\Qwen2.5-0.5B-Instruct\tokenizer_config.json
 `IWinMLModelTextGenerationConfiguration::SetModel` on the selected GPU,
 validates the configuration, and creates the text generation session. The
 **Context window** list defaults to **Model default**, which skips
-`SetLogicalCapacity`, so the session keeps the model's own sequence length. A
-size from 512 to 32,768 tokens calls `SetLogicalCapacity` with it; a smaller
-window uses less GPU memory. Chat layers a chat completion session over the
+`SetLogicalCapacity` and lets the Runtime choose. In this release that is the
+model's trained length, capped at 8,192 tokens, so choose a size for longer
+prompts. A size from 512 to 262,144 tokens calls `SetLogicalCapacity` with it;
+a smaller window uses less GPU memory. A request whose prompt and generated
+tokens don't fit fails with a message that names the context window. Chat
+layers a chat completion session over the
 text generation session with the same tokenizer, and uses the tokenizer's
 structured formatter with the model's own chat template and output parser.
 Completion takes a raw prompt and applies no chat template.
