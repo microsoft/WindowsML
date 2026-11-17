@@ -185,37 +185,49 @@ public sealed unsafe class DXCoreAdapter : WinMLObject
         ExecutionTargetPreference preference = ExecutionTargetPreference.Default,
         Func<DXCoreAdapter, bool>? filter = null)
     {
-        DXCoreAdapter? best = null;
-        ulong bestMemory = 0;
-        bool bestIntegrated = false;
-        foreach (DXCoreAdapter adapter in GetAdapters(kind))
+        IReadOnlyList<DXCoreAdapter> adapters = GetAdapters(kind);
+        DXCoreAdapter? result = null;
+        try
         {
-            if (!adapter.IsHardware || (filter is not null && !filter(adapter)))
+            DXCoreAdapter? best = null;
+            ulong bestMemory = 0;
+            bool bestIntegrated = false;
+            foreach (DXCoreAdapter adapter in adapters)
             {
-                adapter.Dispose();
-                continue;
+                if (!adapter.IsHardware || (filter is not null && !filter(adapter)))
+                {
+                    continue;
+                }
+
+                ulong memory = adapter.DedicatedAdapterMemory;
+                bool integrated = adapter.IsIntegrated;
+                bool better = best is null ||
+                    (preference == ExecutionTargetPreference.Efficiency
+                        ? (integrated && !bestIntegrated) || (integrated == bestIntegrated && memory < bestMemory)
+                        : memory > bestMemory);
+                if (better)
+                {
+                    best = adapter;
+                    bestMemory = memory;
+                    bestIntegrated = integrated;
+                }
             }
 
-            ulong memory = adapter.DedicatedAdapterMemory;
-            bool integrated = adapter.IsIntegrated;
-            bool better = best is null ||
-                (preference == ExecutionTargetPreference.Efficiency
-                    ? (integrated && !bestIntegrated) || (integrated == bestIntegrated && memory < bestMemory)
-                    : memory > bestMemory);
-            if (better)
+            result = best;
+        }
+        finally
+        {
+            // Release every adapter but the result, including when the filter throws.
+            foreach (DXCoreAdapter adapter in adapters)
             {
-                best?.Dispose();
-                best = adapter;
-                bestMemory = memory;
-                bestIntegrated = integrated;
-            }
-            else
-            {
-                adapter.Dispose();
+                if (!ReferenceEquals(adapter, result))
+                {
+                    adapter.Dispose();
+                }
             }
         }
 
-        return best;
+        return result;
     }
 
     private static IDXCoreAdapterFactory* CreateFactory()

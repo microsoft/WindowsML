@@ -153,12 +153,15 @@ public sealed partial class MainWindow
             MsPerToken = pp ? "-" : Ms(sample.LastToken.TotalMilliseconds / Math.Max(sample.GeneratedTokens, 1)),
             Total = $"{Ms(sample.LastToken.TotalMilliseconds)} ({Rate(sample.TokensPerSecond)} t/s)",
             Note = pp ? $"pp: {Rate(sample.TokensPerSecond)} t/s" : sample.FinishReason.Replace('_', ' ').ToLowerInvariant(),
+            // The same columns as a Chat or Completion row (see CopyPerf_Click), with the native finish reason.
             Csv = string.Join(',', DateTime.Now.ToString("O", CultureInfo.InvariantCulture), source.Replace(',', ' '), CsvField(model),
                 (pp ? sample.Test.PromptTokens : 1) + sample.Test.Depth, sample.GeneratedTokens,
                 sample.FirstToken.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture),
-                pp ? "" : sample.TokensPerSecond.ToString("F3", CultureInfo.InvariantCulture), "",
+                pp ? "" : sample.TokensPerSecond.ToString("F3", CultureInfo.InvariantCulture),
+                pp ? "" : (sample.LastToken.TotalMilliseconds / Math.Max(sample.GeneratedTokens, 1)).ToString("F3", CultureInfo.InvariantCulture),
                 sample.LastToken.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture),
-                sample.TokensPerSecond.ToString("F3", CultureInfo.InvariantCulture), sample.FinishReason, "", "")
+                sample.TokensPerSecond.ToString("F3", CultureInfo.InvariantCulture),
+                "WINML_TEXT_GENERATION_FINISH_REASON_" + sample.FinishReason, "", "", "", "", "", "", "")
         };
         PerfRuns.Insert(0, item);
         PerfHistoryEmpty.Visibility = Visibility.Collapsed;
