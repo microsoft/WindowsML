@@ -105,7 +105,9 @@ if (-not (Test-Path "$venvDir\Scripts\python.exe")) {
 
 Write-Host "Ensuring exporter dependencies..." -ForegroundColor Cyan
 $python = Join-Path $venvDir "Scripts\python.exe"
-& uv pip install --python $python `
+# --no-cache keeps these packages out of uv's shared cache, so deleting the
+# environment frees the space they use.
+& uv pip install --no-cache --python $python `
     "torch==2.13.0" `
     "transformers==5.15.0" `
     "onnx==1.22.0" `
