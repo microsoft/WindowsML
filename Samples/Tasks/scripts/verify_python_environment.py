@@ -11,6 +11,8 @@ import json
 from pathlib import Path
 import re
 
+from packaging.requirements import Requirement
+
 
 _LLAMA_DISTRIBUTIONS = ("windowsml-llama-core",)
 # The CUDA backend is opt-in, so these are checked only when installed.
@@ -108,13 +110,43 @@ def main() -> int:
         records[name] = _distribution_record(name)
 
     if "windowsml-llama-cuda" in records:
+        core_name = _LLAMA_DISTRIBUTIONS[0]
+        if core_name not in records:
+            raise RuntimeError(
+                "windowsml-llama-cuda is installed without windowsml-llama-core; "
+                f"install {core_name}=={windowsml.version}"
+            )
+
+        cuda = metadata.distribution("windowsml-llama-cuda")
+        cublas_requirement = next(
+            (
+                requirement
+                for requirement in (
+                    Requirement(value) for value in cuda.requires or ()
+                )
+                if re.sub(r"[-_.]+", "-", requirement.name).casefold()
+                == "nvidia-cublas"
+            ),
+            None,
+        )
+        if cublas_requirement is None:
+            raise RuntimeError(
+                "windowsml-llama-cuda does not declare an nvidia-cublas dependency"
+            )
+
         try:
-            records["nvidia-cublas"] = _distribution_record("nvidia-cublas")
+            cublas = metadata.distribution("nvidia-cublas")
         except metadata.PackageNotFoundError:
             raise RuntimeError(
                 "windowsml-llama-cuda is installed without nvidia-cublas; install "
                 f"windowsml-llama-cuda=={windowsml.version}"
             ) from None
+        if not cublas_requirement.specifier.contains(cublas.version):
+            raise RuntimeError(
+                f"nvidia-cublas version mismatch: windowsml-llama-cuda requires "
+                f"{cublas_requirement.specifier}, found {cublas.version}"
+            )
+        records["nvidia-cublas"] = _distribution_record("nvidia-cublas")
 
     print(json.dumps(records, indent=2))
     return 0
