@@ -83,6 +83,11 @@ public sealed unsafe class MediaEncoder : WinMLObject, IWinMLInterface<MediaEnco
     public MediaEncoding Encode(Tensor media, Tensor? embeddings = null)
     {
         ArgumentNullException.ThrowIfNull(media);
+
+        // Read every pointer before taking a reference to embeddings, so a
+        // disposed encoder or media tensor throws without leaking it.
+        IWinMLMediaEncoder* encoder = Raw;
+        IWinMLTensor* mediaTensor = media.Raw;
         IWinMLTensor* output = null;
         if (embeddings is not null)
         {
@@ -91,7 +96,7 @@ public sealed unsafe class MediaEncoder : WinMLObject, IWinMLInterface<MediaEnco
         }
 
         IWinMLSequenceSegmentLayout* layout = null;
-        HRESULT hr = Raw->Encode(media.Raw, &output, &layout);
+        HRESULT hr = encoder->Encode(mediaTensor, &output, &layout);
         GC.KeepAlive(this);
         GC.KeepAlive(media);
         GC.KeepAlive(embeddings);
