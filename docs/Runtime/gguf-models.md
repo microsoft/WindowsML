@@ -87,6 +87,11 @@ Projects that don't reference the LibLlama.Core package get no llama.cpp
 payload. To keep a referencing project from deploying it, set
 `WinMLCopyLlamaRuntime` to `false`.
 
+The package also contains llama.cpp's own headers and the import libraries of
+its llama.cpp core. A C++ project that sets `WinMLLinkLlamaUpstreamApi` to
+`true` can call the llama.cpp API directly against this payload; see
+[llama.cpp upstream API](../../Samples/Runtime/interop/llama-upstream-api/).
+
 ## Python payload install
 
 The llama.cpp backend ships as the `windowsml-llama-core` wheel, which installs
