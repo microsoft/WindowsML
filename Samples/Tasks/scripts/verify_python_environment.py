@@ -11,8 +11,6 @@ import json
 from pathlib import Path
 import re
 
-from packaging.requirements import Requirement
-
 
 _LLAMA_DISTRIBUTIONS = ("windowsml-llama-core",)
 # The CUDA backend is opt-in, so these are checked only when installed.
@@ -38,6 +36,30 @@ def _distribution_record(name: str) -> dict[str, str]:
         "location": str(distribution.locate_file("")),
         "metadataSha256": hashlib.sha256(metadata_path.read_bytes()).hexdigest(),
     }
+
+
+def _pinned_version(distribution: str, requirement_name: str) -> str:
+    """Returns the == version that distribution requires for requirement_name."""
+    for requirement in metadata.distribution(distribution).requires or ():
+        name = re.match(r"[A-Za-z0-9._-]+", requirement)
+        if name is None or re.sub(r"[-_.]+", "-", name.group(0)).casefold() != requirement_name:
+            continue
+        pinned = re.search(r"==\s*([^,;\s)]+)", requirement)
+        if pinned is None:
+            raise RuntimeError(
+                f"{distribution} must require {requirement_name} with ==; found "
+                f"{requirement!r}"
+            )
+        return pinned.group(1)
+    raise RuntimeError(f"{distribution} does not declare a {requirement_name} dependency")
+
+
+def _release(version: str) -> tuple[int, ...]:
+    """Returns the numeric release segments of a version such as 13.7.0.27."""
+    release = re.match(r"\d+(?:\.\d+)*", version)
+    if release is None:
+        raise RuntimeError(f"cannot read the release number of version {version!r}")
+    return tuple(int(part) for part in release.group(0).split("."))
 
 
 def main() -> int:
@@ -110,30 +132,12 @@ def main() -> int:
         records[name] = _distribution_record(name)
 
     if "windowsml-llama-cuda" in records:
-        core_name = _LLAMA_DISTRIBUTIONS[0]
-        if core_name not in records:
+        # The CUDA backend runs beside the core llama.cpp payload.
+        if "windowsml-llama-core" not in records:
             raise RuntimeError(
                 "windowsml-llama-cuda is installed without windowsml-llama-core; "
-                f"install {core_name}=={windowsml.version}"
+                f"install windowsml-llama-core=={windowsml.version}"
             )
-
-        cuda = metadata.distribution("windowsml-llama-cuda")
-        cublas_requirement = next(
-            (
-                requirement
-                for requirement in (
-                    Requirement(value) for value in cuda.requires or ()
-                )
-                if re.sub(r"[-_.]+", "-", requirement.name).casefold()
-                == "nvidia-cublas"
-            ),
-            None,
-        )
-        if cublas_requirement is None:
-            raise RuntimeError(
-                "windowsml-llama-cuda does not declare an nvidia-cublas dependency"
-            )
-
         try:
             cublas = metadata.distribution("nvidia-cublas")
         except metadata.PackageNotFoundError:
@@ -141,10 +145,16 @@ def main() -> int:
                 "windowsml-llama-cuda is installed without nvidia-cublas; install "
                 f"windowsml-llama-cuda=={windowsml.version}"
             ) from None
-        if not cublas_requirement.specifier.contains(cublas.version):
+        # Windows ML also loads a later cuBLAS with the same major version, so
+        # only an earlier release or another major version fails.
+        pinned_cublas = _pinned_version("windowsml-llama-cuda", "nvidia-cublas")
+        required = _release(pinned_cublas)[:2]
+        found = _release(cublas.version)[:2]
+        if found[0] != required[0] or found < required:
             raise RuntimeError(
-                f"nvidia-cublas version mismatch: windowsml-llama-cuda requires "
-                f"{cublas_requirement.specifier}, found {cublas.version}"
+                f"nvidia-cublas {cublas.version} doesn't work with windowsml-llama-cuda, "
+                f"which needs {required[0]}.{required[1]} or a later {required[0]}.x "
+                f"release; install nvidia-cublas=={pinned_cublas}"
             )
         records["nvidia-cublas"] = _distribution_record("nvidia-cublas")
 

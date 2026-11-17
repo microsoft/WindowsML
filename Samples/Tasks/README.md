@@ -154,6 +154,8 @@ pinned in [`Samples\Directory.Packages.props`](../Directory.Packages.props); see
 [Matching wheel version](../Runtime/localpackages/README.md#matching-wheel-version). The script
 also checks that the installed `onnxruntime-windowsml` version is the one
 `windowsml` requires, and that installed `windowsml-llama-core` and
-`windowsml-llama-cuda` wheels have the same version as `windowsml`. Add
-`--require-llama` before a GGUF flow to fail when the `windowsml-llama-core`
-wheel is missing.
+`windowsml-llama-cuda` wheels have the same version as `windowsml`. With
+`windowsml-llama-cuda` installed, it also requires `windowsml-llama-core` and
+an `nvidia-cublas` release that Windows ML loads, the one the CUDA wheel pins
+or a later release with the same major version. Add `--require-llama` before
+a GGUF flow to fail when the `windowsml-llama-core` wheel is missing.
