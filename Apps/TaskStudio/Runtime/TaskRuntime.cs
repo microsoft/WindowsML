@@ -64,6 +64,7 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
     private const int FileNotFoundHResult = unchecked((int)0x80070002);
     private const int InvalidStateHResult = unchecked((int)0x8007139F);
     private const int CanceledHResult = unchecked((int)0x800704C7);
+    private const int NoInterfaceHResult = unchecked((int)0x80004002);
 
     // Text generation sessions and their streams belong to the thread that created them, so every Runtime call runs here.
     private readonly SessionThread worker = new("Windows ML Task worker");
@@ -145,7 +146,15 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
                 throw new NotSupportedException($"The Runtime reports that this model does not support {Describe(speculation.Mode)}. " +
                     SupportedMethodsText(SpeculativeSupport, companion));
             textTask = tasks.TextGeneration.CreateTextGenerationTask(tokenizer);
-            chatTask = tasks.ChatCompletion.CreateChatCompletionTask(tokenizer);
+            try { chatTask = tasks.ChatCompletion.CreateChatCompletionTask(tokenizer); }
+            // The chat task formats conversations with the tokenizer's chat template, and a tokenizer without one,
+            // such as a speech model's, doesn't offer the formatter.
+            catch (Exception error) when (error.HResult == NoInterfaceHResult)
+            {
+                throw new NotSupportedException("This tokenizer has no chat template, which Chat needs. " + (ownTokenizer
+                    ? "Set the tokenizer to the model's tokenizer_config.json and try again."
+                    : "Select the tokenizer_config.json that came with this model and try again."), error);
+            }
             try
             {
                 // CreateSessions consumes the configuration whether or not it succeeds.
