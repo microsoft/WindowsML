@@ -1,0 +1,31 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyTitle>Task Studio smoke tests</AssemblyTitle>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <PlatformTarget Condition="'$(RuntimeIdentifier)' == 'win-arm64'">ARM64</PlatformTarget>
+    <PlatformTarget Condition="'$(RuntimeIdentifier)' != 'win-arm64'">x64</PlatformTarget>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Runtime\TaskRuntime.cs" Link="TaskRuntime.cs" />
+    <Compile Include="..\Runtime\GenerationDefaults.cs" Link="GenerationDefaults.cs" />
+    <Compile Include="..\Runtime\TaskRuntime.Speech.cs" Link="TaskRuntime.Speech.cs" />
+    <Compile Include="..\Runtime\TaskRuntime.Devices.cs" Link="TaskRuntime.Devices.cs" />
+    <Compile Include="..\Runtime\TaskRuntime.Decision.cs" Link="TaskRuntime.Decision.cs" />
+    <Compile Include="..\Runtime\TaskRuntime.Benchmark.cs" Link="TaskRuntime.Benchmark.cs" />
+    <Compile Include="..\Runtime\TaskRuntime.Speculative.cs" Link="TaskRuntime.Speculative.cs" />
+    <Compile Include="..\Runtime\CodingBenchmark.cs" Link="CodingBenchmark.cs" />
+    <Content Include="..\BenchmarkData\coding\*.txt" Link="BenchmarkData\coding\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="..\Audio\SpeechAudio.cs" Link="SpeechAudio.cs" />
+    <PackageReference Include="NAudio.WinMM" />
+    <PackageReference Include="NAudio.Wasapi" />
+  </ItemGroup>
+  <Import Project="..\Runtime\Runtime.props" />
+</Project>

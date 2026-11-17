@@ -1,0 +1,22 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="TaskStudio.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="SmokeTests\TaskStudio.SmokeTests.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Folder Name="/Documentation/">
+    <File Path="README.md" />
+    <File Path="MODELS.md" />
+  </Folder>
+  <Folder Name="/Scripts/">
+    <File Path="scripts\Pack-TaskStudio.ps1" />
+  </Folder>
+</Solution>

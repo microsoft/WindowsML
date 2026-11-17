@@ -47,6 +47,14 @@ higher-level Task APIs, and the Windows ML Server. See [`Samples`](Samples/).
 | [Tasks](Samples/Tasks/) | Text generation, chat completion, speech recognition, and task composition over application-built pipelines. |
 | [Server](Samples/Server/) | Serve a local model through an OpenAI-compatible endpoint, with C++, C#, and Python clients. |
 
+## Apps
+
+[`Apps`](Apps/) contains complete sample applications built on Windows ML.
+
+| App | What it shows |
+|---|---|
+| [Task Studio](Apps/TaskStudio/) | A WinUI 3 desktop app for chat, completion, speech recognition, and typed decisions with the Models-backed Task APIs on the GPU. |
+
 ## Documentation
 
 [`docs`](docs/) contains guides, tutorials, and the API reference for the

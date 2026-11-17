@@ -1,0 +1,10 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<!-- Windows ML Runtime package and the CsWin32 interop it generates, shared by the app and the smoke harness. -->
+<Project>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)NativeMethods.txt" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)NativeMethods.json" />
+  </ItemGroup>
+</Project>
