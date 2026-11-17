@@ -175,4 +175,27 @@ public sealed unsafe class ConversationFormatResult : WinMLObject, IWinMLInterfa
         Check(((IWinMLConversationFormatResult*)ThisPtr)->GetTokenIds(&count, &tokens));
         return Tokenizer.TakeTokenIds(tokens, count);
     }
+
+    // The generation prompt that formatting added to the request, such as the
+    // header that starts the assistant's turn, or an empty string. GetTokenIds
+    // returns the whole formatted conversation.
+    public string GenerationPrompt
+    {
+        get
+        {
+            PCWSTR prompt;
+            Check(((IWinMLConversationFormatResult*)ThisPtr)->GetGenerationPrompt(&prompt));
+            string result = prompt.Value == null ? string.Empty : new string(prompt.Value);
+            GC.KeepAlive(this);
+            return result;
+        }
+    }
+
+    // A parser for the text the model generates from this prompt.
+    public ConversationOutputParser CreateOutputParser()
+    {
+        IWinMLConversationOutputParser* parser = null;
+        Check(((IWinMLConversationFormatResult*)ThisPtr)->CreateOutputParser(&parser));
+        return new ConversationOutputParser(Required(parser));
+    }
 }

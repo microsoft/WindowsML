@@ -7,11 +7,11 @@
 
   The samples call the Runtime and Task APIs through a small idiomatic C#
   wrapper in Runtime\ (namespaces WinMLSamples.Runtime and
-  WinMLSamples.Runtime.Tasks), which this file compiles into each sample. The
-  wrapper is sample code, not a supported API; see README.md. It calls
-  internal bindings that CsWin32 generates from the Win32 metadata in the
-  Microsoft.Windows.AI.MachineLearning package, so sample code itself uses no
-  pointers or HRESULTs. The package's managed assemblies supply the
+  WinMLSamples.Runtime.Tasks), which WinMLSamples.Runtime.props compiles into
+  each sample. The wrapper is sample code, not a supported API; see README.md.
+  It calls internal bindings that CsWin32 generates from the Win32 metadata in
+  the Microsoft.Windows.AI.MachineLearning package, so sample code itself uses
+  no pointers or HRESULTs. The package's managed assemblies supply the
   execution-provider catalog (Microsoft.Windows.AI.MachineLearning) and the
   ONNX Runtime C# API (Microsoft.ML.OnnxRuntime) that the samples use to
   register a provider that the ep option names and to raise ONNX Runtime
@@ -26,8 +26,6 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- The sample wrapper calls the generated bindings through unmanaged pointers. -->
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>x64;ARM64</Platforms>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
@@ -50,20 +48,11 @@
     <OutDir>$(WinMLSampleOutputRoot)$(_SamplePlatform)\$(Configuration)\$(AssemblyName)\</OutDir>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" />
-    <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
-  </ItemGroup>
+  <!-- The sample wrapper, the package, and the APIs the wrapper calls. -->
+  <Import Project="$(MSBuildThisFileDirectory)WinMLSamples.Runtime.props" />
 
-  <!--
-    The sample wrapper, the shared helpers, and the APIs the wrapper calls.
-    NativeMethods.txt lists those APIs and NativeMethods.json sets the
-    generation options.
-  -->
+  <!-- The shared helpers. -->
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)*.cs" Link="Shared\%(Filename)%(Extension)" />
-    <Compile Include="$(MSBuildThisFileDirectory)Runtime\**\*.cs" Link="Shared\Runtime\%(RecursiveDir)%(Filename)%(Extension)" />
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)NativeMethods.txt" Link="Shared\NativeMethods.txt" />
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)NativeMethods.json" Link="NativeMethods.json" />
   </ItemGroup>
 </Project>

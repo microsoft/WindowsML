@@ -9,6 +9,7 @@
 // Runtime, targets, pipelines, and stages.
 Microsoft.Windows.AI.MachineLearning.Runtime.WinMLCreateRuntime
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLRuntime
+Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLD3D12ExecutionTarget
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLOrtCompatibility
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLLlamaModelLoader
 Microsoft.Windows.AI.MachineLearning.Runtime.IWinMLModelSchema
@@ -73,13 +74,20 @@ Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLAutomaticSpeechRecognit
 // Typed decision Task API (WinMLTasks.dll).
 Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.IWinMLDecisionTaskFactory
 
-// DXCore adapter ranking for --device gpu|npu and --performance|--efficiency.
+// DXCore adapter ranking for --device gpu|npu and --performance|--efficiency,
+// adapter lookup by LUID, and per-process video memory use.
 DXCoreCreateAdapterFactory
 IDXCoreAdapterFactory
 IDXCoreAdapterList
 IDXCoreAdapter
 DXCoreHardwareID
+DXCoreAdapterMemoryBudget
+DXCoreAdapterMemoryBudgetNodeSegmentGroup
 DXCORE_ADAPTER_ATTRIBUTE_D3D12_GRAPHICS
 DXCORE_HARDWARE_TYPE_ATTRIBUTE_NPU
+
+// The adapter LUID of a GPU target's Direct3D 12 device. This also generates
+// the ID3D12Device interface and the Direct3D 12 types its methods use.
+ID3D12Device
 
 CoTaskMemFree

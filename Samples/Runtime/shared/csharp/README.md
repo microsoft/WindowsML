@@ -10,6 +10,13 @@ that copies the native Windows ML DLLs next to the executable, and compiles
 the sample wrapper in [`Runtime`](Runtime/) and the helpers in this folder into
 each sample.
 
+An app with build settings of its own imports
+[`WinMLSamples.Runtime.props`](WinMLSamples.Runtime.props) instead. It
+compiles only the wrapper, with the package and CsWin32 references it needs,
+and its header lists what the app sets itself: a .NET 8 Windows target
+framework with `ImplicitUsings` and `Nullable` enabled, central package
+versions, and a `win-x64` or `win-arm64` runtime identifier.
+
 ## The sample wrapper
 
 The Windows ML Runtime and Task APIs are COM-style C APIs. Called directly
@@ -141,6 +148,12 @@ What the wrapper provides:
   reports, and `WinMLRuntime.CreateExecutionTarget` has overloads for a device
   class, an adapter, and a registered ONNX Runtime execution provider. A
   target keeps the adapter or hardware target it was created from alive.
+  `D3D12ExecutionTarget.GetAdapterLuid`, queried from a GPU target, names the
+  adapter that the Runtime's Direct3D 12 device runs on, and
+  `DXCoreAdapter.GetAdapterByLuid` finds it. CPU targets implement
+  `D3D12ExecutionTarget` too, so check `ExecutionTarget.Kind` first.
+  `DXCoreAdapter.QueryMemoryBudget` reports the process's video memory use on
+  an adapter.
 
 The wrapper calls internal bindings that CsWin32 generates from the Win32
 metadata in the package. [`NativeMethods.txt`](NativeMethods.txt) lists the
@@ -182,6 +195,7 @@ Some members have no native counterpart: `DXCoreAdapter`, `SessionThread`,
 `TensorLock<T>`, `MediaEncoding`, `TextGenerationOutputBinding`,
 `TextGenerationDraftPipeline`, `GenerationSegment`, the adapter and provider
 overloads of `WinMLRuntime.CreateExecutionTarget`, `TryCreateExecutionTarget`,
+`D3D12ExecutionTarget.GetAdapterLuid`,
 `TokenizerMetadata.TryGetBosTokenId`, `WinMLObject.IsSameObject`, and
 `WinMLException.NotSupported`, `InvalidData`, `NoInterface`, and
 `Unexpected`. The last four create the .NET exception for a condition the
@@ -258,7 +272,8 @@ and embedding segments, and an exported ONNX decoder for `SetComposition`.
 The Task API also returns Runtime objects that the wrapper covers only as far
 as the Task API needs them: `MediaEncoder`, `SequenceSegmentLayout`,
 `TokenConstraint`, `TokenizerConstraintFactory`, `ConversationOutputParser`,
-and `AudioTensorFactory`.
+and `AudioTensorFactory`. `D3D12ExecutionTarget` covers only the adapter of a
+GPU target's device, not `GetDevice`, `GetCommandQueue`, or `CreateFence`.
 
 ## Files
 
@@ -268,7 +283,8 @@ and `AudioTensorFactory`.
 | `Runtime\WinMLException.cs` | `HRESULT` to .NET exception mapping. |
 | `Runtime\Types.cs` | Enumerations and descriptors: `ExecutionTargetKind`, `TensorDataType`, `ImageTensorDescription`, `ConversationRequest`, ... |
 | `Runtime\WinMLRuntime.cs` | `WinMLRuntime`, `ExecutionTarget`, `Model`, `ModelSchema`, `OrtCompatibility`, `LlamaModelLoader`. |
-| `Runtime\DXCoreAdapter.cs` | DXCore adapter enumeration and ranking. |
+| `Runtime\DXCoreAdapter.cs` | DXCore adapter enumeration, ranking, lookup by LUID, and video memory budgets. |
+| `Runtime\D3D12ExecutionTarget.cs` | The Direct3D 12 view of a GPU target: the LUID of its device's adapter. |
 | `Runtime\Pipeline.cs` | `PipelineBuilder`, `Pipeline`, `Stage`, and the stage schema, state, and diagnostics interfaces. |
 | `Runtime\StageOptions.cs` | ONNX symbolic dimension overrides and ONNX Runtime session entries for a stage. |
 | `Runtime\OrtModelSchema.cs` | Finds an ONNX model's inputs and outputs by name. |
@@ -288,8 +304,10 @@ and `AudioTensorFactory`.
 | `Runtime\Tasks\SpeechRecognizer.cs` | `IAsyncEnumerable` speech recognition with cancellation. |
 | `Runtime\Tasks\Decision.cs` | The typed decision Task API: tasks, sessions, and results. |
 | `Runtime\Tasks\Decider.cs` | Decisions from any thread, with cancellation. |
-| `NativeMethods.txt` | The Runtime, Task, DXCore, and COM APIs that the wrapper calls. |
+| `NativeMethods.txt` | The Runtime, Task, DXCore, Direct3D 12, and COM APIs that the wrapper calls. |
 | `NativeMethods.json` | CsWin32 options: unmanaged interface structs whose methods return their `HRESULT`. |
+| `WinMLSamples.Runtime.props` | Compiles the wrapper into a project, with the package and CsWin32 references it needs. |
+| `WinMLSamples.CSharp.props` | The samples' build settings; imports `WinMLSamples.Runtime.props` and compiles the helpers below. |
 | `DeviceOptions.cs` | Parses `--device`, `--ep`, `--performance`, `--efficiency`, and `--verbose`. |
 | `ExecutionProviders.cs` | Prepares and registers an `--ep` provider from the Windows ML execution-provider catalog and enables verbose ONNX Runtime logging. Matches `ep_catalog_utils.h`. |
 | `ExecutionTargets.cs` | Creates CPU, GPU, and NPU targets from ranked DXCore adapters, and provider-pinned targets. Matches `execution_target_utils.h`. |
