@@ -23,8 +23,12 @@ The cache identity includes the source-model hash, Runtime package, processor
 architecture, GPU, and compilation settings. `--recompile` replaces only the
 cache for the current identity.
 
-Concurrent first launches serialize cache publication. The sample compiles to
-unique temporary files and publishes the manifest last as the readiness marker.
+Concurrent first launches, including those in different Windows logon sessions,
+serialize cache publication through an exclusively opened per-cache `.lock` file.
+The file stays on disk; ownership lasts only while its handle is open, and cache
+cleanup does not remove it. Waiting for ownership times out after five minutes.
+The sample compiles to unique temporary files and publishes the manifest last
+as the readiness marker.
 If a process stops between those steps, the next launch removes the incomplete
 publication and rebuilds it automatically.
 
@@ -57,6 +61,17 @@ reject missing or altered files. Neither downloads or modifies model assets.
 See [Models and artifacts](../../../../docs/Runtime/artifacts.md) for acquisition guidance.
 Builds never download models.
 
+To use a separate model root, pass `-ModelsDir` to the run script:
+
+```powershell
+.\run_onnx_runtime_winmlcgep.ps1 -ModelsDir "D:\sample-assets\models"
+```
+
+The script verifies that root and forwards it as `--models-dir` to the executable.
+All three assets must be under its `squeezenet` subdirectory; executable-local
+copies cannot override them. An explicit root never falls back to asset discovery.
+Direct executable launches without `--models-dir` retain the shared search behavior.
+
 The first run prints `Cache: cold compile`; later runs print `Cache: warm`.
 Both runs must report a physical adapter, WinMLCGEP provider assignment, and
 `Prediction: Samoyed`.
@@ -79,7 +94,7 @@ To rebuild the cache:
 
 On a multi-GPU system, the sample lists physical candidates and accepts
 `-AdapterIndex N`. The executable accepts the corresponding `--adapter-name`,
-`--adapter-index`, and `--recompile` options directly.
+`--adapter-index`, `--models-dir`, and `--recompile` options directly.
 
 ## API boundary
 

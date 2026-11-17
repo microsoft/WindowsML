@@ -48,6 +48,7 @@ struct Options
     size_t adapterIndex = 0;
     bool adapterIndexSpecified = false;
     std::string adapterName;
+    std::filesystem::path modelsDirectory;
 };
 
 struct ProviderLog
@@ -149,7 +150,7 @@ Options ParseOptions(int argc, wchar_t* argv[])
             wchar_t* end = nullptr;
             errno = 0;
             const unsigned long value = std::wcstoul(argv[index], &end, 10);
-            if (errno == ERANGE || !end || *end != L'\0')
+            if (errno == ERANGE || end == argv[index] || !end || *end != L'\0')
             {
                 throw std::runtime_error("--adapter-index must be a non-negative integer.");
             }
@@ -170,12 +171,21 @@ Options ParseOptions(int argc, wchar_t* argv[])
             }
             options.adapterName = WideToUtf8(wideName);
         }
+        else if (_wcsicmp(argv[index], L"--models-dir") == 0)
+        {
+            if (++index >= argc || argv[index][0] == L'\0')
+            {
+                throw std::runtime_error("--models-dir requires a non-empty directory path.");
+            }
+            options.modelsDirectory = argv[index];
+        }
         else if (_wcsicmp(argv[index], L"--help") == 0 || _wcsicmp(argv[index], L"-h") == 0)
         {
             std::wprintf(
-                L"Usage: onnx-runtime-winmlcgep.exe [--adapter-index N | --adapter-name TEXT] [--recompile]\n"
+                L"Usage: onnx-runtime-winmlcgep.exe [--adapter-index N | --adapter-name TEXT] [--models-dir PATH] [--recompile]\n"
                 L"  --adapter-index N  Select a physical GPU listed by the sample.\n"
                 L"  --adapter-name TEXT Select one physical GPU by description substring.\n"
+                L"  --models-dir PATH Load all assets from PATH\\squeezenet without searching elsewhere.\n"
                 L"  --recompile        Replace the cache for the selected model and GPU.\n");
             std::exit(0);
         }
@@ -248,6 +258,29 @@ void RemoveCacheFiles(const CachePaths& cache)
             std::filesystem::remove(entry.path(), error);
             error.clear();
         }
+    }
+}
+
+wil::unique_handle AcquireCacheLock(const CachePaths& cache)
+{
+    std::filesystem::create_directories(cache.model.parent_path());
+    const std::filesystem::path lockPath = cache.model.parent_path() / (cache.identity + ".lock");
+    const ULONGLONG started = GetTickCount64();
+    for (;;)
+    {
+        wil::unique_handle lock(CreateFileW(lockPath.c_str(), GENERIC_READ | GENERIC_WRITE, 0,
+                                            nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr));
+        if (lock)
+        {
+            return lock;
+        }
+        const DWORD error = GetLastError();
+        THROW_HR_IF_MSG(HRESULT_FROM_WIN32(error), error != ERROR_SHARING_VIOLATION,
+                        "Unable to open the cache lock file.");
+        THROW_HR_IF_MSG(HRESULT_FROM_WIN32(ERROR_TIMEOUT),
+                        GetTickCount64() - started >= 5 * 60 * 1000,
+                        "Timed out waiting for the cache lock file.");
+        Sleep(100);
     }
 }
 
@@ -666,13 +699,20 @@ int wmain(int argc, wchar_t* argv[])
 try
 {
     const Options options = ParseOptions(argc, argv);
-    const std::filesystem::path modelPath = FindModelPath(L"squeezenet\\SqueezeNet.onnx");
-    const std::filesystem::path imagePath = FindModelPath(L"squeezenet\\sample-image.jpg");
-    const std::filesystem::path labelsPath = FindModelPath(L"squeezenet\\imagenet_classes.txt");
-    if (modelPath.empty() || imagePath.empty() || labelsPath.empty())
+    const auto resolveAsset = [&](const wchar_t* name) {
+        return options.modelsDirectory.empty() ? std::filesystem::path(FindModelPath(name))
+                                               : options.modelsDirectory / name;
+    };
+    const std::filesystem::path modelPath = resolveAsset(L"squeezenet\\SqueezeNet.onnx");
+    const std::filesystem::path imagePath = resolveAsset(L"squeezenet\\sample-image.jpg");
+    const std::filesystem::path labelsPath = resolveAsset(L"squeezenet\\imagenet_classes.txt");
+    if (!std::filesystem::is_regular_file(modelPath) ||
+        !std::filesystem::is_regular_file(imagePath) ||
+        !std::filesystem::is_regular_file(labelsPath))
     {
-        std::fprintf(stderr, "SqueezeNet assets are missing. Run check_artifacts.ps1 "
-                             "-Sample onnx-runtime-winmlcgep from Samples\\Runtime.\n");
+        std::fprintf(
+            stderr, "SqueezeNet assets are missing. Verify --models-dir or run check_artifacts.ps1 "
+                    "-Sample onnx-runtime-winmlcgep from Samples\\Runtime.\n");
         return 1;
     }
 
@@ -694,15 +734,7 @@ try
 
     std::unique_ptr<Ort::Session> session;
     {
-        const std::wstring mutexName = L"Local\\WindowsMLSample.WinMLCGEP." +
-                                       std::wstring(cache.identity.begin(), cache.identity.end());
-        wil::unique_mutex mutex(mutexName.c_str());
-        const DWORD waitResult = WaitForSingleObject(mutex.get(), 5 * 60 * 1000);
-        THROW_HR_IF_MSG(HRESULT_FROM_WIN32(ERROR_TIMEOUT), waitResult == WAIT_TIMEOUT,
-                        "WaitForSingleObject");
-        THROW_LAST_ERROR_IF_MSG(waitResult != WAIT_OBJECT_0 && waitResult != WAIT_ABANDONED,
-                                "WaitForSingleObject");
-        auto cacheLock = mutex.ReleaseMutex_scope_exit();
+        auto cacheLock = AcquireCacheLock(cache);
         if (options.recompile)
         {
             RemoveCacheFiles(cache);

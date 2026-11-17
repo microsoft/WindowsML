@@ -17,6 +17,10 @@ Selects a physical GPU from the candidates listed by the sample.
 .PARAMETER AdapterName
 Selects one physical GPU by case-insensitive description substring.
 
+.PARAMETER ModelsDir
+Root containing the squeezenet assets. Defaults to Samples\Runtime\models.
+The executable loads from this same verified root without searching elsewhere.
+
 .PARAMETER Platform
 Architecture of the previously built executable.
 
@@ -32,6 +36,8 @@ param(
     [switch]$Recompile,
     [int]$AdapterIndex = 0,
     [string]$AdapterName,
+    [ValidateNotNullOrEmpty()]
+    [string]$ModelsDir = (Join-Path $PSScriptRoot "models"),
     [ValidateSet("ARM64", "x64")]
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
@@ -44,9 +50,10 @@ if ($AdapterName -and $PSBoundParameters.ContainsKey("AdapterIndex")) {
     throw "Specify at most one of -AdapterName or -AdapterIndex."
 }
 
+$modelsDirectory = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ModelsDir)
 Assert-SampleArtifactsReady `
     -Sample "onnx-runtime-winmlcgep" `
-    -ModelsDirectory (Join-Path $PSScriptRoot "models")
+    -ModelsDirectory $modelsDirectory
 
 $arguments = if ($AdapterName) {
     @("--adapter-name", $AdapterName)
@@ -54,6 +61,7 @@ $arguments = if ($AdapterName) {
 else {
     @("--adapter-index", $AdapterIndex)
 }
+$arguments += @("--models-dir", $modelsDirectory)
 if ($Recompile) { $arguments += "--recompile" }
 
 & (Join-Path $PSScriptRoot "scripts\invoke_sample.ps1") `
