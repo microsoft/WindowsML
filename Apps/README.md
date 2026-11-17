@@ -16,8 +16,9 @@ reference or as a starting point for your own application.
 
 ## Package versions
 
-The apps build against the Windows ML package versions that
+The apps build against the Windows ML and CsWin32 package versions that
 [`Samples\Directory.Packages.props`](../Samples/Directory.Packages.props) pins,
-so the apps and the samples always use the same Windows ML release.
+so the apps and the samples always use the same Windows ML release and build
+the shared C# sample wrapper the same way.
 [`Directory.Packages.props`](Directory.Packages.props) imports those versions
 and adds the packages that only the apps use.

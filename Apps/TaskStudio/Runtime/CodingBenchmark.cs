@@ -1,8 +1,6 @@
 // Copyright (C) Microsoft Corporation. All rights reserved.
 
-using System.Runtime.InteropServices;
-using Microsoft.Windows.AI.MachineLearning.Runtime;
-using Windows.Win32.Foundation;
+using WinMLSamples.Runtime;
 
 namespace TaskStudio.Runtime;
 
@@ -60,7 +58,7 @@ internal sealed partial class TaskRuntime
     // Whole files are added in order; the file that would overflow is cut at a line boundary. Each prompt is formatted
     // as one user turn with the model's chat template, so an instruct model answers it, and still runs as a Completion,
     // which reports the speculative statistics. Returns the prompts and the token count of the longest one.
-    public unsafe Task<(IReadOnlyList<BenchmarkPrompt> Prompts, uint PromptTokens)> BuildCodingPromptsAsync(uint targetTokens) => Run(() =>
+    public Task<(IReadOnlyList<BenchmarkPrompt> Prompts, uint PromptTokens)> BuildCodingPromptsAsync(uint targetTokens) => Run(() =>
     {
         if (tokenizer == null) throw new InvalidOperationException("Load a text model first.");
         var files = CodingBenchmark.LoadFiles();
@@ -106,45 +104,17 @@ internal sealed partial class TaskRuntime
 
     // The prompt as one user turn in the model's chat template, ready for generation, with thinking off as in the
     // app's Chat. A loaded model always has a template, because its Chat task needs one.
-    private unsafe uint[] FormatUserTurn(string content)
+    private uint[] FormatUserTurn(string content)
     {
-        IWinMLStructuredConversationFormatter* formatter = null;
-        IWinMLConversationFormatResult* result = null;
-        uint* tokens = null;
-        nint role = Marshal.StringToCoTaskMemUni("user");
-        nint text = Marshal.StringToCoTaskMemUni(content);
-        try
+        using StructuredConversationFormatter formatter = tokenizer!.As<StructuredConversationFormatter>();
+        using ConversationFormatResult result = formatter.FormatConversation(new ConversationRequest
         {
-            tokenizer->QueryInterface(out formatter).ThrowOnFailure();
-            var message = new WINML_CONVERSATION_MESSAGE { role = new PCWSTR((char*)role), content = new PCWSTR((char*)text) };
-            var request = new WINML_CONVERSATION_REQUEST
-            {
-                messageCount = 1, messages = &message, addGenerationPrompt = true,
-                enableThinking = WINML_CONVERSATION_ENABLE_THINKING.WINML_CONVERSATION_ENABLE_THINKING_DISABLED
-            };
-            result = formatter->FormatConversation(&request);
-            uint count;
-            result->GetTokenIds(&count, &tokens);
-            return new ReadOnlySpan<uint>(tokens, checked((int)count)).ToArray();
-        }
-        finally
-        {
-            Marshal.FreeCoTaskMem((nint)tokens);
-            Release(result);
-            Release(formatter);
-            Marshal.FreeCoTaskMem(role);
-            Marshal.FreeCoTaskMem(text);
-        }
+            Messages = [new ConversationMessage { Role = "user", Content = content }],
+            AddGenerationPrompt = true,
+            EnableThinking = ConversationEnableThinking.Disabled
+        });
+        return result.GetTokenIds();
     }
 
-    private unsafe uint CountTokens(string text)
-    {
-        uint* ids = null;
-        try
-        {
-            tokenizer->Encode(text, (WINML_TOKENIZER_ENCODE_FLAGS)0, out uint count, &ids);
-            return count;
-        }
-        finally { Marshal.FreeCoTaskMem((nint)ids); }
-    }
+    private uint CountTokens(string text) => (uint)tokenizer!.Encode(text).Length;
 }

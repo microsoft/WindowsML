@@ -52,8 +52,8 @@ The app builds against the `Microsoft.Windows.AI.MachineLearning` version that
 [`Samples\Directory.Packages.props`](../../Samples/Directory.Packages.props)
 pins, the same version as the samples. The package supplies the Runtime, the
 Tasks, the CGC backend, and the Win32 metadata from which CsWin32 generates the
-app's interop code, and NuGet restores the Direct3D 12 Agility SDK with it. To
-build against a package that isn't published yet, see
+bindings under the shared C# sample wrapper, and NuGet restores the Direct3D 12
+Agility SDK with it. To build against a package that isn't published yet, see
 [`localpackages`](localpackages/README.md).
 
 ### Package and share
@@ -76,14 +76,19 @@ published app fails at startup.
 
 ## How the app uses Windows ML
 
-CsWin32 generates the unmanaged Runtime and Task interfaces that
-[`Runtime\NativeMethods.txt`](Runtime/NativeMethods.txt) lists, from the
-package's Win32 metadata. `Runtime\TaskRuntime*.cs` owns every COM reference
-and runs every native session, stream, and live-input call on one dedicated MTA
-thread. `MainWindow` owns the presentation and marshals progress back to the UI
-thread. Only the free-threaded cancellation source crosses threads. Shutdown
-cancels active work and drains the microphone before native teardown, and
-native errors, including their HRESULTs, appear in the UI.
+The app calls the Runtime and Task APIs through the
+[C# sample wrapper](../../Samples/Runtime/shared/csharp/README.md) that the C#
+samples use, which [`Runtime\Runtime.props`](Runtime/Runtime.props) compiles
+into the app and the smoke harness. The wrapper owns every COM reference, so
+the app's own code has no pointers or `unsafe` blocks. `Runtime\TaskRuntime*.cs`
+runs every native session, stream, and live-input call on one dedicated
+wrapper `SessionThread`. `MainWindow` owns the presentation and marshals
+progress back to the UI thread. Only the free-threaded cancellation source
+crosses threads. Shutdown cancels active work and drains the microphone before
+native teardown, and native errors, including their HRESULTs, appear in the UI.
+This README names the native APIs; the wrapper's
+[naming conventions](../../Samples/Runtime/shared/csharp/README.md#naming-conventions)
+map them to the calls in `Runtime\TaskRuntime*.cs`.
 
 ### GPU selection
 
@@ -401,6 +406,7 @@ dotnet build Apps\TaskStudio\SmokeTests\TaskStudio.SmokeTests.csproj -p:Platform
 $smoke = '.\Apps\TaskStudio\SmokeTests\bin\ARM64\Debug\net8.0-windows10.0.19041.0\win-arm64\TaskStudio.SmokeTests.exe'
 & $smoke --devices
 & $smoke --defaults
+& $smoke --names
 & $smoke --conversation C:\models\Qwen3-0.6B\tokenizer_config.json
 # A GGUF file's tokenizer against the publisher's tokenizer, for encoding and chat formatting
 & $smoke --tokparity C:\models\qwen2.5-0.5b-instruct-fp16.gguf C:\models\Qwen2.5-0.5B-Instruct\tokenizer_config.json
@@ -423,7 +429,9 @@ $smoke = '.\Apps\TaskStudio\SmokeTests\bin\ARM64\Debug\net8.0-windows10.0.19041.
 The text checks cover Completion, two Chat turns, reset, cancellation during a
 stream and before it starts, recovery, seeded advanced sampling in both modes
 (two of three runs with the same seed must match), explicit stop tokens,
-rejection of invalid options, and unload and reload. The
+rejection of invalid options, and unload and reload. `--names` needs no model
+or GPU; it checks that the finish reasons, prompt cache modes, and speculative
+names the app shows and exports are the Runtime's native names. The
 audio checks cover decoding, downmixing and resampling, a WAV round trip, and
 optionally a real microphone capture. The speech checks cover cancellation
 before a stream starts, recorded transcription, native live chunks, and ordered

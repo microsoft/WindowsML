@@ -16,6 +16,9 @@ compiles only the wrapper, with the package and CsWin32 references it needs,
 and its header lists what the app sets itself: a .NET 8 Windows target
 framework with `ImplicitUsings` and `Nullable` enabled, central package
 versions, and a `win-x64` or `win-arm64` runtime identifier.
+[Task Studio](../../../../Apps/TaskStudio/) does this for its app and its
+smoke tests, so when you change the wrapper, build
+`Apps\TaskStudio\TaskStudio.slnx` too.
 
 ## The sample wrapper
 
@@ -60,9 +63,12 @@ await foreach (TextGenerationUpdate update in generator.GenerateTokensAsync(prom
 > The wrapper is sample code, not a supported API. It is not shipped in a
 > package and may change with the samples. It covers every interface of the
 > Task API (see [Task API coverage](#task-api-coverage)) and the parts of the
-> Runtime API that the samples call. Not every member has run: the
-> coverage table says which sample exercises each interface. You can
-> copy the wrapper into an app, but you then maintain it.
+> Runtime API that the samples and Task Studio call. Not every member has run:
+> the coverage table says which sample exercises each interface, and only
+> Task Studio and its smoke tests call `D3D12ExecutionTarget`,
+> `DXCoreAdapter.InstanceLuid`, `GetAdapterByLuid`, and `QueryMemoryBudget`,
+> and `ConversationFormatResult.GenerationPrompt` and `CreateOutputParser`.
+> You can copy the wrapper into an app, but you then maintain it.
 
 What the wrapper provides:
 
@@ -107,7 +113,8 @@ What the wrapper provides:
   `TextGenerationPullStream` reads `TextGenerationFragment` values whose text
   is a `ReadOnlySpan<char>` borrowed until the next read, with no managed
   allocation per token. No sample uses that loop; it is there for apps that
-  manage the session thread themselves.
+  manage the session thread themselves. Task Studio is one: it reads its
+  streams with `TryReadNext` on its own `SessionThread`.
 - **Chat completion.** `WinMLTasks.ChatCompletion` creates chat completion
   tasks, which compose a tokenizer's chat template with a text generation
   session. `ChatGenerator` owns both sessions on a `SessionThread` and streams

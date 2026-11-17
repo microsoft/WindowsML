@@ -164,7 +164,10 @@ public sealed partial class MainWindow
             ShowStatus("Comparison complete", "The chat conversation was reset because the comparison recreated the sessions.",
                 InfoBarSeverity.Informational);
         }
-        catch (OperationCanceledException) { ShowStatus("Comparison stopped", "The loaded method was restored.", InfoBarSeverity.Informational); }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            ShowStatus("Comparison stopped", "The loaded method was restored.", InfoBarSeverity.Informational);
+        }
         catch (Exception error) { ShowError(error); }
         finally
         {

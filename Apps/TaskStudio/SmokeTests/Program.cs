@@ -1,8 +1,7 @@
 // Copyright (C) Microsoft Corporation. All rights reserved.
 
 using TaskStudio.Runtime;
-using System.Runtime.InteropServices;
-using Microsoft.Windows.AI.MachineLearning.Runtime;
+using WinMLSamples.Runtime;
 
 // --compact-prefill, in any mode that loads a text model, compiles only the 128-token prefill program.
 var prefill = args.Contains("--compact-prefill") ? PrefillProfile.Compact : PrefillProfile.Default;
@@ -40,6 +39,8 @@ if (args.Length == 3 && args[0] == "--encode")
 
 if (args.Length == 1 && args[0] == "--defaults")
     return GenerationDefaultsSmoke.Run();
+if (args.Length == 1 && args[0] == "--names")
+    return EnumNamesSmoke.Run();
 
 if (args.Length == 1 && args[0] == "--devices")
 {
@@ -78,7 +79,7 @@ if (args.Length == 1 && TaskRuntime.IsGgufFile(args[0]))
 
 if (args.Length != 2)
 {
-    Console.Error.WriteLine("Usage: TaskStudio.SmokeTests <model-directory> <tokenizer_config.json> | <model.gguf> [tokenizer_config.json] | --conversation <tokenizer_config.json> | --defaults | --devices | --audio [--microphone] | --speech <model-directory> <tokenizer_config.json> <audio-file> | --decision <model-directory>");
+    Console.Error.WriteLine("Usage: TaskStudio.SmokeTests <model-directory> <tokenizer_config.json> | <model.gguf> [tokenizer_config.json] | --conversation <tokenizer_config.json> | --defaults | --names | --devices | --audio [--microphone] | --speech <model-directory> <tokenizer_config.json> <audio-file> | --decision <model-directory>");
     return 2;
 }
 
@@ -188,22 +189,10 @@ await runtime.LoadAsync(args[0], args[1], 2048, device, null, prefill);
 Console.WriteLine("PASS: completion, two chat turns, reset, mid-stream/pre-cancellation, recovery, unload/reload.");
 return 0;
 
-static unsafe uint[] EncodeStopIds(string tokenizerPath, string text)
+static uint[] EncodeStopIds(string tokenizerPath, string text)
 {
-    IWinMLTokenizer* tokenizer = null;
-    uint* ids = null;
-    try
-    {
-        PInvoke.WinMLCreateTokenizerFromFile(tokenizerPath, &tokenizer).ThrowOnFailure();
-        uint count;
-        tokenizer->Encode(text, (WINML_TOKENIZER_ENCODE_FLAGS)0, out count, &ids);
-        return new ReadOnlySpan<uint>(ids, checked((int)count)).ToArray();
-    }
-    finally
-    {
-        Marshal.FreeCoTaskMem((nint)ids);
-        if (tokenizer != null) tokenizer->Release();
-    }
+    using Tokenizer tokenizer = Tokenizer.CreateFromFile(tokenizerPath);
+    return tokenizer.Encode(text);
 }
 
 sealed class InlineProgress : IProgress<GenerationUpdate>

@@ -1,13 +1,9 @@
 // Copyright (C) Microsoft Corporation. All rights reserved.
 
-using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using Microsoft.Windows.AI.MachineLearning.Runtime;
-using Microsoft.Windows.AI.MachineLearning.Runtime.Tasks;
-using Windows.Win32.Foundation;
-using static Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.WINML_TEXT_GENERATION_EOS_POLICY;
-using static Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.WINML_TEXT_GENERATION_OPTION_FIELDS;
+using System.Text.RegularExpressions;
+using WinMLSamples.Runtime;
+using WinMLSamples.Runtime.Tasks;
 
 namespace TaskStudio.Runtime;
 
@@ -64,43 +60,28 @@ internal enum PrefillProfile
 
 internal sealed partial class TaskRuntime : IAsyncDisposable
 {
-    private readonly BlockingCollection<Action> work = new();
-    private readonly Thread worker;
-    private readonly TaskCompletionSource stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private readonly List<(string Role, string Content)> history = new();
-    private unsafe IWinMLRuntime* runtime;
-    private unsafe IWinMLTasks* tasks;
-    private unsafe IWinMLTokenizer* tokenizer;
-    private unsafe IWinMLTextGenerationTaskFactory* textFactory;
-    private unsafe IWinMLTextGenerationSession* textSession;
-    private unsafe IWinMLChatCompletionSession* chatSession;
-    private bool disposed;
+    private const int NotSupportedHResult = unchecked((int)0x80070032);
+    private const int FileNotFoundHResult = unchecked((int)0x80070002);
+    private const int InvalidStateHResult = unchecked((int)0x8007139F);
+    private const int CanceledHResult = unchecked((int)0x800704C7);
 
-    public TaskRuntime()
-    {
-        worker = new Thread(() =>
-        {
-            foreach (var action in work.GetConsumingEnumerable()) action();
-            stopped.TrySetResult();
-        })
-        { IsBackground = true, Name = "Windows ML Task worker" };
-        worker.SetApartmentState(ApartmentState.MTA);
-        worker.Start();
-    }
+    // Text generation sessions and their streams belong to the thread that created them, so every Runtime call runs here.
+    private readonly SessionThread worker = new("Windows ML Task worker");
+    private readonly List<(string Role, string Content)> history = new();
+    private WinMLRuntime? runtime;
+    private WinMLTasks? tasks;
+    private Tokenizer? tokenizer;
+    private TextGenerationSession? textSession;
+    private ChatCompletionSession? chatSession;
+    private Task? disposal;
 
     private Task<T> Run<T>(Func<T> action)
     {
-        ObjectDisposedException.ThrowIf(disposed, this);
-        var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-        work.Add(() =>
-        {
-            try { completion.SetResult(action()); }
-            catch (Exception error) { completion.SetException(error); }
-        });
-        return completion.Task;
+        ObjectDisposedException.ThrowIf(disposal is not null, this);
+        return worker.InvokeAsync(action);
     }
 
-    public unsafe Task<GpuDevice> LoadAsync(string modelPath, string tokenizerPath, uint? contextTokens, GpuDevice device,
+    public Task<GpuDevice> LoadAsync(string modelPath, string tokenizerPath, uint? contextTokens, GpuDevice device,
         SpeculativeChoice? speculation = null, PrefillProfile prefill = PrefillProfile.Default) => Run(() =>
     {
         speculation ??= SpeculativeChoice.Off;
@@ -122,65 +103,49 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
         if (companion && drafterGguf != gguf)
             throw new ArgumentException("Load the drafter the same way as the model: a folder for a safetensors model, a .gguf file for a GGUF model.");
 
-        IWinMLChatCompletionTaskFactory* chatFactory = null;
-        IWinMLTextGenerationConfiguration* configuration = null;
+        TextGenerationConfiguration? configuration = null;
         try
         {
-            Guid iid = typeof(IWinMLRuntime).GUID;
-            IWinMLRuntime* createdRuntime = null;
-            PInvoke.WinMLCreateRuntime(&iid, (void**)&createdRuntime).ThrowOnFailure();
-            runtime = createdRuntime;
-            iid = typeof(IWinMLTasks).GUID;
-            IWinMLTasks* createdTasks = null;
-            PInvoke.WinMLCreateTasks(runtime, &iid, (void**)&createdTasks).ThrowOnFailure();
-            tasks = createdTasks;
-            if (!ownTokenizer)
-            {
-                IWinMLTokenizer* createdTokenizer = null;
-                PInvoke.WinMLCreateTokenizerFromFile(tokenizerPath, &createdTokenizer).ThrowOnFailure();
-                tokenizer = createdTokenizer;
-            }
-            IWinMLTextGenerationTaskFactory* factory = null;
-            tasks->QueryInterface(out factory).ThrowOnFailure();
-            textFactory = factory;
+            runtime = WinMLRuntime.Create();
+            tasks = WinMLTasks.Create(runtime);
+            if (!ownTokenizer) tokenizer = Tokenizer.CreateFromFile(tokenizerPath);
 
             textTarget = CreateGpuTarget(runtime, device);
             GpuDevice actualDevice = DescribeGpuTarget(textTarget);
-            textModel = gguf ? runtime->LoadModelFromFile(modelPath, null) : runtime->LoadModelFromPath(modelPath, null);
+            textModel = gguf ? runtime.LoadModelFromFile(modelPath) : runtime.LoadModelFromPath(modelPath);
             if (companion)
-                textDraftModel = drafterGguf ? runtime->LoadModelFromFile(drafterPath, null) : runtime->LoadModelFromPath(drafterPath, null);
+                textDraftModel = drafterGguf ? runtime.LoadModelFromFile(drafterPath) : runtime.LoadModelFromPath(drafterPath);
             textContextTokens = contextTokens;
             textPrefill = prefill;
             try { configuration = BindConfiguration(tryProgramCache: true); }
-            catch (Exception error) when (companion && error.HResult == unchecked((int)0x80070032))
+            catch (Exception error) when (companion && error.HResult == NotSupportedHResult)
             {
                 throw new NotSupportedException("The Runtime cannot use this companion drafter with this model. " +
                     "Pick a drafter trained for this model, or load without speculative decoding.", error);
             }
-            catch (Exception error) when (gguf && ownTokenizer && error.HResult == unchecked((int)0x80070002))
+            catch (Exception error) when (gguf && ownTokenizer && error.HResult == FileNotFoundHResult)
             {
                 throw new NotSupportedException("The Runtime could not read the tokenizer stored in this GGUF file. " +
                     "Set the tokenizer to the model's tokenizer_config.json (with tokenizer.json beside it) and try again.", error);
             }
-            catch (Exception error) when (gguf && error.HResult == unchecked((int)0x8007139F) && ownTokenizer)
+            catch (Exception error) when (gguf && error.HResult == InvalidStateHResult && ownTokenizer)
             {
                 throw new NotSupportedException("The Runtime could not create a tokenizer from this GGUF file. " +
                     "Set the tokenizer to the model's tokenizer_config.json (with tokenizer.json beside it) and try again.", error);
             }
-            catch (Exception error) when (gguf && error.HResult == unchecked((int)0x80070032))
+            catch (Exception error) when (gguf && error.HResult == NotSupportedHResult)
             {
                 throw new NotSupportedException("The CGC backend does not support this GGUF file's architecture, " +
                     "layout or tensor types. Use a supported GGUF file or a safetensors model directory.", error);
             }
             // The task and the Chat layer must use the exact tokenizer the configuration holds.
-            if (tokenizer == null) tokenizer = configuration->GetTokenizer();
+            tokenizer ??= configuration.GetTokenizer();
             SpeculativeSupport = ReadSpeculativeSupport(configuration);
             if (SpeculativeSupport.IsSupported(speculation.Mode, companion) == false)
                 throw new NotSupportedException($"The Runtime reports that this model does not support {Describe(speculation.Mode)}. " +
                     SupportedMethodsText(SpeculativeSupport, companion));
-            textTask = textFactory->CreateTextGenerationTask(tokenizer, WINML_TEXT_GENERATION_EOS_POLICY_TOKENIZER_DEFAULT, 0, null);
-            tasks->QueryInterface(out chatFactory).ThrowOnFailure();
-            chatTask = chatFactory->CreateChatCompletionTask(tokenizer);
+            textTask = tasks.TextGeneration.CreateTextGenerationTask(tokenizer);
+            chatTask = tasks.ChatCompletion.CreateChatCompletionTask(tokenizer);
             try
             {
                 // CreateSessions consumes the configuration whether or not it succeeds.
@@ -188,7 +153,7 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
                 configuration = null;
                 CreateSessions(speculation.Mode, speculation.DraftTokens, bound);
             }
-            catch (Exception error) when (speculation.Mode != SpeculativeMode.Off && error.HResult == unchecked((int)0x80070032))
+            catch (Exception error) when (speculation.Mode != SpeculativeMode.Off && error.HResult == NotSupportedHResult)
             {
                 // The refusal doesn't name its cause. A drafter the support query accepts can still be refused once the
                 // session reads its weights, and a model the GPU can't run, such as NVFP4 weights, is refused here too.
@@ -209,65 +174,50 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
         }
         finally
         {
-            Release(chatFactory); Release(configuration);
+            configuration?.Dispose();
         }
     });
 
     // Binds a new configuration to the loaded model (and drafter). A configuration is consumed by the session it
     // creates, so a different speculative method needs a new one.
-    private unsafe IWinMLTextGenerationConfiguration* BindConfiguration(bool tryProgramCache, bool bindDrafter = true)
+    private TextGenerationConfiguration BindConfiguration(bool tryProgramCache, bool bindDrafter = true)
     {
-        IWinMLModel* draft = bindDrafter ? textDraftModel : null;
-        IWinMLTextGenerationConfiguration* configuration = textFactory->CreateTextGenerationConfiguration();
-        IWinMLModelTextGenerationConfiguration* modelConfiguration = null;
+        Model? draft = bindDrafter ? textDraftModel : null;
+        TextGenerationConfiguration? configuration = tasks!.TextGeneration.CreateTextGenerationConfiguration();
         try
         {
-            if (tokenizer != null) configuration->SetTokenizer(tokenizer);
-            configuration->QueryInterface(out modelConfiguration).ThrowOnFailure();
-            var modelFields = draft != null ? WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_DRAFT_MODEL
-                : WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_NONE;
+            if (tokenizer != null) configuration.SetTokenizer(tokenizer);
+            using var modelConfiguration = configuration.As<ModelTextGenerationConfiguration>();
             // The default profile is left unset so the Runtime keeps its own choice.
-            bool compact = textPrefill == PrefillProfile.Compact;
-            if (compact) modelFields |= WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_PREFILL_PROFILE;
-            var prefillProfile = compact ? WINML_TEXT_GENERATION_PREFILL_PROFILE.WINML_TEXT_GENERATION_PREFILL_PROFILE_COMPACT
-                : WINML_TEXT_GENERATION_PREFILL_PROFILE.WINML_TEXT_GENERATION_PREFILL_PROFILE_DEFAULT;
+            TextGenerationPrefillProfile? prefillProfile = textPrefill == PrefillProfile.Compact ? TextGenerationPrefillProfile.Compact : null;
             bool cached = false;
             if (tryProgramCache)
             {
                 try
                 {
-                    fixed (char* directory = CompiledProgramDirectory)
+                    modelConfiguration.SetModel(textTarget!, textModel!, new TextGenerationModelOptions
                     {
-                        var modelOptions = new WINML_TEXT_GENERATION_MODEL_OPTIONS
-                        {
-                            presentFields = WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_COMPILED_PROGRAM_DIRECTORY
-                                | WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS.WINML_TEXT_GENERATION_MODEL_OPTION_FIELDS_COMPILED_PROGRAM_STORAGE | modelFields,
-                            compiledProgramDirectory = new PCWSTR(directory),
-                            compiledProgramStorage = WINML_COMPILED_PROGRAM_STORAGE.WINML_COMPILED_PROGRAM_STORAGE_PROGRAMS,
-                            draftModel = draft,
-                            prefillProfile = prefillProfile
-                        };
-                        modelConfiguration->SetModel(textTarget, textModel, &modelOptions);
-                    }
+                        CompiledProgramDirectory = CompiledProgramDirectory,
+                        CompiledProgramStorage = CompiledProgramStorage.Programs,
+                        DraftModel = draft,
+                        PrefillProfile = prefillProfile
+                    });
                     cached = true;
                 }
                 // A route that cannot keep compiled programs refuses the option; compile per session instead.
                 // If the drafter is what it refused, the SetModel below fails too and reports it.
-                catch (Exception error) when (error.HResult == unchecked((int)0x80070032)) { }
+                catch (Exception error) when (error.HResult == NotSupportedHResult) { }
             }
             if (!cached)
-            {
-                var modelOptions = new WINML_TEXT_GENERATION_MODEL_OPTIONS { presentFields = modelFields, draftModel = draft, prefillProfile = prefillProfile };
-                modelConfiguration->SetModel(textTarget, textModel, draft != null || compact ? &modelOptions : null);
-            }
+                modelConfiguration.SetModel(textTarget!, textModel!, new TextGenerationModelOptions { DraftModel = draft, PrefillProfile = prefillProfile });
             TextProgramCacheUsed = cached;
-            if (textContextTokens is uint capacity) configuration->SetLogicalCapacity(capacity);
-            configuration->Validate();
+            if (textContextTokens is uint capacity) configuration.LogicalCapacity = capacity;
+            configuration.Validate();
             var bound = configuration;
             configuration = null;
             return bound;
         }
-        finally { Release(modelConfiguration); Release(configuration); }
+        finally { configuration?.Dispose(); }
     }
 
     private static string SupportedMethodsText(SpeculativeSupportReport report, bool drafterBound)
@@ -289,7 +239,7 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
     public bool TextProgramCacheUsed { get; private set; }
     public bool SpeechProgramCacheUsed { get; private set; }
 
-    public unsafe Task<GenerationResult> GenerateAsync(bool chat, string prompt, string systemPrompt,
+    public Task<GenerationResult> GenerateAsync(bool chat, string prompt, string systemPrompt,
         GenerationSettings settings, uint[] stopTokenIds, IProgress<GenerationUpdate> progress, CancellationToken cancellation)
     {
         settings.Validate();
@@ -300,38 +250,34 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
             if (textSession == null || chatSession == null) throw new InvalidOperationException("Create task sessions first.");
             if (string.IsNullOrWhiteSpace(prompt)) throw new ArgumentException("A prompt is required.");
             var stopwatch = Stopwatch.StartNew();
-            IWinMLTextGenerationOptions* options = null;
-            IWinMLCancellationSource* source = null;
+            TextGenerationOptions? options = null;
+            CancellationSource? source = null;
             try
             {
-                var values = new WINML_TEXT_GENERATION_OPTIONS
+                options = tasks!.TextGeneration.CreateTextGenerationOptions(new TextGenerationOptionValues
                 {
-                    presentFields = WINML_TEXT_GENERATION_OPTION_FIELD_ALL,
-                    maxNewTokens = settings.MaxTokens,
-                    temperature = settings.Temperature,
-                    topK = settings.TopK,
-                    topP = settings.TopP,
-                    minP = settings.MinP,
-                    repetitionPenalty = settings.RepetitionPenalty,
-                    repetitionPenaltyWindow = settings.RepetitionWindow,
-                    presencePenalty = settings.PresencePenalty,
-                    frequencyPenalty = settings.FrequencyPenalty,
-                    seed = settings.Seed
-                };
-                fixed (uint* stopPointer = stops)
-                    options = textFactory->CreateTextGenerationOptions(&values, checked((uint)stops.Length), stopPointer);
-                source = tasks->CreateCancellationSource();
+                    MaxNewTokens = settings.MaxTokens,
+                    Temperature = settings.Temperature,
+                    TopK = settings.TopK,
+                    TopP = settings.TopP,
+                    MinP = settings.MinP,
+                    RepetitionPenalty = settings.RepetitionPenalty,
+                    RepetitionPenaltyWindow = settings.RepetitionWindow,
+                    PresencePenalty = settings.PresencePenalty,
+                    FrequencyPenalty = settings.FrequencyPenalty,
+                    Seed = settings.Seed,
+                    StopTokenIds = stops
+                });
+                source = tasks.CreateCancellationSource();
                 // The registration is disposed before releasing source, including while Cancel races completion.
-                nint sourceAddress = (nint)source;
-                using var registration = cancellation.Register(() => ((IWinMLCancellationSource*)sourceAddress)->Cancel());
-                GenerationResult result = chat
+                using var registration = cancellation.Register(source.Cancel);
+                return chat
                     ? GenerateChat(prompt, systemPrompt, options, source, progress, stopwatch)
                     : GenerateCompletion(prompt, options, source, progress, stopwatch);
-                return result;
             }
             catch (Exception generationError)
             {
-                try { textSession->Reset(); }
+                try { textSession.Reset(); }
                 catch (Exception resetError)
                 {
                     throw new AggregateException("Generation failed and the Task session could not be reset. Release the sessions before retrying.",
@@ -340,7 +286,7 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
                 if (generationError.HResult == ContextWindowExceeded) throw ContextWindowError(generationError);
                 throw;
             }
-            finally { Release(source); Release(options); }
+            finally { source?.Dispose(); options?.Dispose(); }
         });
     }
 
@@ -350,185 +296,119 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
     private static InvalidOperationException ContextWindowError(Exception error) =>
         new("The prompt and the generated tokens don't fit the context window. Create the task sessions with a larger Context window.", error);
 
-    private unsafe GenerationResult GenerateCompletion(string prompt, IWinMLTextGenerationOptions* options,
-        IWinMLCancellationSource* cancellation, IProgress<GenerationUpdate> progress, Stopwatch stopwatch, uint[]? tokenIds = null)
+    private GenerationResult GenerateCompletion(string prompt, TextGenerationOptions options,
+        CancellationSource cancellation, IProgress<GenerationUpdate> progress, Stopwatch stopwatch, uint[]? tokenIds = null)
     {
-        IWinMLTextGenerationPullStream* stream = null;
-        IWinMLTextGenerationResult* result = null;
-        try
+        // Completion is independent of the retained chat sequence.
+        textSession!.Reset();
+        long start = Stopwatch.GetTimestamp();
+        TimeSpan? first = null, last = null;
+        uint generated = 0;
+        using TextGenerationPullStream stream = tokenIds is null
+            ? textSession.GenerateText(prompt, options, cancellation)
+            : textSession.GenerateTokens(tokenIds, options, cancellation);
+        while (stream.TryReadNext(out _, out ReadOnlySpan<char> fragment))
         {
-            // Completion is independent of the retained chat sequence.
-            textSession->Reset();
-            long start = Stopwatch.GetTimestamp();
-            TimeSpan? first = null, last = null;
-            uint generated = 0;
-            if (tokenIds is null)
-            {
-                stream = textSession->GenerateText(prompt, options, cancellation);
-            }
-            else
-            {
-                fixed (uint* ids = tokenIds)
-                    stream = textSession->GenerateTokens(checked((uint)tokenIds.Length), ids, options, cancellation);
-            }
-            while (true)
-            {
-                WINML_TEXT_GENERATION_READ_STATUS status;
-                uint token;
-                PCWSTR fragment;
-                stream->ReadNext(&status, &token, &fragment);
-                if (status == WINML_TEXT_GENERATION_READ_STATUS.WINML_TEXT_GENERATION_READ_STATUS_COMPLETED) break;
-                // Each read returns one generated token; time it before the UI sees it.
-                last = Stopwatch.GetElapsedTime(start);
-                first ??= last;
-                generated++;
-                progress.Report(new(fragment.ToString()));
-            }
-            TimeSpan total = Stopwatch.GetElapsedTime(start);
-            result = stream->GetResult();
-            PCWSTR text;
-            result->GetText(&text);
-            var reason = result->GetFinishReason();
-            bool canceled = reason == WINML_TEXT_GENERATION_FINISH_REASON.WINML_TEXT_GENERATION_FINISH_REASON_CANCELED;
-            if (!canceled) result->GetErrorCode().ThrowOnFailure();
-            return new(text.ToString(), result->GetPromptTokenCount(), reason.ToString(), canceled, stopwatch.Elapsed,
-                new GenerationTiming(generated, first, last, total, TokenEvents: true), ReadSpeculativeStats(result));
+            // Each read returns one generated token; time it before the UI sees it.
+            last = Stopwatch.GetElapsedTime(start);
+            first ??= last;
+            generated++;
+            progress.Report(new(fragment.ToString()));
         }
-        finally
-        {
-            try { if (stream != null) stream->Close(); }
-            finally { Release(result); Release(stream); }
-        }
+        TimeSpan total = Stopwatch.GetElapsedTime(start);
+        using TextGenerationResult result = stream.GetResult();
+        var reason = result.FinishReason;
+        bool canceled = reason == TextGenerationFinishReason.Canceled;
+        if (!canceled) ThrowOnError(result.ErrorCode);
+        var completion = new GenerationResult(result.Text, result.PromptTokenCount,
+            EnumNames.Native("WINML_TEXT_GENERATION_FINISH_REASON_", reason), canceled, stopwatch.Elapsed,
+            new GenerationTiming(generated, first, last, total, TokenEvents: true), ReadSpeculativeStats(result));
+        stream.Close();
+        return completion;
     }
 
-    private unsafe GenerationResult GenerateChat(string prompt, string systemPrompt, IWinMLTextGenerationOptions* options,
-        IWinMLCancellationSource* cancellation, IProgress<GenerationUpdate> progress, Stopwatch stopwatch)
+    private GenerationResult GenerateChat(string prompt, string systemPrompt, TextGenerationOptions options,
+        CancellationSource cancellation, IProgress<GenerationUpdate> progress, Stopwatch stopwatch)
     {
-        var messages = new List<(string Role, string Content)>();
-        if (!string.IsNullOrWhiteSpace(systemPrompt)) messages.Add(("system", systemPrompt));
-        messages.AddRange(history);
-        messages.Add(("user", prompt));
-        var allocations = new List<nint>();
-        var nativeMessages = new WINML_CONVERSATION_MESSAGE[messages.Count];
-        IWinMLChatCompletionPullStream* stream = null;
-        IWinMLChatCompletionResult* result = null;
-        try
+        var messages = new List<ConversationMessage>();
+        if (!string.IsNullOrWhiteSpace(systemPrompt)) messages.Add(new() { Role = "system", Content = systemPrompt });
+        messages.AddRange(history.Select(turn => new ConversationMessage { Role = turn.Role, Content = turn.Content }));
+        messages.Add(new() { Role = "user", Content = prompt });
+        var request = new ConversationRequest
         {
-            PCWSTR Allocate(string value)
+            Messages = messages,
+            AddGenerationPrompt = true,
+            EnableThinking = ConversationEnableThinking.Disabled
+        };
+        long start = Stopwatch.GetTimestamp();
+        TimeSpan? first = null, last = null;
+        using ChatCompletionPullStream stream = chatSession!.Generate(request, options, cancellation);
+        while (stream.TryReadNext(out ConversationOutputEvent? item))
+        {
+            using (item)
             {
-                nint address = Marshal.StringToCoTaskMemUni(value);
-                allocations.Add(address);
-                return new PCWSTR((char*)address);
-            }
-            for (int i = 0; i < messages.Count; i++)
-            {
-                nativeMessages[i].role = Allocate(messages[i].Role);
-                nativeMessages[i].content = Allocate(messages[i].Content);
-            }
-            long start = Stopwatch.GetTimestamp();
-            TimeSpan? first = null, last = null;
-            fixed (WINML_CONVERSATION_MESSAGE* messagePointer = nativeMessages)
-            {
-                var request = new WINML_CONVERSATION_REQUEST
+                ConversationOutputEventType type = item.Type;
+                if (type is ConversationOutputEventType.ContentDelta or ConversationOutputEventType.ReasoningDelta)
                 {
-                    messageCount = (uint)messages.Count,
-                    messages = messagePointer,
-                    addGenerationPrompt = true,
-                    enableThinking = WINML_CONVERSATION_ENABLE_THINKING.WINML_CONVERSATION_ENABLE_THINKING_DISABLED
-                };
-                stream = chatSession->Generate(&request, options, cancellation);
-            }
-            while (true)
-            {
-                WINML_CHAT_COMPLETION_READ_STATUS status;
-                IWinMLConversationOutputEvent* item = null;
-                stream->ReadNext(&status, &item);
-                try
-                {
-                    if (status == WINML_CHAT_COMPLETION_READ_STATUS.WINML_CHAT_COMPLETION_READ_STATUS_COMPLETED) break;
-                    WINML_CONVERSATION_OUTPUT_EVENT_TYPE type;
-                    item->GetType(&type);
-                    if (type is WINML_CONVERSATION_OUTPUT_EVENT_TYPE.WINML_CONVERSATION_OUTPUT_EVENT_TYPE_CONTENT_DELTA
-                        or WINML_CONVERSATION_OUTPUT_EVENT_TYPE.WINML_CONVERSATION_OUTPUT_EVENT_TYPE_REASONING_DELTA)
-                    {
-                        // Chat events are parser deltas, not tokens: the parser may hold text back.
-                        last = Stopwatch.GetElapsedTime(start);
-                        first ??= last;
-                        PCWSTR fragment;
-                        item->GetText(&fragment);
-                        progress.Report(new(fragment.ToString(),
-                            type == WINML_CONVERSATION_OUTPUT_EVENT_TYPE.WINML_CONVERSATION_OUTPUT_EVENT_TYPE_REASONING_DELTA));
-                    }
-                    else if (type == WINML_CONVERSATION_OUTPUT_EVENT_TYPE.WINML_CONVERSATION_OUTPUT_EVENT_TYPE_ERROR)
-                    {
-                        Windows.Win32.Foundation.HRESULT error;
-                        PCWSTR message;
-                        item->GetError(&error, &message);
-                        if (error.Value != unchecked((int)0x800704C7))
-                            throw new COMException(message.ToString(), error.Value);
-                    }
+                    // Chat events are parser deltas, not tokens: the parser may hold text back.
+                    last = Stopwatch.GetElapsedTime(start);
+                    first ??= last;
+                    progress.Report(new(item.Text, type == ConversationOutputEventType.ReasoningDelta));
                 }
-                finally { Release(item); }
+                else if (type == ConversationOutputEventType.Error)
+                {
+                    int error = item.GetError(out string message);
+                    if (error != CanceledHResult)
+                        throw message.Length == 0 ? WinMLException.GetExceptionForHResult(error) : WinMLException.GetExceptionForHResult(error, message);
+                }
             }
-            TimeSpan total = Stopwatch.GetElapsedTime(start);
-            result = stream->GetResult();
-            PCWSTR text;
-            result->GetContent(&text);
-            var reason = result->GetFinishReason();
-            bool canceled = reason == WINML_CHAT_COMPLETION_FINISH_REASON.WINML_CHAT_COMPLETION_FINISH_REASON_CANCELED;
-            if (!canceled) result->GetErrorCode().ThrowOnFailure();
-            uint promptTokens, completionTokens;
-            result->GetTokenCounts(&promptTokens, &completionTokens);
-            WINML_CHAT_COMPLETION_PROMPT_CACHE cache = result->GetPromptCacheUse();
-            string mode = cache.mode.ToString();
-            var cacheUse = new PromptCacheUse(mode[(mode.LastIndexOf("_MODE_", StringComparison.Ordinal) + 6)..].Replace('_', ' ').ToLowerInvariant(),
-                cache.promptTokenCount, cache.cachedPromptTokenCount, cache.prefilledPromptTokenCount);
-            string answer = text.ToString();
-            if (!canceled)
-            {
-                history.Add(("user", prompt));
-                history.Add(("assistant", answer));
-            }
-            return new(answer, promptTokens, reason.ToString(), canceled, stopwatch.Elapsed,
-                new GenerationTiming(completionTokens, first, last, total, TokenEvents: false, cacheUse), ReadSpeculativeStats(result));
         }
-        finally
+        TimeSpan total = Stopwatch.GetElapsedTime(start);
+        using ChatCompletionResult result = stream.GetResult();
+        string answer = result.Content;
+        var reason = result.FinishReason;
+        bool canceled = reason == ChatCompletionFinishReason.Canceled;
+        if (!canceled) ThrowOnError(result.ErrorCode);
+        var (promptTokens, completionTokens) = result.GetTokenCounts();
+        ChatCompletionPromptCacheUse cache = result.PromptCacheUse;
+        var cacheUse = new PromptCacheUse(EnumNames.Words(cache.Mode),
+            cache.PromptTokenCount, cache.CachedPromptTokenCount, cache.PrefilledPromptTokenCount);
+        if (!canceled)
         {
-            try { if (stream != null) stream->Close(); }
-            finally
-            {
-                Release(result); Release(stream);
-                foreach (nint address in allocations) Marshal.FreeCoTaskMem(address);
-            }
+            history.Add(("user", prompt));
+            history.Add(("assistant", answer));
         }
+        var reply = new GenerationResult(answer, promptTokens, EnumNames.Native("WINML_CHAT_COMPLETION_FINISH_REASON_", reason), canceled,
+            stopwatch.Elapsed, new GenerationTiming(completionTokens, first, last, total, TokenEvents: false, cacheUse), ReadSpeculativeStats(result));
+        stream.Close();
+        return reply;
     }
 
-    public unsafe Task ResetAsync() => Run(() =>
+    public Task ResetAsync() => Run(() =>
     {
-        if (textSession != null) textSession->Reset();
+        textSession?.Reset();
         history.Clear();
         return true;
     });
 
-    public unsafe Task UnloadAsync() => Run(() => { Unload(); return true; });
+    public Task UnloadAsync() => Run(() => { Unload(); return true; });
 
-    private unsafe void Unload()
+    private void Unload()
     {
         try { CloseSessions(); }
         finally
         {
-            Release(chatTask); chatTask = null;
-            Release(textTask); textTask = null;
-            Release(textTaskNoEos); textTaskNoEos = null;
-            Release(textDraftModel); textDraftModel = null;
-            Release(textModel); textModel = null;
-            Release(textTarget); textTarget = null;
+            Release(ref chatTask);
+            Release(ref textTask);
+            Release(ref textTaskNoEos);
+            Release(ref textDraftModel);
+            Release(ref textModel);
+            Release(ref textTarget);
             textContextTokens = null;
             textPrefill = PrefillProfile.Default;
-            Release(textFactory); textFactory = null;
-            Release(tokenizer); tokenizer = null;
-            Release(tasks); tasks = null;
-            Release(runtime); runtime = null;
+            Release(ref tokenizer);
+            Release(ref tasks);
+            Release(ref runtime);
             loadedSpeculation = SpeculativeChoice.Off;
             SpeculativeSupport = null;
             history.Clear();
@@ -537,7 +417,8 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        if (disposed) return new ValueTask(stopped.Task);
+        // Only the first call reports a cleanup failure; later calls wait for the worker to stop, so closing again works.
+        if (disposal is not null) return new ValueTask(disposal);
         Task cleanup = Run(() =>
         {
             try { Unload(); }
@@ -548,20 +429,43 @@ internal sealed partial class TaskRuntime : IAsyncDisposable
             }
             return true;
         });
-        disposed = true;
-        work.CompleteAdding();
-        return new ValueTask(FinishDisposeAsync(cleanup));
+        Task finished = FinishDisposeAsync(cleanup);
+        disposal = finished.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        return new ValueTask(finished);
     }
 
     private async Task FinishDisposeAsync(Task cleanup)
     {
-        try { await cleanup; }
-        finally { await stopped.Task; work.Dispose(); }
+        try { await cleanup.ConfigureAwait(false); }
+        finally { worker.Dispose(); }
     }
 
-    private static unsafe void Release<T>(T* value) where T : unmanaged
+    // A result's error code; the Runtime reports a failure there rather than from the call that read the stream.
+    private static void ThrowOnError(int errorCode)
     {
-        if (value != null)
-            ((delegate* unmanaged[Stdcall]<void*, uint>)(*(void***)value)[2])(value);
+        if (errorCode < 0) throw WinMLException.GetExceptionForHResult(errorCode);
     }
+
+    private static void Release<T>(ref T? value) where T : class, IDisposable
+    {
+        value?.Dispose();
+        value = null;
+    }
+}
+
+// The app reports and exports Runtime enumerations by their native names
+// (WINML_TEXT_GENERATION_FINISH_REASON_STOP_TOKEN), by the last part of the name (STOP_TOKEN), or as lowercase words
+// ("prompt lookup"). Each relies on the wrapper's enum members following the native names; the smoke harness's
+// --names check fails if one doesn't.
+internal static partial class EnumNames
+{
+    public static string Words<T>(T value) where T : struct, Enum =>
+        WordBoundary().Replace(value.ToString(), " ").ToLowerInvariant();
+
+    public static string Constant<T>(T value) where T : struct, Enum => Words(value).Replace(' ', '_').ToUpperInvariant();
+
+    public static string Native<T>(string prefix, T value) where T : struct, Enum => prefix + Constant(value);
+
+    [GeneratedRegex("(?<=[a-z0-9])(?=[A-Z])")]
+    private static partial Regex WordBoundary();
 }
