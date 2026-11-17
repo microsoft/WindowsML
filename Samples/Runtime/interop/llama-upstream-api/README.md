@@ -102,8 +102,11 @@ package.
 
 ggml backends are separate DLLs that llama.cpp loads at run time, so the
 application doesn't link them. The build copies the CPU backend to
-`LlamaBackends\cpu` beside the executable. Before it loads the model, the sample
-calls `ggml_backend_load_all_from_path` on each folder under `LlamaBackends`.
+`LlamaBackends\cpu` beside the executable, and `build.ps1 -LlamaCuda` also
+copies the opt-in CUDA backend and cuBLAS to `LlamaBackends\cuda` (see
+[NVIDIA CUDA](../../../../docs/Runtime/gguf-models.md#nvidia-cuda)). Before it
+loads the model, the sample calls `ggml_backend_load_all_from_path` on each
+folder under `LlamaBackends`.
 
 ggml loads a backend DLL by its full path, but Windows resolves the backend's
 own imports through the standard DLL search order, which doesn't include the
@@ -119,6 +122,7 @@ layers to the GPU devices that the loaded backends register.
 ggml checks a backend's API version but doesn't read
 `WinMLLlamaBackendManifest.json`, so this sample doesn't verify, as the Windows
 ML runtime does, that a backend was built for the package's llama.cpp commit.
-Build each backend for the LibLlama.Core package version that the sample uses,
-as [Package matching](../../../../Tools/llama/README.md#package-matching)
+The CUDA packages share the LibLlama.Core version, so they match it. Build any
+other backend for the LibLlama.Core package version that the sample uses, as
+[Package matching](../../../../Tools/llama/README.md#package-matching)
 describes.

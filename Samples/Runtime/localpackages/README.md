@@ -11,7 +11,11 @@ place anything here. To restore from a local package copy:
    `Microsoft.Windows.AI.MachineLearning.LibLlama.Core` together with the
    `Microsoft.Windows.AI.MachineLearning` package from the same Windows ML
    release. `LibLlama.Core` requires exactly the Runtime package version it was
-   built with.
+   built with. For a `-LlamaCuda` build, also copy
+   `Microsoft.Windows.AI.MachineLearning.LibLlama`,
+   `Microsoft.Windows.AI.MachineLearning.LibLlama.Cuda.win-x64`, and
+   `Microsoft.Windows.AI.MachineLearning.LibLlama.Cuda.win-arm64` from the same
+   release.
 2. Set or override `WinMLRuntimePackageVersion` (and
    `WinMLLibLlamaPackageVersion` for LibLlama) to the matching package
    versions.
@@ -39,6 +43,10 @@ with the version pinned so pip doesn't select a `windowsml` release from PyPI:
 python.exe -m pip install --find-links .\localpackages "windowsml-llama-core==<windowsml-version>" numpy
 ```
 
+For the opt-in CUDA backend, also copy `windowsml-llama-cuda` from the same
+build and install it with the same pin, for example
+`"windowsml-llama-cuda==<windowsml-version>"`.
+
 The wheel version is the Runtime package version without its suffix, plus
 `.dev0` for dev builds or `a0` for experimental builds. The wheel
 version doesn't include the commit, so copy the wheels from the same pipeline run
@@ -62,6 +70,8 @@ Run it from `Samples\Runtime` or `Samples\Tasks`. Other sample READMEs use
 pre-release version, pip installs it without `--pre`, and the other
 dependencies keep their stable releases.
 
-pip still installs other dependencies, such as `comtypes`, from PyPI. Validate the wheel source before use.
+pip still installs other dependencies, such as `comtypes` and, for the CUDA
+backend, NVIDIA's `nvidia-cublas`, from PyPI. Validate the wheel source before
+use.
 
 Package and wheel files in this directory are gitignored.

@@ -13,6 +13,8 @@ import re
 
 
 _LLAMA_DISTRIBUTIONS = ("windowsml-llama-core",)
+# The CUDA backend is opt-in, so these are checked only when installed.
+_OPTIONAL_LLAMA_DISTRIBUTIONS = ("windowsml-llama", "windowsml-llama-cuda")
 
 
 def _distribution_record(name: str) -> dict[str, str]:
@@ -86,13 +88,13 @@ def main() -> int:
         "onnxruntime-windowsml": _distribution_record("onnxruntime-windowsml"),
     }
 
-    # The llama.cpp wheel installs into windowsml\lib and must come from the same
-    # build as windowsml.
-    for name in _LLAMA_DISTRIBUTIONS:
+    # The llama.cpp wheels install into windowsml\lib and must come from the
+    # same build as windowsml.
+    for name in _LLAMA_DISTRIBUTIONS + _OPTIONAL_LLAMA_DISTRIBUTIONS:
         try:
             installed = metadata.distribution(name)
         except metadata.PackageNotFoundError:
-            if args.require_llama:
+            if args.require_llama and name in _LLAMA_DISTRIBUTIONS:
                 raise RuntimeError(
                     f"{name} is not installed; install "
                     f"{name}=={windowsml.version}"
@@ -104,6 +106,15 @@ def main() -> int:
                 f"found {installed.version}"
             )
         records[name] = _distribution_record(name)
+
+    if "windowsml-llama-cuda" in records:
+        try:
+            records["nvidia-cublas"] = _distribution_record("nvidia-cublas")
+        except metadata.PackageNotFoundError:
+            raise RuntimeError(
+                "windowsml-llama-cuda is installed without nvidia-cublas; install "
+                f"windowsml-llama-cuda=={windowsml.version}"
+            ) from None
 
     print(json.dumps(records, indent=2))
     return 0
