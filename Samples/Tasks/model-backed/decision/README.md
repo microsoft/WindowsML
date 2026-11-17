@@ -29,9 +29,15 @@ the app, not permission to take an action.
 ```powershell
 ..\..\run_decision.ps1 -State "The app closes every time I open the settings page."
 ..\..\run_decision.ps1 -ProgramCache ..\..\models\program-cache
+..\..\run_decision.ps1 -Language csharp
 python.exe .\main.py ..\..\models\laya --question "How urgent is this request?" `
   --options low medium high
 ```
+
+The [C# version](csharp/) takes the same arguments and prints the same output
+through the C# sample wrapper; build it with
+`..\..\build.ps1 -Sample decision-csharp` and pass `-Language csharp` to the run
+script.
 
 The first session compiles programs for the GPU. `--program-cache <directory>`
 (run script `-ProgramCache`) keeps them for later runs, and `--cache-weights`

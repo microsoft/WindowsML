@@ -25,4 +25,13 @@ The C++ sample reads clips of at most 30 seconds.
 python.exe .\main.py ..\..\models\whisper-tiny ..\..\..\Runtime\speech\whisper\test_audio.wav
 ```
 
+A [C# version](csharp/) makes the same calls through the C# sample wrapper in
+[`Runtime/shared/csharp`](../../../Runtime/shared/csharp/README.md) and adds a
+`--live` option that writes the audio to a live session in chunks:
+
+```powershell
+..\..\build.ps1 -Sample model-speech-recognition-csharp -PackageOnly
+..\..\run_model_speech_recognition.ps1 -SampleLanguage csharp
+```
+
 See [Models-backed Tasks](../README.md) for package and model requirements.

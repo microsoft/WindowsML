@@ -9,8 +9,8 @@ Target architecture. Defaults to the host architecture.
 
 .PARAMETER Sample
 The sample project to build, or all. C++ projects need Visual Studio with
-Desktop development with C++. model-text-generation-csharp needs the .NET 8
-SDK or later; -Sample all skips it with a warning when the SDK is missing.
+Desktop development with C++. The -csharp samples need the .NET 8 SDK or
+later; -Sample all skips them with a warning when the SDK is missing.
 
 .PARAMETER RuntimePackageVersion
 Overrides the centrally pinned Microsoft.Windows.AI.MachineLearning version.
@@ -35,9 +35,11 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
-    [ValidateSet("all", "text-generation", "chat-completion", "automatic-speech-recognition", "speech-to-text-generation",
-                 "model-text-generation", "model-text-generation-csharp", "composed-text-generation",
-                 "llama-text-generation", "model-speech-recognition", "decision")]
+    [ValidateSet("all", "text-generation", "chat-completion", "chat-completion-csharp", "automatic-speech-recognition",
+                 "automatic-speech-recognition-csharp", "speech-to-text-generation", "model-text-generation",
+                 "model-text-generation-csharp", "text-generation-features-csharp", "composed-text-generation",
+                 "llama-text-generation", "model-speech-recognition", "model-speech-recognition-csharp", "decision",
+                 "decision-csharp")]
     [string]$Sample = "all",
     [string]$RuntimePackageVersion,
     [string]$LibLlamaPackageVersion,
@@ -70,14 +72,19 @@ function Find-MSBuild {
 $projects = [ordered]@{
     "text-generation" = "language\text-generation\task-text-generation.vcxproj"
     "chat-completion" = "language\chat-completion\task-chat-completion.vcxproj"
+    "chat-completion-csharp" = "language\chat-completion\csharp\task-chat-completion-csharp.csproj"
     "automatic-speech-recognition" = "speech\automatic-speech-recognition\task-automatic-speech-recognition.vcxproj"
+    "automatic-speech-recognition-csharp" = "speech\automatic-speech-recognition\csharp\task-automatic-speech-recognition-csharp.csproj"
     "speech-to-text-generation" = "composition\speech-to-text-generation\task-speech-to-text-generation.vcxproj"
     "model-text-generation" = "model-backed\text-generation\task-model-text-generation.vcxproj"
     "model-text-generation-csharp" = "model-backed\text-generation\csharp\task-model-text-generation-csharp.csproj"
+    "text-generation-features-csharp" = "model-backed\text-generation-features\csharp\task-text-generation-features-csharp.csproj"
     "composed-text-generation" = "model-backed\composed-text-generation\task-composed-text-generation.vcxproj"
     "llama-text-generation" = "model-backed\llama-text-generation\task-llama-text-generation.vcxproj"
     "model-speech-recognition" = "model-backed\automatic-speech-recognition\task-model-speech-recognition.vcxproj"
+    "model-speech-recognition-csharp" = "model-backed\automatic-speech-recognition\csharp\task-model-speech-recognition-csharp.csproj"
     "decision" = "model-backed\decision\task-decision.vcxproj"
+    "decision-csharp" = "model-backed\decision\csharp\task-decision-csharp.csproj"
 }
 $selectedProjects = if ($Sample -eq "all") {
     $projects.Values

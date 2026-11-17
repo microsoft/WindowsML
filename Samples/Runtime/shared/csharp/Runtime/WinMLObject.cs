@@ -89,6 +89,26 @@ public abstract unsafe class WinMLObject : IDisposable
         return true;
     }
 
+    // Whether this object and other are the same native object, compared by
+    // COM identity (their IUnknown), as for two references to one Runtime.
+    public bool IsSameObject(WinMLObject other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        void* left = null;
+        void* right = null;
+        try
+        {
+            Check(QueryInterface(IUnknown.IID_Guid, &left));
+            other.Check(other.QueryInterface(IUnknown.IID_Guid, &right));
+            return left == right;
+        }
+        finally
+        {
+            Release(left);
+            Release(right);
+        }
+    }
+
     // Releases the reference. Does nothing for an object that a property of
     // another object returned, such as ExecutionTarget.RawTensorFactory; that
     // object belongs to its parent.
