@@ -1,10 +1,8 @@
 // Copyright (C) Microsoft Corporation. All rights reserved.
 
 using System.Diagnostics;
-using Microsoft.Windows.AI.MachineLearning.Runtime;
-using Microsoft.Windows.AI.MachineLearning.Runtime.Tasks;
-using Windows.Win32.Foundation;
-using static Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.WINML_TEXT_GENERATION_SPECULATIVE_METHOD;
+using WinMLSamples.Runtime;
+using WinMLSamples.Runtime.Tasks;
 
 namespace TaskStudio.Runtime;
 
@@ -73,24 +71,24 @@ internal static class TextComparison
 
 internal sealed partial class TaskRuntime
 {
-    private unsafe IWinMLExecutionTarget* textTarget;
-    private unsafe IWinMLModel* textModel;
-    private unsafe IWinMLModel* textDraftModel;
+    private ExecutionTarget? textTarget;
+    private Model? textModel;
+    private Model? textDraftModel;
     private uint? textContextTokens;
     private PrefillProfile textPrefill;
-    private unsafe IWinMLTextGenerationTask* textTask;
-    private unsafe IWinMLTextGenerationTask* textTaskNoEos;
-    private unsafe IWinMLChatCompletionTask* chatTask;
+    private TextGenerationTask? textTask;
+    private TextGenerationTask? textTaskNoEos;
+    private ChatCompletionTask? chatTask;
     private SpeculativeChoice loadedSpeculation = SpeculativeChoice.Off;
 
     public SpeculativeChoice LoadedSpeculation => loadedSpeculation;
     public SpeculativeSupportReport? SpeculativeSupport { get; private set; }
 
-    private static WINML_TEXT_GENERATION_SPECULATIVE_METHOD ToMethod(SpeculativeMode mode) => mode switch
+    private static TextGenerationSpeculativeMethod ToMethod(SpeculativeMode mode) => mode switch
     {
-        SpeculativeMode.PromptLookup => WINML_TEXT_GENERATION_SPECULATIVE_METHOD_PROMPT_LOOKUP,
-        SpeculativeMode.ModelLayers or SpeculativeMode.CompanionDrafter => WINML_TEXT_GENERATION_SPECULATIVE_METHOD_MODEL,
-        _ => WINML_TEXT_GENERATION_SPECULATIVE_METHOD_NONE
+        SpeculativeMode.PromptLookup => TextGenerationSpeculativeMethod.PromptLookup,
+        SpeculativeMode.ModelLayers or SpeculativeMode.CompanionDrafter => TextGenerationSpeculativeMethod.Model,
+        _ => TextGenerationSpeculativeMethod.None
     };
 
     public static string Describe(SpeculativeMode mode) => mode switch
@@ -101,107 +99,85 @@ internal sealed partial class TaskRuntime
         _ => "off"
     };
 
-    private static string ShortName<T>(T value, string marker) where T : Enum
-    {
-        string name = value.ToString();
-        int at = name.LastIndexOf(marker, StringComparison.Ordinal);
-        return (at >= 0 ? name[(at + marker.Length)..] : name).Replace('_', ' ').ToLowerInvariant();
-    }
-
     // Reads what the bound model supports. A path that reports only through CreateSession returns null entries.
-    private static unsafe SpeculativeSupportReport ReadSpeculativeSupport(IWinMLTextGenerationConfiguration* configuration)
+    private static SpeculativeSupportReport ReadSpeculativeSupport(TextGenerationConfiguration configuration)
     {
-        IWinMLTextGenerationSpeculativeSupport* support = null;
-        if (configuration->QueryInterface(out support).Failed || support == null) return new(null, null);
-        try
+        if (!configuration.TryAs<TextGenerationSpeculativeSupport>(out var support)) return new(null, null);
+        using (support)
         {
-            SpeculativeMethodSupport? Query(WINML_TEXT_GENERATION_SPECULATIVE_METHOD method)
+            SpeculativeMethodSupport? Query(TextGenerationSpeculativeMethod method)
             {
                 try
                 {
-                    var value = support->GetSpeculativeMethodSupport(method);
-                    return new(value.supported, ShortName(value.draftSource, "_SOURCE_"), value.defaultDraftTokenCount,
-                        value.maxDraftTokenCount, value.modelDraftLayersPresent);
+                    var value = support.GetSpeculativeMethodSupport(method);
+                    return new(value.Supported, EnumNames.Words(value.DraftSource), value.DefaultDraftTokenCount,
+                        value.MaxDraftTokenCount, value.ModelDraftLayersPresent);
                 }
-                catch (Exception error) when (error.HResult == unchecked((int)0x80070032)) { return null; }
+                catch (Exception error) when (error.HResult == NotSupportedHResult) { return null; }
             }
-            return new(Query(WINML_TEXT_GENERATION_SPECULATIVE_METHOD_PROMPT_LOOKUP), Query(WINML_TEXT_GENERATION_SPECULATIVE_METHOD_MODEL));
+            return new(Query(TextGenerationSpeculativeMethod.PromptLookup), Query(TextGenerationSpeculativeMethod.Model));
         }
-        finally { Release(support); }
     }
 
-    private static unsafe void ApplySpeculation(IWinMLTextGenerationConfiguration* configuration, SpeculativeMode mode, uint draftTokens)
+    private static void ApplySpeculation(TextGenerationConfiguration configuration, SpeculativeMode mode, uint draftTokens)
     {
-        IWinMLTextGenerationSpeculativeConfiguration* speculative = null;
-        configuration->QueryInterface(out speculative).ThrowOnFailure();
-        try
+        using var speculative = configuration.As<TextGenerationSpeculativeConfiguration>();
+        speculative.SetSpeculativeOptions(new TextGenerationSpeculativeOptions
         {
-            speculative->SetSpeculativeOptions(new WINML_TEXT_GENERATION_SPECULATIVE_OPTIONS
-            {
-                method = ToMethod(mode),
-                draftTokenCount = mode == SpeculativeMode.Off ? 0 : draftTokens
-            });
-        }
-        finally { Release(speculative); }
+            Method = ToMethod(mode),
+            DraftTokenCount = mode == SpeculativeMode.Off ? 0 : draftTokens
+        });
     }
 
     // Creates the text and chat sessions with the given speculation, from a configuration bound for it. The
     // configuration is consumed (released) whether or not the sessions are created.
-    private unsafe void CreateSessions(SpeculativeMode mode, uint draftTokens, IWinMLTextGenerationConfiguration* configuration = null,
+    private void CreateSessions(SpeculativeMode mode, uint draftTokens, TextGenerationConfiguration? configuration = null,
         bool ignoreEndOfText = false)
     {
         // An EXPLICIT policy with no tokens never stops at end of text, so a benchmark generates its full count.
         if (ignoreEndOfText && textTaskNoEos == null)
-            textTaskNoEos = textFactory->CreateTextGenerationTask(tokenizer, WINML_TEXT_GENERATION_EOS_POLICY.WINML_TEXT_GENERATION_EOS_POLICY_EXPLICIT, 0, null);
+            textTaskNoEos = tasks!.TextGeneration.CreateTextGenerationTask(tokenizer!, ReadOnlySpan<uint>.Empty);
         // Only the companion method takes the drafter; the Runtime refuses one with Off or prompt lookup.
-        configuration = configuration != null ? configuration
-            : BindConfiguration(TextProgramCacheUsed, bindDrafter: mode == SpeculativeMode.CompanionDrafter);
+        configuration ??= BindConfiguration(TextProgramCacheUsed, bindDrafter: mode == SpeculativeMode.CompanionDrafter);
         try
         {
             ApplySpeculation(configuration, mode, draftTokens);
-            textSession = (ignoreEndOfText ? textTaskNoEos : textTask)->CreateSession(configuration);
-            chatSession = chatTask->CreateSession(textSession);
+            textSession = (ignoreEndOfText ? textTaskNoEos : textTask)!.CreateSession(configuration);
+            chatSession = chatTask!.CreateSession(textSession);
         }
         catch
         {
             CloseSessions();
             throw;
         }
-        finally { Release(configuration); }
+        finally { configuration.Dispose(); }
     }
 
-    private unsafe void CloseSessions()
+    private void CloseSessions()
     {
-        try { if (chatSession != null) chatSession->Close(); }
+        try { chatSession?.Close(); }
         finally
         {
-            Release(chatSession); chatSession = null;
-            try { if (textSession != null) textSession->Close(); }
-            finally { Release(textSession); textSession = null; }
+            Release(ref chatSession);
+            try { textSession?.Close(); }
+            finally { Release(ref textSession); }
         }
     }
 
-    private static unsafe SpeculativeStats? ReadSpeculativeStats(void* result)
+    private static SpeculativeStats? ReadSpeculativeStats(WinMLObject result)
     {
-        if (result == null) return null;
-        Guid iid = typeof(IWinMLTextGenerationSpeculativeResult).GUID;
-        void* found = null;
-        // Index 0 of every COM vtable is QueryInterface.
-        HRESULT hr = ((delegate* unmanaged[Stdcall]<void*, Guid*, void**, HRESULT>)(*(void***)result)[0])(result, &iid, &found);
-        if (hr.Failed || found == null) return null;
-        var speculative = (IWinMLTextGenerationSpeculativeResult*)found;
-        try
+        if (!result.TryAs<TextGenerationSpeculativeResult>(out var speculative)) return null;
+        using (speculative)
         {
-            var stats = speculative->GetSpeculativeStatistics();
-            return new(ShortName(stats.method, "_METHOD_"), stats.verificationStepCount, stats.draftTokenCount, stats.acceptedDraftTokenCount);
+            var stats = speculative.SpeculativeStatistics;
+            return new(EnumNames.Words(stats.Method), stats.VerificationStepCount, stats.DraftTokenCount, stats.AcceptedDraftTokenCount);
         }
-        finally { Release(speculative); }
     }
 
     // Runs each prompt greedily as a Completion with speculation off, then with the loaded speculation, recreating the
     // sessions in between (never two at once). With ignoreEndOfText every prompt generates maxTokens tokens. Chat
     // history is cleared; the loaded speculation is restored at the end.
-    public unsafe Task<IReadOnlyList<SpeculativeComparisonRow>> CompareSpeculationAsync(IReadOnlyList<BenchmarkPrompt> prompts, uint maxTokens,
+    public Task<IReadOnlyList<SpeculativeComparisonRow>> CompareSpeculationAsync(IReadOnlyList<BenchmarkPrompt> prompts, uint maxTokens,
         bool ignoreEndOfText, IProgress<string> progress, CancellationToken cancellation) => Run<IReadOnlyList<SpeculativeComparisonRow>>(() =>
     {
         if (textSession == null || textModel == null) throw new InvalidOperationException("Load a model first.");
@@ -236,22 +212,18 @@ internal sealed partial class TaskRuntime
         }
     });
 
-    private unsafe GenerationResult RunCompletion(BenchmarkPrompt prompt, uint maxTokens, CancellationToken cancellation)
+    private GenerationResult RunCompletion(BenchmarkPrompt prompt, uint maxTokens, CancellationToken cancellation)
     {
-        IWinMLTextGenerationOptions* options = null;
-        IWinMLCancellationSource* source = null;
+        using TextGenerationOptions options = CreateGreedyOptions(maxTokens);
+        using CancellationSource source = tasks!.CreateCancellationSource();
+        using var registration = cancellation.Register(source.Cancel);
         try
         {
-            options = CreateGreedyOptions(maxTokens);
-            source = tasks->CreateCancellationSource();
-            nint sourceAddress = (nint)source;
-            using var registration = cancellation.Register(() => ((IWinMLCancellationSource*)sourceAddress)->Cancel());
             var result = GenerateCompletion(prompt.Text, options, source, NoProgress.Instance, Stopwatch.StartNew(), prompt.TokenIds);
             if (result.Canceled) throw new OperationCanceledException(cancellation);
             return result;
         }
         catch (Exception error) when (error.HResult == ContextWindowExceeded) { throw ContextWindowError(error); }
-        finally { Release(source); Release(options); }
     }
 
     private sealed class NoProgress : IProgress<GenerationUpdate>

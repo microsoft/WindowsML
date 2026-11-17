@@ -1,0 +1,41 @@
+<!--
+  Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Compiles the sample wrapper in Runtime\ (namespaces WinMLSamples.Runtime and
+  WinMLSamples.Runtime.Tasks) into a project, with the Windows ML package and
+  the CsWin32 bindings that the wrapper calls, and turns on AllowUnsafeBlocks
+  for the project, which the wrapper needs. WinMLSamples.CSharp.props imports
+  it for the samples. An app with build settings of its own can import it
+  instead, and then sets the rest:
+
+  - a .NET 8 Windows target framework, with ImplicitUsings and Nullable enabled
+  - central package management, with versions for
+    Microsoft.Windows.AI.MachineLearning and Microsoft.Windows.CsWin32, such as
+    the ones Samples\Directory.Packages.props sets
+  - a win-x64 or win-arm64 RuntimeIdentifier, which places the package's
+    native DLLs next to the executable
+
+  The wrapper is sample code, not a supported API; see README.md.
+
+  NativeMethods.txt lists the APIs the wrapper calls, and NativeMethods.json
+  sets the generation options the wrapper depends on. CsWin32 generates the
+  bindings once for the whole project, from every NativeMethods.txt with these
+  options, and also includes a NativeMethods.txt or NativeMethods.json from
+  the project's own folder. So a project that imports this file gets the
+  bindings as internal types, and should not add a NativeMethods.json of its
+  own.
+-->
+<Project>
+  <PropertyGroup>
+    <!-- The sample wrapper calls the generated bindings through unmanaged pointers. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
+    <Compile Include="$(MSBuildThisFileDirectory)Runtime\**\*.cs" Link="Shared\Runtime\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)NativeMethods.txt" Link="Shared\NativeMethods.txt" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)NativeMethods.json" Link="NativeMethods.json" />
+  </ItemGroup>
+</Project>

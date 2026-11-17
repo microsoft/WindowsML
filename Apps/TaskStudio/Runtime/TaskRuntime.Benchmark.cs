@@ -1,11 +1,8 @@
 // Copyright (C) Microsoft Corporation. All rights reserved.
 
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using Microsoft.Windows.AI.MachineLearning.Runtime;
-using Microsoft.Windows.AI.MachineLearning.Runtime.Tasks;
-using Windows.Win32.Foundation;
-using static Microsoft.Windows.AI.MachineLearning.Runtime.Tasks.WINML_TEXT_GENERATION_OPTION_FIELDS;
+using WinMLSamples.Runtime;
+using WinMLSamples.Runtime.Tasks;
 
 namespace TaskStudio.Runtime;
 
@@ -33,119 +30,77 @@ internal sealed partial class TaskRuntime
         "Ships passed far offshore, their lights blinking like slow stars, while gulls settled on the rocks below. " +
         "In the morning she wrote the weather in a leather book, mended nets and watched the tide uncover the reef. ";
 
-    public unsafe Task<BenchmarkSample> RunBenchmarkAsync(BenchmarkTest test, CancellationToken cancellation) => Run(() =>
+    public Task<BenchmarkSample> RunBenchmarkAsync(BenchmarkTest test, CancellationToken cancellation) => Run(() =>
     {
         if (textSession == null || tokenizer == null) throw new InvalidOperationException("Create task sessions first.");
         // tg starts from a one-token prompt, as llama-bench does.
         uint promptCount = Math.Max(test.PromptTokens, 1);
         uint[] tokens = SyntheticTokens(test.Depth + promptCount);
-        IWinMLTextGenerationOptions* primeOptions = null;
-        IWinMLTextGenerationOptions* options = null;
-        IWinMLCancellationSource* source = tasks->CreateCancellationSource();
-        IWinMLTextGenerationPullStream* stream = null;
-        IWinMLTextGenerationResult* result = null;
+        using CancellationSource source = tasks!.CreateCancellationSource();
         try
         {
-            nint sourceAddress = (nint)source;
-            using var registration = cancellation.Register(() => ((IWinMLCancellationSource*)sourceAddress)->Cancel());
-            textSession->Reset();
+            using var registration = cancellation.Register(source.Cancel);
+            textSession.Reset();
             // Greedy, so every repetition does the same work.
-            options = CreateGreedyOptions(test.PromptTokens > 0 ? 1 : test.GeneratedTokens);
+            using TextGenerationOptions options = CreateGreedyOptions(test.PromptTokens > 0 ? 1 : test.GeneratedTokens);
             if (test.Depth > 0)
             {
-                primeOptions = CreateGreedyOptions(1);
-                fixed (uint* depthTokens = tokens)
-                    stream = textSession->GenerateTokens(test.Depth, depthTokens, primeOptions, source);
-                try { DrainUntimed(stream); }
-                finally { stream->Close(); Release(stream); stream = null; }
+                using TextGenerationOptions primeOptions = CreateGreedyOptions(1);
+                using (TextGenerationPullStream prime = textSession.GenerateTokens(tokens.AsSpan(0, (int)test.Depth), primeOptions, source))
+                {
+                    try { DrainUntimed(prime); }
+                    finally { prime.Close(); }
+                }
                 if (cancellation.IsCancellationRequested)
                     return new BenchmarkSample(test, 0, TimeSpan.Zero, TimeSpan.Zero, "CANCELED", true);
             }
             long start = Stopwatch.GetTimestamp();
-            fixed (uint* testTokens = &tokens[test.Depth])
-            {
-                stream = test.Depth > 0
-                    ? textSession->ContinueTokens(promptCount, testTokens, options, source)
-                    : textSession->GenerateTokens(promptCount, testTokens, options, source);
-            }
+            ReadOnlySpan<uint> testTokens = tokens.AsSpan((int)test.Depth, (int)promptCount);
+            using TextGenerationPullStream stream = test.Depth > 0
+                ? textSession.ContinueTokens(testTokens, options, source)
+                : textSession.GenerateTokens(testTokens, options, source);
             TimeSpan? first = null, last = null;
             uint generated = 0;
-            while (true)
+            while (stream.TryReadNext(out _, out _))
             {
-                WINML_TEXT_GENERATION_READ_STATUS status;
-                uint token;
-                PCWSTR fragment;
-                stream->ReadNext(&status, &token, &fragment);
-                if (status == WINML_TEXT_GENERATION_READ_STATUS.WINML_TEXT_GENERATION_READ_STATUS_COMPLETED) break;
                 last = Stopwatch.GetElapsedTime(start);
                 first ??= last;
                 generated++;
             }
-            result = stream->GetResult();
-            var reason = result->GetFinishReason();
-            bool canceled = reason == WINML_TEXT_GENERATION_FINISH_REASON.WINML_TEXT_GENERATION_FINISH_REASON_CANCELED;
-            if (!canceled) result->GetErrorCode().ThrowOnFailure();
-            string name = reason.ToString();
-            return new BenchmarkSample(test, generated, first ?? TimeSpan.Zero, last ?? TimeSpan.Zero,
-                name[(name.LastIndexOf("_REASON_", StringComparison.Ordinal) + 8)..], canceled || first is null);
+            using TextGenerationResult result = stream.GetResult();
+            var reason = result.FinishReason;
+            bool canceled = reason == TextGenerationFinishReason.Canceled;
+            if (!canceled) ThrowOnError(result.ErrorCode);
+            var sample = new BenchmarkSample(test, generated, first ?? TimeSpan.Zero, last ?? TimeSpan.Zero,
+                EnumNames.Constant(reason), canceled || first is null);
+            stream.Close();
+            return sample;
         }
         catch (Exception error)
         {
-            textSession->Reset();
+            textSession.Reset();
             if (error.HResult == ContextWindowExceeded) throw ContextWindowError(error);
             throw;
         }
-        finally
-        {
-            try { if (stream != null) stream->Close(); }
-            finally { Release(result); Release(stream); Release(options); Release(primeOptions); Release(source); }
-        }
     });
 
-    private unsafe IWinMLTextGenerationOptions* CreateGreedyOptions(uint maxNewTokens)
-    {
-        var values = new WINML_TEXT_GENERATION_OPTIONS
-        {
-            presentFields = WINML_TEXT_GENERATION_OPTION_FIELD_MAX_NEW_TOKENS | WINML_TEXT_GENERATION_OPTION_FIELD_TEMPERATURE,
-            maxNewTokens = maxNewTokens,
-            temperature = 0
-        };
-        return textFactory->CreateTextGenerationOptions(&values, 0, null);
-    }
+    private TextGenerationOptions CreateGreedyOptions(uint maxNewTokens) =>
+        tasks!.TextGeneration.CreateTextGenerationOptions(new TextGenerationOptionValues { MaxNewTokens = maxNewTokens, Temperature = 0 });
 
-    private static unsafe void DrainUntimed(IWinMLTextGenerationPullStream* stream)
+    private static void DrainUntimed(TextGenerationPullStream stream)
     {
-        WINML_TEXT_GENERATION_READ_STATUS status;
-        do
-        {
-            uint token;
-            PCWSTR fragment;
-            stream->ReadNext(&status, &token, &fragment);
-        }
-        while (status != WINML_TEXT_GENERATION_READ_STATUS.WINML_TEXT_GENERATION_READ_STATUS_COMPLETED);
-        IWinMLTextGenerationResult* result = stream->GetResult();
-        try
-        {
-            if (result->GetFinishReason() != WINML_TEXT_GENERATION_FINISH_REASON.WINML_TEXT_GENERATION_FINISH_REASON_CANCELED)
-                result->GetErrorCode().ThrowOnFailure();
-        }
-        finally { Release(result); }
+        while (stream.TryReadNext(out _, out _)) { }
+        using TextGenerationResult result = stream.GetResult();
+        if (result.FinishReason != TextGenerationFinishReason.Canceled) ThrowOnError(result.ErrorCode);
     }
 
     // Ordinary text tokens from the model's own tokenizer, repeated to the requested length.
-    private unsafe uint[] SyntheticTokens(uint count)
+    private uint[] SyntheticTokens(uint count)
     {
-        uint* ids = null;
-        try
-        {
-            uint encoded;
-            tokenizer->Encode(BenchmarkText, (WINML_TOKENIZER_ENCODE_FLAGS)0, out encoded, &ids);
-            if (encoded == 0) throw new InvalidOperationException("The tokenizer produced no tokens for the benchmark text.");
-            var source = new ReadOnlySpan<uint>(ids, checked((int)encoded));
-            var tokens = new uint[count];
-            for (int i = 0; i < tokens.Length; i++) tokens[i] = source[i % source.Length];
-            return tokens;
-        }
-        finally { Marshal.FreeCoTaskMem((nint)ids); }
+        uint[] source = tokenizer!.Encode(BenchmarkText);
+        if (source.Length == 0) throw new InvalidOperationException("The tokenizer produced no tokens for the benchmark text.");
+        var tokens = new uint[count];
+        for (int i = 0; i < tokens.Length; i++) tokens[i] = source[i % source.Length];
+        return tokens;
     }
 }
