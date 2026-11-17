@@ -306,6 +306,12 @@
             Artifacts    = @('squeezenet-model', 'imagenet-labels', 'squeezenet-sample-image')
             Preparations = @()
         }
+        'onnx-runtime-winmlcgep' = @{
+            Title        = 'ONNX Runtime with the Windows ML CG execution provider'
+            Summary      = 'Compiles SqueezeNet through the CG execution provider and reuses an application-owned cache.'
+            Artifacts    = @('squeezenet-model', 'imagenet-labels', 'squeezenet-sample-image')
+            Preparations = @()
+        }
         'super-resolution' = @{
             Title        = 'Super resolution'
             Summary      = 'Upscales an image two times with the SESR model.'

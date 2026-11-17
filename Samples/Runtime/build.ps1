@@ -59,7 +59,7 @@ param(
     [string]$Platform = $(if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "ARM64" } else { "x64" }),
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
-    [ValidateSet("all", "image-classification", "image-classification-csharp", "super-resolution", "whisper", "hello-language-model", "hello-language-model-csharp", "llm-chat", "speech-to-language-model", "model-compilation", "managed-shared-context")]
+    [ValidateSet("all", "image-classification", "image-classification-csharp", "super-resolution", "whisper", "hello-language-model", "hello-language-model-csharp", "llm-chat", "speech-to-language-model", "model-compilation", "managed-shared-context", "onnx-runtime-winmlcgep")]
     [string]$Sample = "all",
     [string]$RuntimePackageVersion,
     [string]$LibLlamaPackageVersion,
@@ -99,6 +99,7 @@ $sampleProjects = [ordered]@{
     "speech-to-language-model" = "language\speech-to-language-model\speech-to-language-model.vcxproj"
     "model-compilation" = "compile-and-deploy\model-compilation\model-compilation.vcxproj"
     "managed-shared-context" = "interop\managed-shared-context\managed-shared-context.vcxproj"
+    "onnx-runtime-winmlcgep" = "interop\onnx-runtime-winmlcgep\onnx-runtime-winmlcgep.vcxproj"
 }
 $projects = if ($Sample -eq "all") { @($sampleProjects.Values) } else { @($sampleProjects[$Sample]) }
 # C++ projects build first. C# projects need the .NET SDK: when it is missing,

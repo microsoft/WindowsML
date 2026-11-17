@@ -45,6 +45,7 @@ param(
         'llm-chat-gguf',
         'speech-to-language-model',
         'model-compilation',
+        'onnx-runtime-winmlcgep',
         'all')]
     [string]$Sample = 'all',
     [string]$ModelsDir,
@@ -67,7 +68,8 @@ $samples = if ($Sample -eq 'all') {
         'llm-chat',
         'llm-chat-gguf',
         'speech-to-language-model',
-        'model-compilation'
+        'model-compilation',
+        'onnx-runtime-winmlcgep'
     )
 }
 else {
