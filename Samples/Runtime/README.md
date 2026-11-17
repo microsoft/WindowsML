@@ -52,6 +52,7 @@ Every sample has a C++ version, and most also have a Python version that uses
 | Composition | [Speech to LanguageModel](language/speech-to-language-model/) | C++, Python | Send a Whisper transcript to an ONNX or GGUF language model. |
 | Compile and deploy | [Model compilation](compile-and-deploy/model-compilation/) | C++, Python | Compile a model for a target, then reload and run the compiled artifact. |
 | Interop | [Managed shared context](interop/managed-shared-context/) | C++ | Run two ONNX Runtime stages in one Runtime-managed provider context. |
+| Interop | [ONNX Runtime CG execution provider](interop/onnx-runtime-winmlcgep/) | C++ | Use ONNX Runtime directly with the Windows ML CG EP and an application-owned compilation cache. |
 
 ## Quick start
 
@@ -90,15 +91,17 @@ models, places stages on hardware, and connects them into pipelines. Keep
 these points in mind while you try it:
 
 - **Performance isn't a goal of these samples yet.** The first run on a GPU or
-  NPU can include a long model compilation, and the samples don't cache
-  compiled models between runs. [Model compilation](compile-and-deploy/model-compilation/)
+  NPU can include a long model compilation, and most samples don't cache
+  compiled models between runs. The [CG EP sample](interop/onnx-runtime-winmlcgep/)
+  caches its compiled model. [Model compilation](compile-and-deploy/model-compilation/)
   shows how to compile once and reload the result.
 - **The language model samples target CPU and GPU.** The bundled language model
   export isn't prepared for NPUs, so the language samples refuse `-Device npu`
   unless `-ModelPath` names a model prepared for your NPU.
 - **Hardware coverage comes from the execution providers and drivers on the
   device.** Which models run on a GPU or NPU, and how well, depends on them. The
-  CPU target runs every sample and is the reference for correct output.
+  CPU target runs the native Runtime inference samples and is the reference for
+  correct output. The CG EP sample requires a physical D3D12 GPU.
 
 ### Known issues
 
