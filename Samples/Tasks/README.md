@@ -72,7 +72,7 @@ download models. The GGUF samples also reference
 `Microsoft.Windows.AI.MachineLearning.LibLlama.Core`, which deploys the CPU
 llama.cpp backend; see
 [C++ payload deployment](../../docs/Runtime/gguf-models.md#c-payload-deployment).
-To run a GGUF model on an NVIDIA GPU from C++, add `-LlamaCuda` to deploy the
+To run a GGUF model on an NVIDIA GPU from C++ or C#, add `-LlamaCuda` to deploy the
 opt-in CUDA backend; see [GPU backends](../../docs/Runtime/gguf-models.md#gpu-backends).
 Pass `-Platform ARM64` or `-Platform x64` consistently to both
 build and run scripts when targeting a different architecture.

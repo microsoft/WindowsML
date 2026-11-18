@@ -142,7 +142,7 @@ Windows ML publishes the llama.cpp CUDA backend for x64 and ARM64. It is
 opt-in, so the CPU backend stays the default. The CUDA backend runs on an
 NVIDIA GPU with a driver that supports CUDA 13.
 
-For the C++ samples, pass `-LlamaCuda` to `build.ps1`. The GGUF projects then
+For the C++ and C# samples, pass `-LlamaCuda` to `build.ps1`. The GGUF projects then
 also reference the `Microsoft.Windows.AI.MachineLearning.LibLlama` package,
 which brings the `LibLlama.Cuda.win-x64` and `LibLlama.Cuda.win-arm64`
 packages, and the build deploys the backend for the target platform:

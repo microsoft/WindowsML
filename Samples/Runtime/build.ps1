@@ -169,6 +169,7 @@ if ($LibLlamaPackageVersion) {
 if ($LlamaCuda) {
     $restoreArgs += "/p:WinMLSamplesLlamaCuda=true"
     $buildArgs += "/p:WinMLSamplesLlamaCuda=true"
+    $dotnetArgs += "/p:WinMLSamplesLlamaCuda=true"
 }
 if ($NuGetPackagesDir) {
     New-Item -ItemType Directory -Force -Path $NuGetPackagesDir | Out-Null
