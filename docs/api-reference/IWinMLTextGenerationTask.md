@@ -106,10 +106,10 @@ RETURN_IF_FAILED(task->CreateSession(configuration.get(), session.put()));
 In Python, `Runtime.load_model` loads a folder or a file, and
 `TextGenerationConfiguration.set_model(target, model, *, draft_model=None,
 compiled_program_directory=None, store_compiled_program_weights=False)` binds
-it; read `configuration.tokenizer` for the task. After `set_model`,
-`set_key_value_cache_type(TextGenerationKeyValueCacheType.INT8)` sets the cache
-type, and `TextGenerationSession.key_value_cache_type` reports the type a
-session holds. See the
+it; read `configuration.tokenizer` for the task. In `windowsml` 2.9.42a0 and
+later, `set_key_value_cache_type(TextGenerationKeyValueCacheType.INT8)` after
+`set_model` sets the cache type, and `TextGenerationSession.key_value_cache_type`
+reports the type a session holds. See the
 [Models-backed Task samples](../../Samples/Tasks/model-backed/README.md).
 
 ### Composed models
