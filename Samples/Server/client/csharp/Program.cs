@@ -11,13 +11,15 @@
 //   library's typed list drops the server's winml field with each model's
 //   limits and tool support. CompleteChat and CompleteChatStreaming send the
 //   plain and streamed requests. If tools are supported, a required tool
-//   choice gets a multiply call that the client runs itself before asking
-//   again with tool choice none. Every request asks for at most 256 tokens
-//   or the model's lower limit.
+//   choice (or an automatic one when the model generates tool calls without
+//   constraints) gets a multiply call that the client runs itself before
+//   asking again with tool choice none. Every request asks for at most 256
+//   tokens or the model's lower limit.
 //
 // Run it
 //   ..\..\run_in_process_server.ps1 -Client csharp
 //   ..\..\run_server_executable.ps1 -Client csharp
+//   ..\..\run_qwen3.8_27b_server.ps1 -Client csharp
 //
 // Learn more (paths relative to this file)
 //   ../README.md
@@ -43,11 +45,14 @@ internal static class Program
     private const int RequestedOutputTokens = 256;
 
     // Bit 0 of capability_flags in the model list means the model supports
-    // tool calls.
+    // tool calls. Bit 4 means the server constrains what the model generates,
+    // so it can require a tool call; without it, the model decides, and the
+    // server accepts only an automatic tool choice or none.
     private const long ToolCallsCapability = 0x1;
+    private const long ConstrainedLogitsCapability = 0x10;
 
-    // The parameters are a JSON schema. When the model supports tool calls,
-    // the server makes its arguments match the schema.
+    // The parameters are a JSON schema. When the server constrains generation,
+    // it makes the arguments match the schema.
     private static readonly ChatTool MultiplyTool = ChatTool.CreateFunctionTool(
         functionName: "multiply",
         functionDescription: "Multiply two numbers.",
@@ -63,7 +68,7 @@ internal static class Program
             }
             """));
 
-    private sealed record ModelInfo(string Id, int OutputLimit, bool SupportsTools);
+    private sealed record ModelInfo(string Id, int OutputLimit, bool SupportsTools, bool ConstrainsGeneration);
 
     public static int Main(string[] args)
     {
@@ -150,7 +155,9 @@ internal static class Program
             string id = model.GetProperty("id").GetString() ?? string.Empty;
             JsonElement details = model.TryGetProperty("winml", out JsonElement winml) ? winml : default;
             int outputLimit = (int)ReadNumber(details, "maximum_output_tokens");
-            bool supportsTools = (ReadNumber(details, "capability_flags") & ToolCallsCapability) != 0;
+            long flags = ReadNumber(details, "capability_flags");
+            bool supportsTools = (flags & ToolCallsCapability) != 0;
+            bool constrainsGeneration = (flags & ConstrainedLogitsCapability) != 0;
             Console.WriteLine(
                 $"  {id}: context window {ReadNumber(details, "context_window_tokens")} tokens, " +
                 $"output limit {outputLimit} tokens, " +
@@ -158,7 +165,7 @@ internal static class Program
 
             if ((selected is null && requestedId is null) || id == requestedId)
             {
-                selected = new ModelInfo(id, outputLimit, supportsTools);
+                selected = new ModelInfo(id, outputLimit, supportsTools, constrainsGeneration);
             }
         }
 
@@ -270,9 +277,10 @@ internal static class Program
     }
 
     // A tool call takes two requests. The first offers the tool and requires
-    // the model to call it. The client runs the call and adds the model's
-    // request and the result to the conversation. The second request returns
-    // the answer. An agent sends ChatToolChoice.CreateAutoChoice() instead and
+    // the model to call it, or, on a model whose generation the server doesn't
+    // constrain, lets the model decide. The client runs the call and adds the
+    // model's request and the result to the conversation. The second request
+    // returns the answer. An agent sends ChatToolChoice.CreateAutoChoice() and
     // repeats until the model answers without calling a tool; this sample
     // takes one call and then asks for the answer, so it always finishes in
     // two requests.
@@ -288,7 +296,9 @@ internal static class Program
         {
             MaxOutputTokenCount = model.OutputLimit,
             Tools = { MultiplyTool },
-            ToolChoice = ChatToolChoice.CreateRequiredChoice(),
+            ToolChoice = model.ConstrainsGeneration
+                ? ChatToolChoice.CreateRequiredChoice()
+                : ChatToolChoice.CreateAutoChoice(),
         };
         ChatCompletion first = chat.CompleteChat(messages, options);
         messages.Add(new AssistantChatMessage(first));

@@ -11,13 +11,15 @@
 //   reads each model's limits and tool support from the server's winml field.
 //   POST /chat/completions then sends a plain request, a streamed request
 //   read as server-sent events until [DONE], and, if tools are supported, a
-//   request with tool_choice "required"; the client runs multiply itself and
+//   request with tool_choice "required" (or "auto" when the model generates
+//   tool calls without constraints); the client runs multiply itself and
 //   returns the result with tool_choice "none". Every request asks for at
 //   most 256 tokens or the model's lower limit.
 //
 // Run it
 //   ..\..\run_in_process_server.ps1 -Client cpp
 //   ..\..\run_server_executable.ps1 -Client cpp
+//   ..\..\run_qwen3.8_27b_server.ps1 -Client cpp
 //
 // Learn more (paths relative to this file)
 //   ../README.md
@@ -60,8 +62,11 @@ constexpr wchar_t AccessKeyVariable[] = L"WINMLSERVER_ACCESS_KEY";
 constexpr UINT32 RequestedOutputTokens = 256;
 
 // Bit 0 of capability_flags in the model list means the model supports tool
-// calls.
+// calls. Bit 4 means the server constrains what the model generates, so it
+// can require a tool call; without it, the model decides, and the server
+// accepts only tool_choice "auto" or "none".
 constexpr UINT32 ToolCallsCapability = 0x1;
+constexpr UINT32 ConstrainedLogitsCapability = 0x10;
 
 std::wstring ReadEnvironment(LPCWSTR name)
 {
@@ -276,6 +281,7 @@ struct ModelInfo
     std::wstring id;
     UINT32 outputLimit = RequestedOutputTokens;
     bool supportsTools = false;
+    bool constrainsGeneration = false;
 };
 
 double ReadNumber(const JsonObject& object, LPCWSTR name)
@@ -299,8 +305,9 @@ ModelInfo ListModels(ServerConnection& server, const std::wstring& requestedId)
         ModelInfo info;
         info.id = model.GetNamedString(L"id");
         info.outputLimit = static_cast<UINT32>(ReadNumber(details, L"maximum_output_tokens"));
-        info.supportsTools = (static_cast<UINT32>(ReadNumber(details, L"capability_flags")) &
-                              ToolCallsCapability) != 0;
+        const UINT32 flags = static_cast<UINT32>(ReadNumber(details, L"capability_flags"));
+        info.supportsTools = (flags & ToolCallsCapability) != 0;
+        info.constrainsGeneration = (flags & ConstrainedLogitsCapability) != 0;
         std::wprintf(L"  %ls: context window %.0f tokens, output limit %u tokens, tool calls %ls\n",
                      info.id.c_str(), ReadNumber(details, L"context_window_tokens"),
                      info.outputLimit, info.supportsTools ? L"supported" : L"not supported");
@@ -454,11 +461,12 @@ std::wstring RunTool(const JsonObject& function)
 }
 
 // A tool call takes two requests. The first offers the tool and requires the
-// model to call it. The client runs the call and adds the model's request and
-// the result to the conversation. The second request returns the answer.
-// An agent sends tool_choice "auto" instead and repeats until the model
-// answers without calling a tool; this sample takes one call and then asks
-// for the answer, so it always finishes in two requests.
+// model to call it, or, on a model whose generation the server doesn't
+// constrain, lets the model decide. The client runs the call and adds the
+// model's request and the result to the conversation. The second request
+// returns the answer. An agent sends tool_choice "auto" and repeats until the
+// model answers without calling a tool; this sample takes one call and then
+// asks for the answer, so it always finishes in two requests.
 void CallTool(ServerConnection& server, const ModelInfo& model)
 {
     constexpr wchar_t prompt[] = L"What is 12 times 34? Use the multiply tool.";
@@ -470,7 +478,8 @@ void CallTool(ServerConnection& server, const ModelInfo& model)
     tools.Append(MultiplyTool());
     JsonObject request = ChatRequest(model, messages);
     request.Insert(L"tools", tools);
-    request.Insert(L"tool_choice", JsonValue::CreateStringValue(L"required"));
+    request.Insert(L"tool_choice",
+                   JsonValue::CreateStringValue(model.constrainsGeneration ? L"required" : L"auto"));
 
     const JsonObject first = server.Post(L"/chat/completions", request);
     const JsonObject reply =

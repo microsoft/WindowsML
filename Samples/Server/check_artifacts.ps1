@@ -33,6 +33,7 @@ param(
     [ValidateSet(
         'server-in-process',
         'server-executable',
+        'server-qwen3.8-27b',
         'all')]
     [string]$Sample = 'all',
     [string]$ModelsDir,
@@ -49,7 +50,8 @@ if (-not $ModelsDir) {
 $samples = if ($Sample -eq 'all') {
     @(
         'server-in-process',
-        'server-executable'
+        'server-executable',
+        'server-qwen3.8-27b'
     )
 }
 else {

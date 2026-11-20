@@ -12,6 +12,7 @@
     <File Path="README.md" />
     <File Path="host\in-process\README.md" />
     <File Path="host\executable\README.md" />
+    <File Path="qwen3.8-27b\README.md" />
     <File Path="client\README.md" />
   </Folder>
   <Folder Name="/Python/">
@@ -22,6 +23,7 @@
     <File Path="build.ps1" />
     <File Path="run_in_process_server.ps1" />
     <File Path="run_server_executable.ps1" />
+    <File Path="run_qwen3.8_27b_server.ps1" />
     <File Path="scripts\invoke_sample.ps1" />
     <File Path="scripts\client_command.ps1" />
   </Folder>

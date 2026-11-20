@@ -24,6 +24,7 @@ same endpoint, so each client works with either one.
 | --- | --- | --- |
 | [In-process server](host/in-process/) | C++ | Build a Text Generation lane for a GGUF model, register it with the server, start the server in the application's process, and start a client with the endpoint and access key. |
 | [Server executable](host/executable/) | PowerShell | Run `WinMLServer.exe`, read the endpoint and access key it prints, and connect a client or a coding agent. |
+| [Qwen3.8-27B with DFlash2](qwen3.8-27b/) | PowerShell | Serve a 27B coding model on a 32 GB GPU with speculative decoding, a float16 or calibrated int8 key and value cache, and compiled programs reused across starts. |
 | [Clients](client/) | C++, C#, Python | List the served models, complete a chat, stream a reply, and complete a tool call. The C++ client uses WinHTTP; the C# and Python clients use the OpenAI libraries. |
 
 The server's interfaces are documented in
@@ -86,6 +87,10 @@ so the run scripts select the matching architecture.
 .\run_server_executable.ps1 -Client cpp
 .\run_server_executable.ps1
 ```
+
+The [Qwen3.8-27B sample](qwen3.8-27b/README.md) serves a 27B model from
+checkpoints you download yourself and needs `2.9.42-experimental` or later;
+its README lists the checkpoints, the build, and `run_qwen3.8_27b_server.ps1`.
 
 `check_artifacts.ps1` reads `Samples\shared\SampleArtifacts.psd1`, checks
 whether the model is present under `Samples\Server\models`, and prints the

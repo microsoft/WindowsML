@@ -11,14 +11,16 @@ a streamed reply, and complete one tool call.
   environment. models.list() keeps the server's winml field, with each
   model's limits and tool support, in model_extra. chat.completions.create
   sends a plain request, a streamed request with include_usage, and, if
-  tools are supported, a request with tool_choice "required"; the client
-  runs multiply itself and returns the result with tool_choice "none".
+  tools are supported, a request with tool_choice "required" (or "auto" when
+  the model generates tool calls without constraints); the client runs
+  multiply itself and returns the result with tool_choice "none".
   Every request asks for at most 256 tokens or the model's lower limit.
 
 Run it
   python.exe -m pip install openai
   ..\..\run_in_process_server.ps1 -Client python
   ..\..\run_server_executable.ps1 -Client python
+  ..\..\run_qwen3.8_27b_server.ps1 -Client python
 
 Learn more (paths relative to this file)
   ../README.md
@@ -49,11 +51,14 @@ ACCESS_KEY_VARIABLE = "WINMLSERVER_ACCESS_KEY"
 REQUESTED_OUTPUT_TOKENS = 256
 
 # Bit 0 of capability_flags in the model list means the model supports tool
-# calls.
+# calls. Bit 4 means the server constrains what the model generates, so it can
+# require a tool call; without it, the model decides, and the server accepts
+# only tool_choice "auto" or "none".
 TOOL_CALLS_CAPABILITY = 0x1
+CONSTRAINED_LOGITS_CAPABILITY = 0x10
 
-# The parameters are a JSON schema. When the model supports tool calls, the
-# server makes its arguments match the schema.
+# The parameters are a JSON schema. When the server constrains generation, it
+# makes the arguments match the schema.
 MULTIPLY_TOOL = {
     "type": "function",
     "function": {
@@ -74,6 +79,7 @@ class ModelInfo:
     id: str
     output_limit: int
     supports_tools: bool
+    constrains_generation: bool
 
 
 def _list_models(client: openai.OpenAI, requested_id: str | None) -> ModelInfo:
@@ -86,16 +92,16 @@ def _list_models(client: openai.OpenAI, requested_id: str | None) -> ModelInfo:
         # fields it does not define in model_extra.
         details = (model.model_extra or {}).get("winml") or {}
         output_limit = int(details.get("maximum_output_tokens") or 0)
-        supports_tools = bool(
-            int(details.get("capability_flags") or 0) & TOOL_CALLS_CAPABILITY
-        )
+        flags = int(details.get("capability_flags") or 0)
+        supports_tools = bool(flags & TOOL_CALLS_CAPABILITY)
+        constrains_generation = bool(flags & CONSTRAINED_LOGITS_CAPABILITY)
         print(
             f"  {model.id}: context window {details.get('context_window_tokens', 0)} tokens, "
             f"output limit {output_limit} tokens, tool calls "
             f"{'supported' if supports_tools else 'not supported'}"
         )
         if (selected is None and requested_id is None) or model.id == requested_id:
-            selected = ModelInfo(model.id, output_limit, supports_tools)
+            selected = ModelInfo(model.id, output_limit, supports_tools, constrains_generation)
 
     if selected is None:
         raise SystemExit(f"The server has no model named '{requested_id}'.")
@@ -104,7 +110,9 @@ def _list_models(client: openai.OpenAI, requested_id: str | None) -> ModelInfo:
     output_limit = selected.output_limit
     if output_limit == 0 or output_limit > REQUESTED_OUTPUT_TOKENS:
         output_limit = REQUESTED_OUTPUT_TOKENS
-    return ModelInfo(selected.id, output_limit, selected.supports_tools)
+    return ModelInfo(
+        selected.id, output_limit, selected.supports_tools, selected.constrains_generation
+    )
 
 
 def _print_usage(usage) -> None:
@@ -188,10 +196,11 @@ def _run_tool(name: str, arguments: str) -> str:
 def _call_tool(client: openai.OpenAI, model: ModelInfo) -> None:
     """Make one tool call and get the answer.
 
-    The first request offers the tool and requires the model to call it. The
-    client runs the call and adds the model's request and the result to the
-    conversation. The second request returns the answer. An agent sends
-    tool_choice "auto" instead and repeats until the model answers without
+    The first request offers the tool and requires the model to call it, or,
+    on a model whose generation the server doesn't constrain, lets the model
+    decide. The client runs the call and adds the model's request and the
+    result to the conversation. The second request returns the answer. An
+    agent sends tool_choice "auto" and repeats until the model answers without
     calling a tool; this sample takes one call and then asks for the answer,
     so it always finishes in two requests.
     """
@@ -202,7 +211,7 @@ def _call_tool(client: openai.OpenAI, model: ModelInfo) -> None:
         model=model.id,
         messages=messages,
         tools=[MULTIPLY_TOOL],
-        tool_choice="required",
+        tool_choice="required" if model.constrains_generation else "auto",
         max_completion_tokens=model.output_limit,
     )
     reply = first.choices[0].message
