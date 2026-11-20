@@ -445,7 +445,8 @@ JsonObject MultiplyTool()
 }
 
 // The model writes the arguments as JSON text, which the client parses before
-// it runs the function.
+// it runs the function. A server that doesn't constrain generation can return
+// arguments that don't match the schema, so both operands must be numbers.
 std::wstring RunTool(const JsonObject& function)
 {
     const std::wstring name(function.GetNamedString(L"name"));
@@ -456,7 +457,14 @@ std::wstring RunTool(const JsonObject& function)
         return L"error: unknown tool or invalid arguments";
     }
 
-    const double product = ReadNumber(arguments, L"a") * ReadNumber(arguments, L"b");
+    const IJsonValue a = arguments.TryLookup(L"a");
+    const IJsonValue b = arguments.TryLookup(L"b");
+    if (!a || a.ValueType() != JsonValueType::Number || !b || b.ValueType() != JsonValueType::Number)
+    {
+        return L"error: invalid arguments";
+    }
+
+    const double product = a.GetNumber() * b.GetNumber();
     return std::wstring(JsonValue::CreateNumberValue(product).Stringify());
 }
 

@@ -182,15 +182,23 @@ def _run_tool(name: str, arguments: str) -> str:
     """Run the function the model called.
 
     The model writes the arguments as JSON text, which the client parses
-    before it runs the function.
+    before it runs the function. A server that doesn't constrain generation
+    can return arguments that don't match the schema, so both operands must
+    be numbers.
     """
     if name != "multiply":
         return "error: unknown tool"
     try:
         values = json.loads(arguments)
-        return json.dumps(values["a"] * values["b"])
-    except (ValueError, KeyError, TypeError):
+    except ValueError:
         return "error: invalid arguments"
+    if not isinstance(values, dict):
+        return "error: invalid arguments"
+    operands = [values.get("a"), values.get("b")]
+    # bool is a subclass of int, but JSON true and false aren't numbers.
+    if not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in operands):
+        return "error: invalid arguments"
+    return json.dumps(operands[0] * operands[1])
 
 
 def _call_tool(client: openai.OpenAI, model: ModelInfo) -> None:
