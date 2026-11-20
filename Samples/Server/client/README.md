@@ -126,5 +126,12 @@ the function, then appends the model's message and a `tool` message with the
 result to the conversation. The second request sets `tool_choice` to `none`,
 and the model answers with the result.
 
-An agent sends `tool_choice` as `auto` instead, and repeats until the model
-answers without calling a tool. The server never runs a tool itself.
+A model whose `capability_flags` has tool calls but not constrained generation
+(`0x10`), such as the [Qwen3.8-27B sample](../qwen3.8-27b/README.md), generates
+tool calls on its own: the chat template describes the tools and the server
+parses the calls the model writes. The server rejects a `required` or named
+`tool_choice` for it with HTTP 422, so the clients send `auto` instead, and the
+model decides whether to call the tool.
+
+An agent sends `tool_choice` as `auto`, and repeats until the model answers
+without calling a tool. The server never runs a tool itself.
