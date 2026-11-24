@@ -16,7 +16,7 @@ and value (KV) cache in one of two types:
 | KV cache | Context window | Use it for |
 | --- | --- | --- |
 | `float16` (default) | 135,168 tokens | The default. Prompts up to 131,072 tokens. |
-| `int8` | 262,144 tokens | The model's full context. It needs the calibrated scales in [`kv_cache_scales.safetensors`](kv_cache_scales.safetensors). |
+| `int8` | 262,144 tokens | The model's full context. It needs scales you calibrate once with [`calibrate_kv_scales.py`](calibrate_kv_scales.py); see [INT8 KV cache calibration](#int8-kv-cache-calibration). |
 
 Both windows are the largest that fit in 32 GB of dedicated GPU memory with
 this build. They were measured on an NVIDIA GeForce RTX 5090.
@@ -65,27 +65,84 @@ clients send is `Qwen3.8-27B-NVFP4`; pass `-ModelId` to change it.
 An `int8` cache stores each key and value channel as an 8-bit integer times a
 per-channel scale. The scales come from `kv_cache_scales.safetensors` in the
 model folder, and the server fails the launch with `ERROR_NOT_SUPPORTED`
-without it. NVIDIA's checkpoint doesn't include one, so this sample does:
+without it. NVIDIA's checkpoint doesn't include one, so calibrate it once with
+the two scripts in this folder. They use PyTorch and Hugging Face Transformers,
+not Windows ML.
 
-| File | Bytes | SHA-256 |
-| --- | --- | --- |
-| [`kv_cache_scales.safetensors`](kv_cache_scales.safetensors) | 134,608 | `A062DD0D450412956AC8D156C409D89221C976D789DC436E9E815AA2E159911C` |
+| File | What it does |
+| --- | --- |
+| [`build_calibration_prompts.py`](build_calibration_prompts.py) | Builds 9 calibration prompts, 304,930 tokens in all, from the public files in [`calibration_sources.json`](calibration_sources.json). |
+| [`calibrate_kv_scales.py`](calibrate_kv_scales.py) | Runs the prompts through the model and writes `kv_cache_scales.safetensors` into the model folder. |
 
-Each scale is the channel's largest absolute key or value over a calibration
-corpus, divided by 127, with values given 1.5 times more range than keys. The
-corpus is 9 prompts, 259,543 tokens in all: repository source code in several
-programming languages, coding problems, reasoning traces, model cards, and
-multilingual text. With these scales, `int8` matched `float16` on HumanEval+
-and MBPP+ (541 problems, greedy decoding): the two differ on 3 problems.
+Each scale is the channel's largest absolute key or value over the prompts,
+divided by 127, with values given 1.5 times more range than keys. Keys are
+taken after their norm and rotary embedding, as the cache stores them.
 
-Copy the file next to the model. The run script never writes into the model
-folder itself:
+Install Python 3.10 or later, PyTorch with CUDA, and the other packages, in a
+virtual environment from `Samples\Server`:
 
 ```powershell
-Copy-Item qwen3.8-27b\kv_cache_scales.safetensors models\Qwen3.8-27B-NVFP4\
+python -m venv models\calibration-venv
+models\calibration-venv\Scripts\Activate.ps1
+pip install torch==2.9.1 --index-url https://download.pytorch.org/whl/cu128
+pip install -r qwen3.8-27b\requirements.txt
 ```
 
+Then build the prompts and calibrate:
+
+```powershell
+python qwen3.8-27b\build_calibration_prompts.py --tokenizer models\Qwen3.8-27B-NVFP4\tokenizer.json
+python qwen3.8-27b\calibrate_kv_scales.py models\Qwen3.8-27B-NVFP4 --prompts models\qwen3.8-27b-calibration-prompts.jsonl
+```
+
+The first script downloads each source file once into
+`models\calibration-cache`, checks its SHA-256, and writes the same prompts
+file on every run. The second runs the model one decoder layer at a time, and
+each layer in blocks of 4,096 tokens, so it needs far less memory than serving
+the model: on an NVIDIA GeForce RTX 5090 it took 5 minutes, with a peak of
+3.5 GB of GPU memory and 8.4 GB of system memory. Without a CUDA GPU it runs on
+the CPU, much more slowly. It records the model id, its revision when the
+folder was downloaded with `hf download`, and the prompts' SHA-256 in the
+file's metadata.
+
 The `float16` cache ignores the file, so both types can serve the same folder.
+To calibrate for other content, such as another language or domain, pass your
+own prompts: JSON Lines with one `{"prompt": ...}` per line, already rendered
+with the chat template.
+
+### Calibration sources
+
+The prompts are made from these files, each pinned in
+[`calibration_sources.json`](calibration_sources.json) by URL, commit, and
+SHA-256. This sample doesn't redistribute them; the script downloads them from
+their sources.
+
+| Content | Source | Revision | License |
+| --- | --- | --- | --- |
+| Python repository context | [sympy/sympy](https://github.com/sympy/sympy) | `514579c6` | BSD-3-Clause |
+| C repository context | [redis/redis](https://github.com/redis/redis) | `eedb8b17` | BSD-3-Clause |
+| C++ repository context, agent transcript with tool calls | [fmtlib/fmt](https://github.com/fmtlib/fmt) | `dfe5b12c` | MIT |
+| C++ repository context | [microsoft/WindowsML](https://github.com/microsoft/WindowsML) | `c780909f` | MIT |
+| Model cards | [nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4), [incoai/Qwen3.8-27B-DFlash2](https://huggingface.co/incoai/Qwen3.8-27B-DFlash2), [microsoft/phi-4](https://huggingface.co/microsoft/phi-4), [Qwen/Qwen3-TTS-12Hz-1.7B-Base](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base) | see the manifest | Apache-2.0, Apache-2.0, MIT, Apache-2.0 |
+| Multi-turn coding chat | [HumanEval+](https://github.com/evalplus/humanevalplus_release) | `v0.1.10` | Apache-2.0 (EvalPlus), MIT (HumanEval) |
+| Step-by-step reasoning | [GSM8K](https://github.com/openai/grade-school-math) | `3101c7d5` | MIT |
+| Documentation in nine languages | [kubernetes/website](https://github.com/kubernetes/website) | `a81f5383` | CC-BY-4.0 |
+
+### Validation
+
+We checked these scales on an NVIDIA GeForce RTX 5090 with
+`2.9.42-experimental`, against the `float16` cache, at temperature 0 with
+thinking off. The GSM8K and HumanEval+ problems are the last in each set, none
+of which are in the calibration prompts.
+
+| KV cache | GSM8K (100) | HumanEval+ (60) | Passcode found in 28k tokens | Passcode found in 222k tokens |
+| --- | --- | --- | --- | --- |
+| `float16` | 97 | 54 | 3 of 3 | Doesn't fit |
+| `int8` | 97 | 54 | 3 of 3 | 3 of 3 |
+
+The `int8` replies matched the `float16` replies word for word on 76 of the
+GSM8K problems and 52 of the HumanEval+ problems; no problem passed with one
+cache and failed with the other.
 
 ## Build
 
@@ -294,7 +351,7 @@ the prompt and the output.
 | --- | --- |
 | `WinMLServer.exe ... has no --kv-cache-type ...` | The sample was built with an older package. Rebuild with `2.9.42-experimental` or later. |
 | `ERROR_NOT_ENOUGH_MEMORY` at launch | The cache for `--context-tokens` doesn't fit in free dedicated GPU memory. Close other GPU applications or pass a smaller `-ContextTokens`. |
-| `ERROR_NOT_SUPPORTED` with `-KvCache int8` | `kv_cache_scales.safetensors` isn't in the model folder. |
+| `ERROR_NOT_SUPPORTED` with `-KvCache int8` | `kv_cache_scales.safetensors` isn't in the model folder. Calibrate it; see [INT8 KV cache calibration](#int8-kv-cache-calibration). |
 | `WINMLSERVER_MEMORY_SPILL` | Part of the model ended up in shared GPU memory. Lower `-ContextTokens`. |
 | HTTP 413 | The request body exceeds `--max-request-body-bytes`. |
 | HTTP 422 on a tool request | The request sent a `tool_choice` other than `auto` or `none`; see [Tool calls](#tool-calls). |

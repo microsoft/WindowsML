@@ -21,7 +21,8 @@ stops the server when the client exits.
 .PARAMETER KvCache
 The type the attention key and value cache is held in: float16 (default) or
 int8. int8 roughly doubles the context that fits and needs
-kv_cache_scales.safetensors beside the model.
+kv_cache_scales.safetensors beside the model, which
+qwen3.8-27b\calibrate_kv_scales.py writes.
 
 .PARAMETER ModelPath
 Optional nvidia/Qwen3.8-27B-NVFP4 folder. Defaults to
@@ -149,15 +150,9 @@ $ModelPath = (Resolve-Path -LiteralPath $ModelPath).Path
 $DraftModelPath = (Resolve-Path -LiteralPath $DraftModelPath).Path
 
 if ($KvCache -eq "int8") {
-    # The Task reads the scales from the model folder. This script never writes
-    # into it; copy the file yourself.
-    $sampleScales = Join-Path $PSScriptRoot "qwen3.8-27b\kv_cache_scales.safetensors"
     $modelScales = Join-Path $ModelPath "kv_cache_scales.safetensors"
     if (-not (Test-Path -LiteralPath $modelScales -PathType Leaf)) {
-        throw "An int8 cache needs kv_cache_scales.safetensors beside the model. Copy the calibrated scales:`n  Copy-Item `"$sampleScales`" `"$modelScales`""
-    }
-    if ((Get-FileHash -LiteralPath $modelScales).Hash -ne (Get-FileHash -LiteralPath $sampleScales).Hash) {
-        Write-Warning "$modelScales differs from the calibrated scales in qwen3.8-27b. The server uses the file beside the model."
+        throw "An int8 cache needs kv_cache_scales.safetensors beside the model. Calibrate it once with qwen3.8-27b\calibrate_kv_scales.py; see `"INT8 KV cache calibration`" in qwen3.8-27b\README.md."
     }
 }
 
