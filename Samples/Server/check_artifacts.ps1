@@ -14,7 +14,8 @@ responsible for reviewing the terms each publisher attaches and determining
 whether your use is permitted.
 
 .PARAMETER Sample
-The Server sample to report on. Omit to report on every Server sample.
+The Server sample to report on. Omit to report on the in-process and executable
+samples. server-qwen3.8-27b, about 25.8 GB, is checked only when you name it.
 
 .PARAMETER ModelsDir
 Destination root for model artifacts. Defaults to Samples\Server\models.
@@ -33,6 +34,7 @@ param(
     [ValidateSet(
         'server-in-process',
         'server-executable',
+        'server-qwen3.8-27b',
         'all')]
     [string]$Sample = 'all',
     [string]$ModelsDir,

@@ -1,0 +1,654 @@
+{
+  "schema": 1,
+  "sources": {
+    "sympy": {
+      "repo": "sympy/sympy",
+      "commit": "514579c655bf22e2af14f0743376ae1d7befe345",
+      "files": [
+        {
+          "path": "sympy/physics/units/unitsystem.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/unitsystem.py",
+          "bytes": 7512,
+          "sha256": "2c765fbe5101c3209644e3b9a9cc8f89e1c7a4efdf0655b1dc5d61380a4d03d1"
+        },
+        {
+          "path": "sympy/physics/units/__init__.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/__init__.py",
+          "bytes": 12210,
+          "sha256": "a902742cd86e01e62c67db36365dcc0a6c9da9e84414c647667befe436d9d9e8"
+        },
+        {
+          "path": "sympy/physics/units/dimensions.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/dimensions.py",
+          "bytes": 20282,
+          "sha256": "0fd6ea9c6c13e23fb1e2d9c79f842d7cccdd3685be8686b6322290596afe10ba"
+        },
+        {
+          "path": "sympy/physics/units/prefixes.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/prefixes.py",
+          "bytes": 6222,
+          "sha256": "f87dcd882f47ed3a0b1960418d28298f841d3dafa846dead654e302359a46422"
+        },
+        {
+          "path": "sympy/physics/units/quantities.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/quantities.py",
+          "bytes": 9036,
+          "sha256": "fb31a59b8484510b8d00428683e924069e8561e13c0c339c156acde8ca09b22f"
+        },
+        {
+          "path": "sympy/physics/units/util.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/util.py",
+          "bytes": 9610,
+          "sha256": "ce9b9b758bcbcac1781463e668d3c4e16ffbccab5504b47e8069b8e19a0a9cce"
+        },
+        {
+          "path": "sympy/physics/units/definitions/__init__.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/definitions/__init__.py",
+          "bytes": 7356,
+          "sha256": "fda43468cd680634c52228c32d1477887173dded0b246e7117258c7e260d425f"
+        },
+        {
+          "path": "sympy/physics/units/definitions/dimension_definitions.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/definitions/dimension_definitions.py",
+          "bytes": 1745,
+          "sha256": "e6bfd60e7c96157d13f1b4e30c0ea99ebe4fa912afe571939b42ee26b67a7df3"
+        },
+        {
+          "path": "sympy/physics/units/definitions/unit_definitions.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/definitions/unit_definitions.py",
+          "bytes": 14146,
+          "sha256": "1fa624ff7d5f9ce58c42a16dd4276c232ed5b81ae80734245714d6f9693e5653"
+        },
+        {
+          "path": "sympy/physics/units/systems/__init__.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/systems/__init__.py",
+          "bytes": 244,
+          "sha256": "8c9baf75cd7973cdf2975d48baf8728e28f0399f66d491a064e80ac0abf67b6a"
+        },
+        {
+          "path": "sympy/physics/units/systems/cgs.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/systems/cgs.py",
+          "bytes": 3649,
+          "sha256": "2eb1627234208843f65d056620fc13e808561410d527b9a97cfe248bd01f8540"
+        },
+        {
+          "path": "sympy/physics/units/systems/length_weight_time.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/systems/length_weight_time.py",
+          "bytes": 6922,
+          "sha256": "76198c713d7ff60be52fef860057418a193b60fad94a00190f049898dc6eb377"
+        },
+        {
+          "path": "sympy/physics/units/systems/mks.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/systems/mks.py",
+          "bytes": 1546,
+          "sha256": "677797f7258af4176f128b0244e2b6a912ad28560e8ed439d0993abc54fb0106"
+        },
+        {
+          "path": "sympy/physics/units/systems/mksa.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/systems/mksa.py",
+          "bytes": 1924,
+          "sha256": "7734337b478da94e61fc26059a6cbe251bf9a5c27a4cd583fef54dcbc139995a"
+        },
+        {
+          "path": "sympy/physics/units/systems/natural.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/systems/natural.py",
+          "bytes": 909,
+          "sha256": "e3739dbe6b717696f3f14716ff1a1113d02b25555d17b7607403760720c05f1e"
+        },
+        {
+          "path": "sympy/physics/units/systems/si.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/units/systems/si.py",
+          "bytes": 14283,
+          "sha256": "db3895e8fc17f1081cac071a3542f5e2ae726471984308cad82a33ee04cca444"
+        },
+        {
+          "path": "sympy/physics/__init__.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/__init__.py",
+          "bytes": 220,
+          "sha256": "17fcaf50c0ae06adc747edc08ba5b8a24b41b17460f0a76eb452f04fd1452656"
+        },
+        {
+          "path": "sympy/physics/hydrogen.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/hydrogen.py",
+          "bytes": 7593,
+          "sha256": "795793f76c1ebd9d11ebd76f883f3abe8588cd03a38c9cab40311d7f90a0750d"
+        },
+        {
+          "path": "sympy/physics/matrices.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/matrices.py",
+          "bytes": 3836,
+          "sha256": "8c77db5a4ccbda6c85b7edfd928750a39c0fb9b0713592979658ee4b164be1b1"
+        },
+        {
+          "path": "sympy/physics/paulialgebra.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/paulialgebra.py",
+          "bytes": 6002,
+          "sha256": "d6bfea0c16d5ca5f37eaa2179550dda05f3d67dc1e746bd62241c06f041a2bee"
+        },
+        {
+          "path": "sympy/physics/pring.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/pring.py",
+          "bytes": 2240,
+          "sha256": "482306188704855a03eddc2163bfcd58bd622b0a3b39f80a7669b63a4ffd5e5d"
+        },
+        {
+          "path": "sympy/physics/qho_1d.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/qho_1d.py",
+          "bytes": 2037,
+          "sha256": "c3596d3b160bf46a464d8cbb872993a02546ebe9ef9bc925b65ad0d5455eb33b"
+        },
+        {
+          "path": "sympy/physics/secondquant.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/secondquant.py",
+          "bytes": 90400,
+          "sha256": "bd196143f511732cf5cbf6001f5f46b1744443c284fe8cf8173d553119ea8266"
+        },
+        {
+          "path": "sympy/physics/sho.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/sho.py",
+          "bytes": 2508,
+          "sha256": "f3742654b1bf99b0a501edc851c9c9622796b08fbb45603bc4da282663a3ca14"
+        },
+        {
+          "path": "sympy/physics/wigner.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/wigner.py",
+          "bytes": 37605,
+          "sha256": "e2361cbfada07c72469497d871b9f4e81166348b3924288404d9f151b8363b2a"
+        },
+        {
+          "path": "sympy/physics/continuum_mechanics/__init__.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/continuum_mechanics/__init__.py",
+          "bytes": 89,
+          "sha256": "9a856b72c130fdaf1d6faf5db6ec04f9aaae6754c025cec9c47ba4ad89c9bb23"
+        },
+        {
+          "path": "sympy/physics/continuum_mechanics/beam.py",
+          "url": "https://raw.githubusercontent.com/sympy/sympy/514579c655bf22e2af14f0743376ae1d7befe345/sympy/physics/continuum_mechanics/beam.py",
+          "bytes": 148716,
+          "sha256": "7748ecbb8ef0402c68b025368390b27b29c74723e30776e47057b5e96f16c8d1"
+        }
+      ],
+      "license": "BSD-3-Clause"
+    },
+    "redis": {
+      "repo": "redis/redis",
+      "commit": "eedb8b172474dd7776d9bbb0f2954a1394027289",
+      "files": [
+        {
+          "path": "src/acl.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/acl.c",
+          "bytes": 118639,
+          "sha256": "cab276c6a5eb81a8541316a596fb6a1880868520cc01a0b0862929d2bf6a1c45"
+        },
+        {
+          "path": "src/adlist.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/adlist.c",
+          "bytes": 11519,
+          "sha256": "ba290ccc23e8aef805bbe9afa6cf2d8c5c1d4d26bbb9d3581a3bcde8afbdaacc"
+        },
+        {
+          "path": "src/adlist.h",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/adlist.h",
+          "bytes": 3715,
+          "sha256": "1ac9a8027960c19418eb7dda6ef84b003ed3143ff57f2ec108c517e11d74b056"
+        },
+        {
+          "path": "src/ae.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/ae.c",
+          "bytes": 17414,
+          "sha256": "d8b6d83993b27d76e0f9bc84c47f7513867c1cb47440b2270ad0539bfe69831c"
+        },
+        {
+          "path": "src/ae.h",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/ae.h",
+          "bytes": 5528,
+          "sha256": "4a7b7421dfe73700739b1a2e638bd1be808c4b36386fc832a272a20216d4cd62"
+        },
+        {
+          "path": "src/ae_epoll.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/ae_epoll.c",
+          "bytes": 5019,
+          "sha256": "1dec92d5c4dccf03d72c949048b4bce6effd108fbcb0ffc4fc1b02179d3c7f73"
+        },
+        {
+          "path": "src/ae_evport.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/ae_evport.c",
+          "bytes": 11002,
+          "sha256": "9a47e95b3ad9e21b992d063be93bf899a8e708fd04da51cf2e06a9324c6f2a35"
+        },
+        {
+          "path": "src/ae_kqueue.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/ae_kqueue.c",
+          "bytes": 6801,
+          "sha256": "1a6ce5ce32e5c6fbdf218df7186bbc953baee373a114104fcd386d843b1cbaaf"
+        },
+        {
+          "path": "src/ae_select.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/ae_select.c",
+          "bytes": 3962,
+          "sha256": "8b240b36931a4807b61e100301858ed009786ecb52b4f760de508bbb0885388a"
+        },
+        {
+          "path": "src/anet.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/anet.c",
+          "bytes": 22548,
+          "sha256": "0c13c4384e89755e6e23f0856e3cffc6110be63910d9180b9fe5e32d0e1ef7ce"
+        },
+        {
+          "path": "src/anet.h",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/anet.h",
+          "bytes": 3212,
+          "sha256": "342e2df6bc399954857b7abf8f261ce674ff05a938502b8aad2b2d207e3d4075"
+        },
+        {
+          "path": "src/aof.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/aof.c",
+          "bytes": 102624,
+          "sha256": "3c9fd5e8858ab6e178c86935fe84af95bf4b7d03746fddcaa6e00556d42b713c"
+        },
+        {
+          "path": "src/asciilogo.h",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/asciilogo.h",
+          "bytes": 2838,
+          "sha256": "ef4f1f004d33ec7542254bfeb55691f456b8161554e2c2dbf4f1953b149de1bc"
+        },
+        {
+          "path": "src/atomicvar.h",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/atomicvar.h",
+          "bytes": 6946,
+          "sha256": "059508d7a9e5f756dbd7fda6854bb1b505f9de00b0f07749eeb0fad08e5972d9"
+        },
+        {
+          "path": "src/bio.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/bio.c",
+          "bytes": 10628,
+          "sha256": "16b0a6d4ce6381dda6cdf6f837dd29f8061434271b5bd07cbf186ffe71482368"
+        },
+        {
+          "path": "src/bio.h",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/bio.h",
+          "bytes": 2188,
+          "sha256": "2e875dd064e521729ba39d19af5d7a87655dba21b2e6c66352134f40b0ea5ab1"
+        },
+        {
+          "path": "src/bitops.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/bitops.c",
+          "bytes": 47271,
+          "sha256": "5bee7d2542987b294848e3490114062b8a67017c89ae524e0beed4f4a7ca488e"
+        },
+        {
+          "path": "src/blocked.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/blocked.c",
+          "bytes": 38224,
+          "sha256": "06680663e92982e636b197fd2056a939834816a98b7cf5de242ddd2d6360972f"
+        },
+        {
+          "path": "src/call_reply.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/call_reply.c",
+          "bytes": 20622,
+          "sha256": "1b1e6b0c4b9fde33cdff63ab6908c45a77c85f1691eb124b5e803110f6e061ba"
+        },
+        {
+          "path": "src/call_reply.h",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/call_reply.h",
+          "bytes": 2885,
+          "sha256": "a2ec10c34f9bb729fd16f1083363aa324c3eb477efafa53dfd6616553b82c7e1"
+        },
+        {
+          "path": "src/childinfo.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/childinfo.c",
+          "bytes": 7169,
+          "sha256": "f38c7cfd3d24126da02733f5634744282c71ccc3dbddd8b7898d509fc9b1029c"
+        },
+        {
+          "path": "src/cli_common.c",
+          "url": "https://raw.githubusercontent.com/redis/redis/eedb8b172474dd7776d9bbb0f2954a1394027289/src/cli_common.c",
+          "bytes": 12336,
+          "sha256": "7183983a3f00184b99e237802db858e44aef6e01821491ac909ed578de1b6900"
+        }
+      ],
+      "license": "BSD-3-Clause"
+    },
+    "fmt": {
+      "repo": "fmtlib/fmt",
+      "commit": "dfe5b12c08dfa803fe5a275b380991df25f4b52d",
+      "files": [
+        {
+          "path": "include/fmt/ranges.h",
+          "url": "https://raw.githubusercontent.com/fmtlib/fmt/dfe5b12c08dfa803fe5a275b380991df25f4b52d/include/fmt/ranges.h",
+          "bytes": 25174,
+          "sha256": "1ee688e552394ea8698d0ba1e3b5113c2b648108e73cca7c284a0628ab6096cf"
+        },
+        {
+          "path": "include/fmt/args.h",
+          "url": "https://raw.githubusercontent.com/fmtlib/fmt/dfe5b12c08dfa803fe5a275b380991df25f4b52d/include/fmt/args.h",
+          "bytes": 7480,
+          "sha256": "387a0dd46780da5967308e4e9a7eab262beefa598cf7fed3d740fd79688a992c"
+        },
+        {
+          "path": "include/fmt/base.h",
+          "url": "https://raw.githubusercontent.com/fmtlib/fmt/dfe5b12c08dfa803fe5a275b380991df25f4b52d/include/fmt/base.h",
+          "bytes": 103136,
+          "sha256": "aef363200656cbc094c2989439978429e5ecbeb8bf1d8b298e1abe88f8cee7e6"
+        },
+        {
+          "path": "include/fmt/chrono.h",
+          "url": "https://raw.githubusercontent.com/fmtlib/fmt/dfe5b12c08dfa803fe5a275b380991df25f4b52d/include/fmt/chrono.h",
+          "bytes": 75285,
+          "sha256": "3e4e24fca63843a99e9f21003c240269b868f5f48d2f03f1d9bdf4b13974dc36"
+        },
+        {
+          "path": "include/fmt/color.h",
+          "url": "https://raw.githubusercontent.com/fmtlib/fmt/dfe5b12c08dfa803fe5a275b380991df25f4b52d/include/fmt/color.h",
+          "bytes": 23461,
+          "sha256": "81b4f48a991b839dd12cec37195e7be8ca5c2e2dff219ee344483a6ffac4f51f"
+        },
+        {
+          "path": "include/fmt/compile.h",
+          "url": "https://raw.githubusercontent.com/fmtlib/fmt/dfe5b12c08dfa803fe5a275b380991df25f4b52d/include/fmt/compile.h",
+          "bytes": 18976,
+          "sha256": "645d0c2ad6d3e9570a1e9a9bb477f10afe6b4b44d935a3a3e27155923233d350"
+        },
+        {
+          "path": "include/fmt/format.h",
+          "url": "https://raw.githubusercontent.com/fmtlib/fmt/dfe5b12c08dfa803fe5a275b380991df25f4b52d/include/fmt/format.h",
+          "bytes": 162206,
+          "sha256": "151e39a7ce05ec3b0e0930999fc3fda00f987d24aa99d907b163c788a3c38ca3"
+        },
+        {
+          "path": "include/fmt/os.h",
+          "url": "https://raw.githubusercontent.com/fmtlib/fmt/dfe5b12c08dfa803fe5a275b380991df25f4b52d/include/fmt/os.h",
+          "bytes": 13272,
+          "sha256": "d592591eeb127401e6462ed1ab20a7435a15657890a4355f37f5ac674b200bbe"
+        }
+      ],
+      "license": "MIT"
+    },
+    "windowsml": {
+      "repo": "microsoft/WindowsML",
+      "commit": "c780909f46abc21bcb1db6304f12e44dc6051e22",
+      "license": "MIT",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/audio_utils.h",
+          "bytes": 22891,
+          "sha256": "5abab8327719c2e68e2d5dcbc2b03fb19b9bfa52ed76ad5f25f35358e89273ce",
+          "path": "Samples/Runtime/shared/audio_utils.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/common.h",
+          "bytes": 16397,
+          "sha256": "2e5a1e92136e3a3f2fb55077a3e540da6700883a0c5d67ff73ba3a7ffb9475ba",
+          "path": "Samples/Runtime/shared/common.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/ep_catalog_utils.h",
+          "bytes": 16205,
+          "sha256": "3dedcb313b1312a70e205b29ec1bbbfd30fd13e6ceb2cbda8880818303fa4a81",
+          "path": "Samples/Runtime/shared/ep_catalog_utils.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/execution_target_utils.h",
+          "bytes": 8329,
+          "sha256": "d1360d6c1a008448a72840cfbd913c2adc494056a0914faa692de851911d824e",
+          "path": "Samples/Runtime/shared/execution_target_utils.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/image_utils.h",
+          "bytes": 10553,
+          "sha256": "1a9d9bb5f9c7aebf0bb380bf6fb24d0f27cd8d304872786aeac4de75324d96b4",
+          "path": "Samples/Runtime/shared/image_utils.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/language_args.h",
+          "bytes": 11750,
+          "sha256": "9e57505b1355671f224080bed63666b50672cb323eb3304db83b56ae961aa5ef",
+          "path": "Samples/Runtime/shared/language_args.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/language_console.h",
+          "bytes": 2683,
+          "sha256": "6c80efdf29eb25df8c909952839389f07c2ddc20871dd49f82382591a571df98",
+          "path": "Samples/Runtime/shared/language_console.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/language_model_loader.h",
+          "bytes": 27736,
+          "sha256": "0f6e011cba0274c8f12f62322404a70d588de4a5f42e8d3f58c1420c33969b03",
+          "path": "Samples/Runtime/shared/language_model_loader.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/llm_inference.h",
+          "bytes": 8044,
+          "sha256": "1d536937a8b3b0964446c518fa45805bb611630680ba46f122f9c6122914243a",
+          "path": "Samples/Runtime/shared/llm_inference.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/llm_stateful_inputs.h",
+          "bytes": 11281,
+          "sha256": "f27eff68460d1e8c3a0ef94b0fb2ee2cbc4afcfe7f5886f5e90924b9ea2c06e5",
+          "path": "Samples/Runtime/shared/llm_stateful_inputs.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/model_compilation_utils.h",
+          "bytes": 5755,
+          "sha256": "1630859280d0f8c3063ee7eed051457fd8bb0677df3aa158e37bd90f91af3a9e",
+          "path": "Samples/Runtime/shared/model_compilation_utils.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/numeric_utils.h",
+          "bytes": 2405,
+          "sha256": "976bf54a0e23b3b0074beb2758feef52852a1700339c1e3f7e6387d87afa7e2c",
+          "path": "Samples/Runtime/shared/numeric_utils.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/sample_args.h",
+          "bytes": 12884,
+          "sha256": "6a4b06cd4bc1ecc036947a51386eceff7c3e1171f431b5d72327e01c1c80f365",
+          "path": "Samples/Runtime/shared/sample_args.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/tensor_lock_utils.h",
+          "bytes": 2890,
+          "sha256": "4ae7e379144a07fd800d83493121299a0ca730f9732e3280a538756765c4b0e5",
+          "path": "Samples/Runtime/shared/tensor_lock_utils.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/tensorization_common.h",
+          "bytes": 7790,
+          "sha256": "4530d95ac67c5823b6c8012b3032dfcb559a0cb7a7e3cbdc56ed0888646f1a4e",
+          "path": "Samples/Runtime/shared/tensorization_common.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/tensorization_image.h",
+          "bytes": 3618,
+          "sha256": "32a5f019f8b0f17f3502171f975566187c56ceb6a210a8a1d1b0eeb9e8e7afed",
+          "path": "Samples/Runtime/shared/tensorization_image.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/tensorization_inference.h",
+          "bytes": 10003,
+          "sha256": "cbc663bd28b3dcce994ff331ee9cbcaf94582713a90950d97e73aec0531251a1",
+          "path": "Samples/Runtime/shared/tensorization_inference.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Runtime/shared/tensorization_video.h",
+          "bytes": 5437,
+          "sha256": "d6eb01ec184fbc3af03f20999fba61d9c63abcb0661bc1ec49dcacc9af01e5cf",
+          "path": "Samples/Runtime/shared/tensorization_video.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Server/client/cpp/main.cpp",
+          "bytes": 21033,
+          "sha256": "13afb43ba0495aca8711962373ff6174c21d1d1a5be4cc25a3e5056ec8ae7ed2",
+          "path": "Samples/Server/client/cpp/main.cpp"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Server/host/in-process/main.cpp",
+          "bytes": 19661,
+          "sha256": "281a7bd695c1c0157f73181e90df0ee8cc16526a1add17b5b3f5f5903a2e4853",
+          "path": "Samples/Server/host/in-process/main.cpp"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Tasks/shared/hybrid_text_generation_task.h",
+          "bytes": 25345,
+          "sha256": "d02cd5f85a611582e75f4add6ed4d257042149ce40f7536e52b8e9c1b97901da",
+          "path": "Samples/Tasks/shared/hybrid_text_generation_task.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Tasks/shared/model_task.h",
+          "bytes": 1359,
+          "sha256": "d7e7fdc911d9f6f8d032f482a8c22009914349148dc441bac9241b7cc3459db3",
+          "path": "Samples/Tasks/shared/model_task.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Tasks/shared/speech_recognition_task.h",
+          "bytes": 8522,
+          "sha256": "e753bae9de5376152a00e3befee235a0e9a0587d68fe79b767b69a820004a1c2",
+          "path": "Samples/Tasks/shared/speech_recognition_task.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Tasks/shared/task_runtime.h",
+          "bytes": 5245,
+          "sha256": "2ab1b4cac08a540976cda929ff52ced8f93da956b5e536fa876453fb6407d183",
+          "path": "Samples/Tasks/shared/task_runtime.h"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/microsoft/WindowsML/c780909f46abc21bcb1db6304f12e44dc6051e22/Samples/Tasks/shared/text_generation_task.h",
+          "bytes": 35909,
+          "sha256": "8fbcdc339ecba4f376161af0cad301615aa5cbc575d1afa932ef5a7660adf423",
+          "path": "Samples/Tasks/shared/text_generation_task.h"
+        }
+      ]
+    },
+    "model_cards": {
+      "license": "per model: see each entry",
+      "files": [
+        {
+          "url": "https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/README.md",
+          "bytes": 9578,
+          "sha256": "2dc5368ce2dda4393818fc3c6e587d588ec7b7f599b1f3a326d97dc271e3866d",
+          "path": "nvidia/Qwen3.8-27B-NVFP4/README.md",
+          "license": "Apache-2.0"
+        },
+        {
+          "url": "https://huggingface.co/incoai/Qwen3.8-27B-DFlash2/resolve/015e795645c74b1a0eeef3b570031fb62e769bc5/README.md",
+          "bytes": 5399,
+          "sha256": "be141ff737af8779959cb5ecaefb458ac3c214a5020aa40f69d4d1dc6f42494a",
+          "path": "incoai/Qwen3.8-27B-DFlash2/README.md",
+          "license": "Apache-2.0"
+        },
+        {
+          "url": "https://huggingface.co/microsoft/phi-4/resolve/2db69c1c3e91a05d2c64a3185acfbaf36f744e25/README.md",
+          "bytes": 13763,
+          "sha256": "4cc56faa6a5bcbde6227789b2ef9aedfde481ca660c8a4b686703aae19b00011",
+          "path": "microsoft/phi-4/README.md",
+          "license": "MIT"
+        },
+        {
+          "url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base/resolve/fd4b254389122332181a7c3db7f27e918eec64e3/README.md",
+          "bytes": 57817,
+          "sha256": "621b7e88f1867bc03d817176fc1f7f55f4b5a70654b2a07fdcda1e169efb024b",
+          "path": "Qwen/Qwen3-TTS-12Hz-1.7B-Base/README.md",
+          "license": "Apache-2.0"
+        }
+      ]
+    },
+    "multilingual": {
+      "repo": "kubernetes/website",
+      "commit": "a81f5383d57959d479d946ae3ad2c620ceb11e6a",
+      "license": "CC-BY-4.0",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/zh-cn/docs/concepts/overview/components.md",
+          "bytes": 6541,
+          "sha256": "5d5ee0e0ff18f61939059aa31603e0933d5e58c9fac321ed707a0eac99eb3c64",
+          "path": "content/zh-cn/docs/concepts/overview/components.md",
+          "language": "zh-cn"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/ja/docs/concepts/overview/components.md",
+          "bytes": 4303,
+          "sha256": "1f3942327cf344b4aa0f49197d1df105b34bfe5102e2a62ebb2b01ec99caad92",
+          "path": "content/ja/docs/concepts/overview/components.md",
+          "language": "ja"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/ko/docs/concepts/overview/components.md",
+          "bytes": 3821,
+          "sha256": "a2e494a0853f102c99d1dde39227866e8560c1ccbff6f8f883b948cbb202a64d",
+          "path": "content/ko/docs/concepts/overview/components.md",
+          "language": "ko"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/ru/docs/concepts/overview/components.md",
+          "bytes": 5352,
+          "sha256": "5568ba600e2fb401434c0638abed3f6f248cb16a6ea29464ca5d7864714f3d11",
+          "path": "content/ru/docs/concepts/overview/components.md",
+          "language": "ru"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/de/docs/concepts/overview/components.md",
+          "bytes": 6160,
+          "sha256": "2aa527743a42f5bbc4c77f8db66f7f12c70560184907d3cae032d45a7ffd4fae",
+          "path": "content/de/docs/concepts/overview/components.md",
+          "language": "de"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/fr/docs/concepts/overview/components.md",
+          "bytes": 3798,
+          "sha256": "6d99b03265c88ea26af2535d509f133b82b56d3b0af9218131715d6297c15e54",
+          "path": "content/fr/docs/concepts/overview/components.md",
+          "language": "fr"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/es/docs/concepts/overview/components.md",
+          "bytes": 6200,
+          "sha256": "e0ec621533b97c6e30427bfc7e5bfefde232a06162cd18fef78814aac092b03d",
+          "path": "content/es/docs/concepts/overview/components.md",
+          "language": "es"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/it/docs/concepts/overview/components.md",
+          "bytes": 6149,
+          "sha256": "1159cd0e46bb7ba8f58cfe71184140e27e3f0a3169391d127f8b125e3a205d0d",
+          "path": "content/it/docs/concepts/overview/components.md",
+          "language": "it"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/kubernetes/website/a81f5383d57959d479d946ae3ad2c620ceb11e6a/content/pt-br/docs/concepts/overview/components.md",
+          "bytes": 6424,
+          "sha256": "f05fa8f306f0b7ebcc983b4b4813ffc92f8148bb95193b7b1e23ead46b19da56",
+          "path": "content/pt-br/docs/concepts/overview/components.md",
+          "language": "pt-br"
+        }
+      ]
+    },
+    "gsm8k": {
+      "repo": "openai/grade-school-math",
+      "commit": "3101c7d5072418e28b9008a6636bde82a006892c",
+      "license": "MIT",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/openai/grade-school-math/3101c7d5072418e28b9008a6636bde82a006892c/grade_school_math/data/test.jsonl",
+          "bytes": 749738,
+          "sha256": "3730d312f6e3440559ace48831e51066acaca737f6eabec99bccb9e4b3c39d14",
+          "path": "grade_school_math/data/test.jsonl"
+        }
+      ]
+    },
+    "humaneval_plus": {
+      "repo": "evalplus/humanevalplus_release",
+      "commit": "v0.1.10",
+      "license": "Apache-2.0 (EvalPlus); MIT (HumanEval)",
+      "files": [
+        {
+          "url": "https://github.com/evalplus/humanevalplus_release/releases/download/v0.1.10/HumanEvalPlus.jsonl.gz",
+          "path": "HumanEvalPlus.jsonl.gz",
+          "bytes": 925932,
+          "sha256": "272720b90ac375502c8ed23cd791c2a93dfb22a911641a494da74a426c09f101"
+        }
+      ]
+    }
+  }
+}

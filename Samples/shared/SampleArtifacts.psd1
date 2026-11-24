@@ -159,6 +159,127 @@
             Sha256      = '5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583'
             Path        = 'qwen2.5-0.5b-instruct\tokenizer_config.json'
         }
+        'qwen3.8-27b-config' = @{
+            DisplayName = 'Qwen3.8-27B NVFP4 model configuration'
+            Purpose     = 'Describes the model architecture and its quantization.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/config.json'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 87506
+            Sha256      = '71fa01bb64de20971045cd82a82c0ebb25a54e1b0a3f09ef23cf5479e9c54df8'
+            Path        = 'Qwen3.8-27B-NVFP4\config.json'
+        }
+        'qwen3.8-27b-generation-config' = @{
+            DisplayName = 'Qwen3.8-27B NVFP4 generation configuration'
+            Purpose     = 'Supplies the end-of-sequence tokens.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/generation_config.json'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 214
+            Sha256      = '8a3a817a9d330f6f9e62f048fe62a48594946c4a5c4cb314a8011316d5094986'
+            Path        = 'Qwen3.8-27B-NVFP4\generation_config.json'
+        }
+        'qwen3.8-27b-weights-index' = @{
+            DisplayName = 'Qwen3.8-27B NVFP4 weight index'
+            Purpose     = 'Maps each tensor to its weight file.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/model.safetensors.index.json'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 214866
+            Sha256      = '7aa103a2582b7d26631988de33dea19e8a308ee9c239e8e14feb374af30905e2'
+            Path        = 'Qwen3.8-27B-NVFP4\model.safetensors.index.json'
+        }
+        'qwen3.8-27b-weights-1' = @{
+            DisplayName = 'Qwen3.8-27B NVFP4 weights, part 1 of 3'
+            Purpose     = 'Supplies the model weights.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/model-00001-of-00003.safetensors'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 9965652544
+            Sha256      = '7d0fd155118901373eb0fd13ed3aae68f95be747bc205be72ebc41739c25ee80'
+            Path        = 'Qwen3.8-27B-NVFP4\model-00001-of-00003.safetensors'
+            TimeoutSeconds = 14400
+        }
+        'qwen3.8-27b-weights-2' = @{
+            DisplayName = 'Qwen3.8-27B NVFP4 weights, part 2 of 3'
+            Purpose     = 'Supplies the model weights.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/model-00002-of-00003.safetensors'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 9985757064
+            Sha256      = '98a7e9486baa860c792c9463a770cb9d017696bdd17606300a5b9334149f4c27'
+            Path        = 'Qwen3.8-27B-NVFP4\model-00002-of-00003.safetensors'
+            TimeoutSeconds = 14400
+        }
+        'qwen3.8-27b-weights-3' = @{
+            DisplayName = 'Qwen3.8-27B NVFP4 weights, part 3 of 3'
+            Purpose     = 'Supplies the model weights.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/model-00003-of-00003.safetensors'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 1970287672
+            Sha256      = '0506ad35dc21469708e7813bd76c592cef08bd0317b4a1fe899745ebe2435271'
+            Path        = 'Qwen3.8-27B-NVFP4\model-00003-of-00003.safetensors'
+            TimeoutSeconds = 3600
+        }
+        'qwen3.8-27b-tokenizer' = @{
+            DisplayName = 'Qwen3.8-27B tokenizer'
+            Purpose     = 'Converts between text and token IDs.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/tokenizer.json'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 12809320
+            Sha256      = '0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3'
+            Path        = 'Qwen3.8-27B-NVFP4\tokenizer.json'
+        }
+        'qwen3.8-27b-tokenizer-config' = @{
+            DisplayName = 'Qwen3.8-27B tokenizer configuration'
+            Purpose     = 'Supplies the special tokens.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/tokenizer_config.json'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 1121
+            Sha256      = 'e5d078b00e6c1223b32444db8c1001dc71d86ceef8ee706b5bf084c3a43a1f9c'
+            Path        = 'Qwen3.8-27B-NVFP4\tokenizer_config.json'
+        }
+        'qwen3.8-27b-chat-template' = @{
+            DisplayName = 'Qwen3.8-27B chat template'
+            Purpose     = 'Formats conversations, tools, and reasoning.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/chat_template.jinja'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 8952
+            Sha256      = 'c3cf9e34abf4f9e36c2d72165aa9c132d3e2a725b6c2586aaa3a8af9d7a81041'
+            Path        = 'Qwen3.8-27B-NVFP4\chat_template.jinja'
+        }
+        'qwen3.8-27b-processor-config' = @{
+            DisplayName = 'Qwen3.8-27B processor configuration'
+            Purpose     = 'Describes the model''s input processing.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/processor_config.json'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 1191
+            Sha256      = 'd89ef49ce9cd37fbf510158e13c1ef063d9286411c1ec9049932dbe0487143b1'
+            Path        = 'Qwen3.8-27B-NVFP4\processor_config.json'
+        }
+        'qwen3.8-27b-preprocessor-config' = @{
+            DisplayName = 'Qwen3.8-27B preprocessor configuration'
+            Purpose     = 'Describes the model''s input preprocessing.'
+            SourceUrl   = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/preprocessor_config.json'
+            ProvenanceUrl = 'https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4'
+            SizeBytes   = 390
+            Sha256      = '27225450ac9c6529872ee1924fcb0962ff5634834f817040f444118116f4e516'
+            Path        = 'Qwen3.8-27B-NVFP4\preprocessor_config.json'
+        }
+        'qwen3.8-27b-dflash2-config' = @{
+            DisplayName = 'Qwen3.8-27B DFlash2 drafter configuration'
+            Purpose     = 'Describes the speculative-decoding drafter.'
+            SourceUrl   = 'https://huggingface.co/incoai/Qwen3.8-27B-DFlash2/resolve/015e795645c74b1a0eeef3b570031fb62e769bc5/config.json'
+            ProvenanceUrl = 'https://huggingface.co/incoai/Qwen3.8-27B-DFlash2'
+            SizeBytes   = 1239
+            Sha256      = '873e3556509b0da06e29654ba00d4944888d4b5e8a33afde25f7eb27d321e980'
+            Path        = 'Qwen3.8-27B-DFlash2\config.json'
+        }
+        'qwen3.8-27b-dflash2-weights' = @{
+            DisplayName = 'Qwen3.8-27B DFlash2 drafter weights (safetensors)'
+            Purpose     = 'Supplies the drafter weights.'
+            SourceUrl   = 'https://huggingface.co/incoai/Qwen3.8-27B-DFlash2/resolve/015e795645c74b1a0eeef3b570031fb62e769bc5/model.safetensors'
+            ProvenanceUrl = 'https://huggingface.co/incoai/Qwen3.8-27B-DFlash2'
+            SizeBytes   = 3848817896
+            Sha256      = '67fc76d68dc5a9415511a4f394ef744d67510cd20e93b37cc2cc7d28e4bab65c'
+            Path        = 'Qwen3.8-27B-DFlash2\model.safetensors'
+            TimeoutSeconds = 7200
+        }
         'whisper-tiny-config' = @{
             DisplayName = 'Whisper tiny model configuration'
             Purpose     = 'Describes the model architecture.'
@@ -424,6 +545,12 @@
             Title        = 'In-process server'
             Summary      = 'Hosts the OpenAI-compatible server inside an application and runs a client against it.'
             Artifacts    = @('qwen-gguf')
+            Preparations = @()
+        }
+        'server-qwen3.8-27b' = @{
+            Title        = 'Qwen3.8-27B with DFlash2'
+            Summary      = 'Serves Qwen3.8-27B NVFP4 on a 32 GB GPU with DFlash2 speculative decoding and a float16 or int8 key and value cache.'
+            Artifacts    = @('qwen3.8-27b-config', 'qwen3.8-27b-generation-config', 'qwen3.8-27b-weights-index', 'qwen3.8-27b-weights-1', 'qwen3.8-27b-weights-2', 'qwen3.8-27b-weights-3', 'qwen3.8-27b-tokenizer', 'qwen3.8-27b-tokenizer-config', 'qwen3.8-27b-chat-template', 'qwen3.8-27b-processor-config', 'qwen3.8-27b-preprocessor-config', 'qwen3.8-27b-dflash2-config', 'qwen3.8-27b-dflash2-weights')
             Preparations = @()
         }
         'server-executable' = @{

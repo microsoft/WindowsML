@@ -1,0 +1,5 @@
+# Packages for calibrate_kv_scales.py and build_calibration_prompts.py, besides
+# PyTorch; see "INT8 KV cache calibration" in README.md for the PyTorch install.
+transformers==5.23.0
+safetensors==0.8.0
+tokenizers==0.23.3

@@ -11,14 +11,18 @@ a streamed reply, and complete one tool call.
   environment. models.list() keeps the server's winml field, with each
   model's limits and tool support, in model_extra. chat.completions.create
   sends a plain request, a streamed request with include_usage, and, if
-  tools are supported, a request with tool_choice "required"; the client
-  runs multiply itself and returns the result with tool_choice "none".
-  Every request asks for at most 256 tokens or the model's lower limit.
+  tools are supported, a request with tool_choice "required" (or "auto" when
+  the model generates tool calls without constraints); the client runs
+  multiply itself and returns the result with tool_choice "none".
+  Every request asks for at most 256 tokens or the model's lower limit, and
+  turns thinking off with reasoning_effort "none" when the model thinks by
+  default and accepts "none".
 
 Run it
   python.exe -m pip install openai
   ..\..\run_in_process_server.ps1 -Client python
   ..\..\run_server_executable.ps1 -Client python
+  ..\..\run_qwen3.8_27b_server.ps1 -Client python
 
 Learn more (paths relative to this file)
   ../README.md
@@ -49,11 +53,20 @@ ACCESS_KEY_VARIABLE = "WINMLSERVER_ACCESS_KEY"
 REQUESTED_OUTPUT_TOKENS = 256
 
 # Bit 0 of capability_flags in the model list means the model supports tool
-# calls.
+# calls. Bit 4 means the server constrains what the model generates, so it
+# accepts tool_choice "required". Without it, the client can't assume
+# "required" is accepted, so it sends "auto" and lets the model decide.
 TOOL_CALLS_CAPABILITY = 0x1
+CONSTRAINED_LOGITS_CAPABILITY = 0x10
 
-# The parameters are a JSON schema. When the model supports tool calls, the
-# server makes its arguments match the schema.
+# Bit 0 of reasoning_effort_mask means the model accepts reasoning_effort
+# "none"; the other bits are thinking levels. A model that accepts both
+# thinks unless the request turns it off, which would spend the sample's
+# small output budget on thinking.
+REASONING_EFFORT_NONE = 0x1
+
+# The parameters are a JSON schema. When the server constrains generation, it
+# makes the arguments match the schema.
 MULTIPLY_TOOL = {
     "type": "function",
     "function": {
@@ -74,6 +87,12 @@ class ModelInfo:
     id: str
     output_limit: int
     supports_tools: bool
+    constrains_generation: bool
+    turns_thinking_off: bool
+
+    def extra_body(self) -> dict:
+        """Fields the OpenAI library's create() doesn't take as parameters."""
+        return {"reasoning_effort": "none"} if self.turns_thinking_off else {}
 
 
 def _list_models(client: openai.OpenAI, requested_id: str | None) -> ModelInfo:
@@ -86,8 +105,12 @@ def _list_models(client: openai.OpenAI, requested_id: str | None) -> ModelInfo:
         # fields it does not define in model_extra.
         details = (model.model_extra or {}).get("winml") or {}
         output_limit = int(details.get("maximum_output_tokens") or 0)
-        supports_tools = bool(
-            int(details.get("capability_flags") or 0) & TOOL_CALLS_CAPABILITY
+        flags = int(details.get("capability_flags") or 0)
+        supports_tools = bool(flags & TOOL_CALLS_CAPABILITY)
+        constrains_generation = bool(flags & CONSTRAINED_LOGITS_CAPABILITY)
+        reasoning = int(details.get("reasoning_effort_mask") or 0)
+        turns_thinking_off = bool(reasoning & REASONING_EFFORT_NONE) and bool(
+            reasoning & ~REASONING_EFFORT_NONE
         )
         print(
             f"  {model.id}: context window {details.get('context_window_tokens', 0)} tokens, "
@@ -95,7 +118,9 @@ def _list_models(client: openai.OpenAI, requested_id: str | None) -> ModelInfo:
             f"{'supported' if supports_tools else 'not supported'}"
         )
         if (selected is None and requested_id is None) or model.id == requested_id:
-            selected = ModelInfo(model.id, output_limit, supports_tools)
+            selected = ModelInfo(
+                model.id, output_limit, supports_tools, constrains_generation, turns_thinking_off
+            )
 
     if selected is None:
         raise SystemExit(f"The server has no model named '{requested_id}'.")
@@ -104,7 +129,13 @@ def _list_models(client: openai.OpenAI, requested_id: str | None) -> ModelInfo:
     output_limit = selected.output_limit
     if output_limit == 0 or output_limit > REQUESTED_OUTPUT_TOKENS:
         output_limit = REQUESTED_OUTPUT_TOKENS
-    return ModelInfo(selected.id, output_limit, selected.supports_tools)
+    return ModelInfo(
+        selected.id,
+        output_limit,
+        selected.supports_tools,
+        selected.constrains_generation,
+        selected.turns_thinking_off,
+    )
 
 
 def _print_usage(usage) -> None:
@@ -139,6 +170,7 @@ def _complete_chat(client: openai.OpenAI, model: ModelInfo) -> None:
             {"role": "user", "content": prompt},
         ],
         max_completion_tokens=model.output_limit,
+        extra_body=model.extra_body(),
     )
     print(f"  Assistant: {completion.choices[0].message.content}")
     _print_usage(completion.usage)
@@ -158,6 +190,7 @@ def _stream_chat(client: openai.OpenAI, model: ModelInfo) -> None:
         max_completion_tokens=model.output_limit,
         stream=True,
         stream_options={"include_usage": True},
+        extra_body=model.extra_body(),
     )
     usage = None
     for chunk in stream:
@@ -174,24 +207,34 @@ def _run_tool(name: str, arguments: str) -> str:
     """Run the function the model called.
 
     The model writes the arguments as JSON text, which the client parses
-    before it runs the function.
+    before it runs the function. A server that doesn't constrain generation
+    can return arguments that don't match the schema, so both operands must
+    be numbers.
     """
     if name != "multiply":
         return "error: unknown tool"
     try:
         values = json.loads(arguments)
-        return json.dumps(values["a"] * values["b"])
-    except (ValueError, KeyError, TypeError):
+    except ValueError:
         return "error: invalid arguments"
+    if not isinstance(values, dict):
+        return "error: invalid arguments"
+    operands = [values.get("a"), values.get("b")]
+    # bool is a subclass of int, but JSON true and false aren't numbers.
+    if not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in operands):
+        return "error: invalid arguments"
+    return json.dumps(operands[0] * operands[1])
 
 
-def _call_tool(client: openai.OpenAI, model: ModelInfo) -> None:
-    """Make one tool call and get the answer.
+def _call_tool(client: openai.OpenAI, model: ModelInfo) -> bool:
+    """Make one tool call and get the answer. Returns False if the model
+    answered without calling the tool.
 
-    The first request offers the tool and requires the model to call it. The
-    client runs the call and adds the model's request and the result to the
-    conversation. The second request returns the answer. An agent sends
-    tool_choice "auto" instead and repeats until the model answers without
+    The first request offers the tool and requires the model to call it, or,
+    on a model whose generation the server doesn't constrain, lets the model
+    decide. The client runs the call and adds the model's request and the
+    result to the conversation. The second request returns the answer. An
+    agent sends tool_choice "auto" and repeats until the model answers without
     calling a tool; this sample takes one call and then asks for the answer,
     so it always finishes in two requests.
     """
@@ -202,12 +245,19 @@ def _call_tool(client: openai.OpenAI, model: ModelInfo) -> None:
         model=model.id,
         messages=messages,
         tools=[MULTIPLY_TOOL],
-        tool_choice="required",
+        tool_choice="required" if model.constrains_generation else "auto",
         max_completion_tokens=model.output_limit,
+        extra_body=model.extra_body(),
     )
     reply = first.choices[0].message
+    if not reply.tool_calls:
+        print(f"  Assistant: {reply.content}")
+        print("  The model answered without calling the tool.")
+        _print_usage(first.usage)
+        return False
+
     messages.append(reply.to_dict())
-    for call in reply.tool_calls or []:
+    for call in reply.tool_calls:
         result = _run_tool(call.function.name, call.function.arguments)
         print(
             f"  Tool call: {call.function.name}({call.function.arguments}) returned {result}"
@@ -220,9 +270,11 @@ def _call_tool(client: openai.OpenAI, model: ModelInfo) -> None:
         tools=[MULTIPLY_TOOL],
         tool_choice="none",
         max_completion_tokens=model.output_limit,
+        extra_body=model.extra_body(),
     )
     print(f"  Assistant: {second.choices[0].message.content}")
     _print_usage(second.usage)
+    return True
 
 
 def _parse_args() -> argparse.Namespace:
@@ -260,7 +312,8 @@ def main() -> int:
         _complete_chat(client, model)
         _stream_chat(client, model)
         if model.supports_tools:
-            _call_tool(client, model)
+            if not _call_tool(client, model):
+                return 1
         else:
             print(
                 f"\nTool calling: skipped, because {model.id} does not support tool calls."

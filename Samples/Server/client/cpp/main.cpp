@@ -11,13 +11,15 @@
 //   reads each model's limits and tool support from the server's winml field.
 //   POST /chat/completions then sends a plain request, a streamed request
 //   read as server-sent events until [DONE], and, if tools are supported, a
-//   request with tool_choice "required"; the client runs multiply itself and
+//   request with tool_choice "required" (or "auto" when the model generates
+//   tool calls without constraints); the client runs multiply itself and
 //   returns the result with tool_choice "none". Every request asks for at
 //   most 256 tokens or the model's lower limit.
 //
 // Run it
 //   ..\..\run_in_process_server.ps1 -Client cpp
 //   ..\..\run_server_executable.ps1 -Client cpp
+//   ..\..\run_qwen3.8_27b_server.ps1 -Client cpp
 //
 // Learn more (paths relative to this file)
 //   ../README.md
@@ -60,8 +62,17 @@ constexpr wchar_t AccessKeyVariable[] = L"WINMLSERVER_ACCESS_KEY";
 constexpr UINT32 RequestedOutputTokens = 256;
 
 // Bit 0 of capability_flags in the model list means the model supports tool
-// calls.
+// calls. Bit 4 means the server constrains what the model generates, so it
+// accepts tool_choice "required". Without it, the client can't assume
+// "required" is accepted, so it sends "auto" and lets the model decide.
 constexpr UINT32 ToolCallsCapability = 0x1;
+constexpr UINT32 ConstrainedLogitsCapability = 0x10;
+
+// Bit 0 of reasoning_effort_mask means the model accepts reasoning_effort
+// "none"; the other bits are thinking levels. A model that accepts both thinks
+// unless the request turns it off, which would spend the sample's small output
+// budget on thinking.
+constexpr UINT32 ReasoningEffortNone = 0x1;
 
 std::wstring ReadEnvironment(LPCWSTR name)
 {
@@ -276,6 +287,8 @@ struct ModelInfo
     std::wstring id;
     UINT32 outputLimit = RequestedOutputTokens;
     bool supportsTools = false;
+    bool constrainsGeneration = false;
+    bool turnsThinkingOff = false;
 };
 
 double ReadNumber(const JsonObject& object, LPCWSTR name)
@@ -299,8 +312,12 @@ ModelInfo ListModels(ServerConnection& server, const std::wstring& requestedId)
         ModelInfo info;
         info.id = model.GetNamedString(L"id");
         info.outputLimit = static_cast<UINT32>(ReadNumber(details, L"maximum_output_tokens"));
-        info.supportsTools = (static_cast<UINT32>(ReadNumber(details, L"capability_flags")) &
-                              ToolCallsCapability) != 0;
+        const UINT32 flags = static_cast<UINT32>(ReadNumber(details, L"capability_flags"));
+        info.supportsTools = (flags & ToolCallsCapability) != 0;
+        info.constrainsGeneration = (flags & ConstrainedLogitsCapability) != 0;
+        const UINT32 reasoning = static_cast<UINT32>(ReadNumber(details, L"reasoning_effort_mask"));
+        info.turnsThinkingOff =
+            (reasoning & ReasoningEffortNone) != 0 && (reasoning & ~ReasoningEffortNone) != 0;
         std::wprintf(L"  %ls: context window %.0f tokens, output limit %u tokens, tool calls %ls\n",
                      info.id.c_str(), ReadNumber(details, L"context_window_tokens"),
                      info.outputLimit, info.supportsTools ? L"supported" : L"not supported");
@@ -340,6 +357,11 @@ JsonObject ChatRequest(const ModelInfo& model, const JsonArray& messages)
     request.Insert(L"model", JsonValue::CreateStringValue(model.id));
     request.Insert(L"messages", messages);
     request.Insert(L"max_completion_tokens", JsonValue::CreateNumberValue(model.outputLimit));
+    if (model.turnsThinkingOff)
+    {
+        request.Insert(L"reasoning_effort", JsonValue::CreateStringValue(L"none"));
+    }
+
     return request;
 }
 
@@ -417,8 +439,8 @@ void StreamChat(ServerConnection& server, const ModelInfo& model)
 
 JsonObject MultiplyTool()
 {
-    // The parameters are a JSON schema. When the model supports tool calls,
-    // the server makes its arguments match the schema.
+    // The parameters are a JSON schema. When the server constrains generation,
+    // it makes the arguments match the schema.
     return JsonObject::Parse(LR"({
         "type": "function",
         "function": {
@@ -438,7 +460,8 @@ JsonObject MultiplyTool()
 }
 
 // The model writes the arguments as JSON text, which the client parses before
-// it runs the function.
+// it runs the function. A server that doesn't constrain generation can return
+// arguments that don't match the schema, so both operands must be numbers.
 std::wstring RunTool(const JsonObject& function)
 {
     const std::wstring name(function.GetNamedString(L"name"));
@@ -449,17 +472,27 @@ std::wstring RunTool(const JsonObject& function)
         return L"error: unknown tool or invalid arguments";
     }
 
-    const double product = ReadNumber(arguments, L"a") * ReadNumber(arguments, L"b");
+    const IJsonValue a = arguments.TryLookup(L"a");
+    const IJsonValue b = arguments.TryLookup(L"b");
+    if (!a || a.ValueType() != JsonValueType::Number || !b ||
+        b.ValueType() != JsonValueType::Number)
+    {
+        return L"error: invalid arguments";
+    }
+
+    const double product = a.GetNumber() * b.GetNumber();
     return std::wstring(JsonValue::CreateNumberValue(product).Stringify());
 }
 
 // A tool call takes two requests. The first offers the tool and requires the
-// model to call it. The client runs the call and adds the model's request and
-// the result to the conversation. The second request returns the answer.
-// An agent sends tool_choice "auto" instead and repeats until the model
-// answers without calling a tool; this sample takes one call and then asks
-// for the answer, so it always finishes in two requests.
-void CallTool(ServerConnection& server, const ModelInfo& model)
+// model to call it, or, on a model whose generation the server doesn't
+// constrain, lets the model decide. The client runs the call and adds the
+// model's request and the result to the conversation. The second request
+// returns the answer. An agent sends tool_choice "auto" and repeats until the
+// model answers without calling a tool; this sample takes one call and then
+// asks for the answer, so it always finishes in two requests. Returns false if
+// the model answered without calling the tool.
+bool CallTool(ServerConnection& server, const ModelInfo& model)
 {
     constexpr wchar_t prompt[] = L"What is 12 times 34? Use the multiply tool.";
     std::wprintf(L"\nTool calling\n  User: %ls\n", prompt);
@@ -470,13 +503,25 @@ void CallTool(ServerConnection& server, const ModelInfo& model)
     tools.Append(MultiplyTool());
     JsonObject request = ChatRequest(model, messages);
     request.Insert(L"tools", tools);
-    request.Insert(L"tool_choice", JsonValue::CreateStringValue(L"required"));
+    request.Insert(L"tool_choice", JsonValue::CreateStringValue(
+                                       model.constrainsGeneration ? L"required" : L"auto"));
 
     const JsonObject first = server.Post(L"/chat/completions", request);
     const JsonObject reply =
         first.GetNamedArray(L"choices").GetObjectAt(0).GetNamedObject(L"message");
+    // tool_calls is absent or null when the model answers instead.
+    const IJsonValue toolCalls = reply.TryLookup(L"tool_calls");
+    if (!toolCalls || toolCalls.ValueType() != JsonValueType::Array ||
+        toolCalls.GetArray().Size() == 0)
+    {
+        std::wprintf(L"  Assistant: %ls\n", ReadContent(reply).c_str());
+        std::wprintf(L"  The model answered without calling the tool.\n");
+        PrintUsage(first.GetNamedObject(L"usage"));
+        return false;
+    }
+
     messages.Append(reply);
-    for (const IJsonValue& entry : reply.GetNamedArray(L"tool_calls", JsonArray()))
+    for (const IJsonValue& entry : toolCalls.GetArray())
     {
         const JsonObject call = entry.GetObject();
         const JsonObject function = call.GetNamedObject(L"function");
@@ -499,6 +544,7 @@ void CallTool(ServerConnection& server, const ModelInfo& model)
         second.GetNamedArray(L"choices").GetObjectAt(0).GetNamedObject(L"message");
     std::wprintf(L"  Assistant: %ls\n", ReadContent(answer).c_str());
     PrintUsage(second.GetNamedObject(L"usage"));
+    return true;
 }
 
 } // namespace
@@ -542,7 +588,10 @@ try
     StreamChat(server, model);
     if (model.supportsTools)
     {
-        CallTool(server, model);
+        if (!CallTool(server, model))
+        {
+            return 1;
+        }
     }
     else
     {

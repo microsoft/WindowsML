@@ -87,6 +87,19 @@ same catalog `check_artifacts.ps1` verifies against. Regenerate it with
 | Qwen2.5 0.5B Instruct tokenizer configuration | Supplies the special tokens and chat template. | [https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) | 7 KB |
 | Qwen2.5 0.5B Instruct weights (safetensors) | Supplies the model weights. | [https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) | 942.3 MB |
 | Qwen2.5 0.5B Instruct (GGUF, Q4_K_M) | Supplies a quantized language model for the GGUF backend. | [https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF) | 468.6 MB |
+| Qwen3.8-27B chat template | Formats conversations, tools, and reasoning. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 9 KB |
+| Qwen3.8-27B NVFP4 model configuration | Describes the model architecture and its quantization. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 85 KB |
+| Qwen3.8-27B DFlash2 drafter configuration | Describes the speculative-decoding drafter. | [https://huggingface.co/incoai/Qwen3.8-27B-DFlash2](https://huggingface.co/incoai/Qwen3.8-27B-DFlash2) | 1 KB |
+| Qwen3.8-27B DFlash2 drafter weights (safetensors) | Supplies the drafter weights. | [https://huggingface.co/incoai/Qwen3.8-27B-DFlash2](https://huggingface.co/incoai/Qwen3.8-27B-DFlash2) | 3.58 GB |
+| Qwen3.8-27B NVFP4 generation configuration | Supplies the end-of-sequence tokens. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 214 bytes |
+| Qwen3.8-27B preprocessor configuration | Describes the model's input preprocessing. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 390 bytes |
+| Qwen3.8-27B processor configuration | Describes the model's input processing. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 1 KB |
+| Qwen3.8-27B tokenizer | Converts between text and token IDs. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 12.2 MB |
+| Qwen3.8-27B tokenizer configuration | Supplies the special tokens. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 1 KB |
+| Qwen3.8-27B NVFP4 weights, part 1 of 3 | Supplies the model weights. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 9.28 GB |
+| Qwen3.8-27B NVFP4 weights, part 2 of 3 | Supplies the model weights. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 9.30 GB |
+| Qwen3.8-27B NVFP4 weights, part 3 of 3 | Supplies the model weights. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 1.83 GB |
+| Qwen3.8-27B NVFP4 weight index | Maps each tensor to its weight file. | [https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4) | 210 KB |
 | SESR x2 super resolution (ONNX, FP32) | Upscales an image by two times. | [https://huggingface.co/amd/ryzenai-sesr](https://huggingface.co/amd/ryzenai-sesr) | 92 KB |
 | Sample photograph | Provides a default low-resolution input image. | [https://github.com/pytorch/hub](https://github.com/pytorch/hub) | 646 KB |
 | SqueezeNet 1.1 image classifier (ONNX) | Classifies an image into ImageNet categories. | [https://github.com/microsoft/WindowsAppSDK-Samples](https://github.com/microsoft/WindowsAppSDK-Samples) | 1.2 MB |
