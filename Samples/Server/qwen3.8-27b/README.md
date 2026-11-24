@@ -18,18 +18,23 @@ and value (KV) cache in one of two types:
 | `float16` (default) | 135,168 tokens | The default. Prompts up to 131,072 tokens. |
 | `int8` | 262,144 tokens | The model's full context. It needs scales you calibrate once with [`calibrate_kv_scales.py`](calibrate_kv_scales.py); see [INT8 KV cache calibration](#int8-kv-cache-calibration). |
 
-Both windows are the largest that fit in 32 GB of dedicated GPU memory with
-this build. They were measured on an NVIDIA GeForce RTX 5090.
+The `float16` window is the largest that fits in 32 GB of dedicated GPU memory
+with `2.9.42-experimental`. The `int8` window is the model's own limit,
+262,144 tokens.
 
 > [!IMPORTANT]
 > This sample needs `Microsoft.Windows.AI.MachineLearning` `2.9.42-experimental`
 > or later, the version [`Directory.Packages.props`](../../Directory.Packages.props)
-> pins.
+> pins, and a GPU with 32 GB of dedicated memory: the target model's weights
+> alone are 21.9 GB. It was tested on x64 with an NVIDIA GeForce RTX 5090
+> (32 GB) and driver 621.24. ARM64, which the run script selects on ARM64 PCs,
+> and other GPUs are untested.
 
 ## Checkpoints
 
 These are the exact revisions the settings below were tuned and tested with.
-Both are published under the Apache 2.0 license.
+These checkpoints are published by third parties, not by Microsoft. Review each
+publisher's license and terms before you download or use them.
 
 | Folder | Hugging Face repository | Revision | Size |
 | --- | --- | --- | --- |
@@ -57,8 +62,10 @@ that is missing or different:
 .\check_artifacts.ps1 -Sample server-qwen3.8-27b
 ```
 
-The run script runs the same check before it starts the server. The model id
-clients send is `Qwen3.8-27B-NVFP4`; pass `-ModelId` to change it.
+The run script checks the file sizes before it starts the server; hashing
+25.8 GB on every start would take tens of seconds, so run `check_artifacts.ps1`
+after a download. The model id clients send is `Qwen3.8-27B-NVFP4`; pass
+`-ModelId` to change it.
 
 ## INT8 KV cache calibration
 
@@ -187,33 +194,40 @@ WINMLSERVER_KV_CACHE_TYPE model=Qwen3.8-27B-NVFP4 requested=int8 held=int8
 WINMLSERVER_SPECULATIVE model=Qwen3.8-27B-NVFP4 method=model draft_tokens=7 draft_model=...\models\Qwen3.8-27B-DFlash2
 ```
 
-With `-Client`, the script runs one of the [clients](../client/README.md) and
-stops the server when it exits:
+With `-Client`, the script prints the server's startup lines, runs one of the
+[clients](../client/README.md), and stops the server when it exits. The
+clients send `reasoning_effort` as `none`, because this model accepts it:
 
 ```text
+WINMLSERVER_MODEL model=Qwen3.8-27B-NVFP4 composition=model context=262144 declared_context=262144 max_output=4096 lanes=1 target=gpu reasoning_effort_mask=45
+WINMLSERVER_KV_CACHE_TYPE model=Qwen3.8-27B-NVFP4 requested=int8 held=int8
+WINMLSERVER_SPECULATIVE model=Qwen3.8-27B-NVFP4 method=model draft_tokens=7 draft_model=...\models\Qwen3.8-27B-DFlash2
+Serving at http://127.0.0.1:51950/v1
+
 Models
   Qwen3.8-27B-NVFP4: context window 262144 tokens, output limit 4096 tokens, tool calls supported
 
 Chat completion
   User: Name three primary colors.
   Assistant: Red, blue, and yellow.
-  Usage: 67 prompt tokens, 59 completion tokens
+  Usage: 31 prompt tokens, 7 completion tokens
 
 Streaming
   User: Count from one to five in words.
   Assistant: One, two, three, four, five.
-  Usage: 60 prompt tokens, 50 completion tokens
+  Usage: 20 prompt tokens, 10 completion tokens
 
 Tool calling
   User: What is 12 times 34? Use the multiply tool.
   Tool call: multiply({"a":12,"b":34}) returned 408
   Assistant: 12 times 34 is **408**.
-  Usage: 413 prompt tokens, 23 completion tokens
+  Usage: 357 prompt tokens, 12 completion tokens
 ```
 
 Pass `-ModelPath` and `-DraftModelPath` to serve checkpoints from another
-folder, and `-ContextTokens` to request a smaller window on a GPU with less
-memory. `Get-Help .\run_qwen3.8_27b_server.ps1 -Full` lists every option.
+folder, and `-ContextTokens` to request a smaller window, for example to leave
+GPU memory to other applications. `Get-Help .\run_qwen3.8_27b_server.ps1 -Full`
+lists every option.
 
 ## Settings
 
@@ -238,7 +252,9 @@ starts the server with it:
 | `naturalToolCalls` (recipe only) | `true` | Serves tool calls; see below. |
 
 The recipe the script writes to `models\qwen3.8-27b-<type>.recipe.json` looks
-like this, and you can run `WinMLServer.exe` with it directly:
+like this, and you can run `WinMLServer.exe` with it directly. The script
+writes it again from its options on every run, so a later run with other
+options replaces it; copy it elsewhere to keep it.
 
 ```json
 {
@@ -287,6 +303,10 @@ the model writes the calls, and the server parses them. Requests can send
 HTTP 422. `capability_flags` in the model list is `0x0b`: tool calls, parallel
 tool calls, and reasoning, without constrained generation (`0x10`).
 
+Because generation isn't constrained, a call's arguments can differ from the
+tool's schema. Treat tool calls as untrusted model output: check the tool name
+and arguments before you run them.
+
 ## Serve a coding agent
 
 Start the server without `-Client`, then point the agent at the
@@ -308,15 +328,18 @@ copilot --reasoning-effort none
 ```
 
 The [server executable README](../host/executable/README.md#serve-a-coding-agent)
-explains each setting and how the access key is kept private.
+explains each setting and how the access key is kept private. The agent runs
+the tools the model calls, including shell commands, so keep its tool approvals
+on.
 
 ### Turn thinking off
 
 We suggest running Qwen3.8-27B with thinking off. With thinking on, the model
 writes its reasoning before every reply, and in an agent loop that adds a long
 stretch of output to each step. A request that omits `reasoning_effort` gets
-the model's default thinking, so turn it off explicitly with
-`"reasoning_effort": "none"`:
+the chat template's default, `xhigh`, the longest thinking, so turn it off
+explicitly with `"reasoning_effort": "none"`. The sample's
+[clients](../client/README.md) do this for every request:
 
 ```json
 {

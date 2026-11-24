@@ -63,10 +63,16 @@ constexpr UINT32 RequestedOutputTokens = 256;
 
 // Bit 0 of capability_flags in the model list means the model supports tool
 // calls. Bit 4 means the server constrains what the model generates, so it
-// can require a tool call; without it, the model decides, and the server
-// accepts only tool_choice "auto" or "none".
+// accepts tool_choice "required". Without it, the client can't assume
+// "required" is accepted, so it sends "auto" and lets the model decide.
 constexpr UINT32 ToolCallsCapability = 0x1;
 constexpr UINT32 ConstrainedLogitsCapability = 0x10;
+
+// Bit 0 of reasoning_effort_mask means the model accepts reasoning_effort
+// "none"; the other bits are thinking levels. A model that accepts both thinks
+// unless the request turns it off, which would spend the sample's small output
+// budget on thinking.
+constexpr UINT32 ReasoningEffortNone = 0x1;
 
 std::wstring ReadEnvironment(LPCWSTR name)
 {
@@ -282,6 +288,7 @@ struct ModelInfo
     UINT32 outputLimit = RequestedOutputTokens;
     bool supportsTools = false;
     bool constrainsGeneration = false;
+    bool turnsThinkingOff = false;
 };
 
 double ReadNumber(const JsonObject& object, LPCWSTR name)
@@ -308,6 +315,9 @@ ModelInfo ListModels(ServerConnection& server, const std::wstring& requestedId)
         const UINT32 flags = static_cast<UINT32>(ReadNumber(details, L"capability_flags"));
         info.supportsTools = (flags & ToolCallsCapability) != 0;
         info.constrainsGeneration = (flags & ConstrainedLogitsCapability) != 0;
+        const UINT32 reasoning = static_cast<UINT32>(ReadNumber(details, L"reasoning_effort_mask"));
+        info.turnsThinkingOff =
+            (reasoning & ReasoningEffortNone) != 0 && (reasoning & ~ReasoningEffortNone) != 0;
         std::wprintf(L"  %ls: context window %.0f tokens, output limit %u tokens, tool calls %ls\n",
                      info.id.c_str(), ReadNumber(details, L"context_window_tokens"),
                      info.outputLimit, info.supportsTools ? L"supported" : L"not supported");
@@ -347,6 +357,11 @@ JsonObject ChatRequest(const ModelInfo& model, const JsonArray& messages)
     request.Insert(L"model", JsonValue::CreateStringValue(model.id));
     request.Insert(L"messages", messages);
     request.Insert(L"max_completion_tokens", JsonValue::CreateNumberValue(model.outputLimit));
+    if (model.turnsThinkingOff)
+    {
+        request.Insert(L"reasoning_effort", JsonValue::CreateStringValue(L"none"));
+    }
+
     return request;
 }
 
@@ -424,8 +439,8 @@ void StreamChat(ServerConnection& server, const ModelInfo& model)
 
 JsonObject MultiplyTool()
 {
-    // The parameters are a JSON schema. When the model supports tool calls,
-    // the server makes its arguments match the schema.
+    // The parameters are a JSON schema. When the server constrains generation,
+    // it makes the arguments match the schema.
     return JsonObject::Parse(LR"({
         "type": "function",
         "function": {
@@ -459,7 +474,8 @@ std::wstring RunTool(const JsonObject& function)
 
     const IJsonValue a = arguments.TryLookup(L"a");
     const IJsonValue b = arguments.TryLookup(L"b");
-    if (!a || a.ValueType() != JsonValueType::Number || !b || b.ValueType() != JsonValueType::Number)
+    if (!a || a.ValueType() != JsonValueType::Number || !b ||
+        b.ValueType() != JsonValueType::Number)
     {
         return L"error: invalid arguments";
     }
@@ -474,8 +490,9 @@ std::wstring RunTool(const JsonObject& function)
 // model's request and the result to the conversation. The second request
 // returns the answer. An agent sends tool_choice "auto" and repeats until the
 // model answers without calling a tool; this sample takes one call and then
-// asks for the answer, so it always finishes in two requests.
-void CallTool(ServerConnection& server, const ModelInfo& model)
+// asks for the answer, so it always finishes in two requests. Returns false if
+// the model answered without calling the tool.
+bool CallTool(ServerConnection& server, const ModelInfo& model)
 {
     constexpr wchar_t prompt[] = L"What is 12 times 34? Use the multiply tool.";
     std::wprintf(L"\nTool calling\n  User: %ls\n", prompt);
@@ -486,14 +503,25 @@ void CallTool(ServerConnection& server, const ModelInfo& model)
     tools.Append(MultiplyTool());
     JsonObject request = ChatRequest(model, messages);
     request.Insert(L"tools", tools);
-    request.Insert(L"tool_choice",
-                   JsonValue::CreateStringValue(model.constrainsGeneration ? L"required" : L"auto"));
+    request.Insert(L"tool_choice", JsonValue::CreateStringValue(
+                                       model.constrainsGeneration ? L"required" : L"auto"));
 
     const JsonObject first = server.Post(L"/chat/completions", request);
     const JsonObject reply =
         first.GetNamedArray(L"choices").GetObjectAt(0).GetNamedObject(L"message");
+    // tool_calls is absent or null when the model answers instead.
+    const IJsonValue toolCalls = reply.TryLookup(L"tool_calls");
+    if (!toolCalls || toolCalls.ValueType() != JsonValueType::Array ||
+        toolCalls.GetArray().Size() == 0)
+    {
+        std::wprintf(L"  Assistant: %ls\n", ReadContent(reply).c_str());
+        std::wprintf(L"  The model answered without calling the tool.\n");
+        PrintUsage(first.GetNamedObject(L"usage"));
+        return false;
+    }
+
     messages.Append(reply);
-    for (const IJsonValue& entry : reply.GetNamedArray(L"tool_calls", JsonArray()))
+    for (const IJsonValue& entry : toolCalls.GetArray())
     {
         const JsonObject call = entry.GetObject();
         const JsonObject function = call.GetNamedObject(L"function");
@@ -516,6 +544,7 @@ void CallTool(ServerConnection& server, const ModelInfo& model)
         second.GetNamedArray(L"choices").GetObjectAt(0).GetNamedObject(L"message");
     std::wprintf(L"  Assistant: %ls\n", ReadContent(answer).c_str());
     PrintUsage(second.GetNamedObject(L"usage"));
+    return true;
 }
 
 } // namespace
@@ -559,7 +588,10 @@ try
     StreamChat(server, model);
     if (model.supportsTools)
     {
-        CallTool(server, model);
+        if (!CallTool(server, model))
+        {
+            return 1;
+        }
     }
     else
     {

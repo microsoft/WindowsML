@@ -75,21 +75,39 @@ function Invoke-ServerWithClient {
     )
 
     # The script reads the server's standard output to get the address and key.
-    # Errors still go to this console.
+    # Errors still go to this console. The output is read asynchronously from
+    # the start, so the server can never block on a full pipe.
     $serverStart = New-Object System.Diagnostics.ProcessStartInfo
     $serverStart.FileName = $ServerExe
     $serverStart.Arguments = ConvertTo-CommandLine $ServerArguments
     $serverStart.UseShellExecute = $false
     $serverStart.RedirectStandardOutput = $true
     $server = [System.Diagnostics.Process]::Start($serverStart)
+    $outputEvents = "WinMLServerOutput-$($server.Id)"
+    Register-ObjectEvent -InputObject $server -EventName OutputDataReceived -SourceIdentifier $outputEvents |
+        Out-Null
+    $server.BeginOutputReadLine()
+
+    # Returns the next line, $null at the end of the output, or $false when no
+    # line arrives within the timeout.
+    function Read-ServerLine([int]$TimeoutSeconds = -1) {
+        if (-not (Wait-Event -SourceIdentifier $outputEvents -Timeout $TimeoutSeconds)) {
+            return $false
+        }
+        # Get-Event doesn't list events in the order they arrived.
+        $received = Get-Event -SourceIdentifier $outputEvents | Sort-Object EventIdentifier | Select-Object -First 1
+        Remove-Event -EventIdentifier $received.EventIdentifier
+        return $received.SourceEventArgs.Data
+    }
+
     try {
         # Once the server is listening, it writes the access key, then its
-        # address, then one line for each model it serves. Loading the model can
-        # take a while.
+        # address, then its startup lines for each model it serves, all at once.
+        # Loading the model can take a while.
         $accessKey = $null
         $baseUrl = $null
         while (-not $baseUrl) {
-            $line = $server.StandardOutput.ReadLine()
+            $line = Read-ServerLine
             if ($null -eq $line) {
                 $server.WaitForExit()
                 throw "WinMLServer.exe exited with code $($server.ExitCode) before it was ready."
@@ -106,12 +124,15 @@ function Invoke-ServerWithClient {
             throw "WinMLServer.exe did not report an access key."
         }
 
-        Write-Host $server.StandardOutput.ReadLine()
+        # The model lines follow the address immediately. The output keeps
+        # draining after this, without being printed.
+        while (($line = Read-ServerLine -TimeoutSeconds 1) -and $line.StartsWith("WINMLSERVER_")) {
+            Write-Host $line
+        }
+        Unregister-Event -SourceIdentifier $outputEvents
+        Get-Event -SourceIdentifier $outputEvents -ErrorAction SilentlyContinue | Remove-Event
         Write-Host "Serving at $baseUrl"
         Write-Host ""
-
-        # Keep reading the server's output so it can never block on a full pipe.
-        $null = $server.StandardOutput.ReadToEndAsync()
 
         # Only the client's environment gets the key. It never appears on a
         # command line, where other users on the computer could read it.
@@ -127,6 +148,8 @@ function Invoke-ServerWithClient {
         $exitCode = $clientProcess.ExitCode
     }
     finally {
+        Unregister-Event -SourceIdentifier $outputEvents -ErrorAction SilentlyContinue
+        Get-Event -SourceIdentifier $outputEvents -ErrorAction SilentlyContinue | Remove-Event
         # The access key is valid only while this server process runs.
         Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
         $server.WaitForExit()

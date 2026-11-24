@@ -91,6 +91,8 @@ so the run scripts select the matching architecture.
 The [Qwen3.8-27B sample](qwen3.8-27b/README.md) serves a 27B model from
 checkpoints you download yourself and needs `2.9.42-experimental` or later;
 its README lists the checkpoints, the build, and `run_qwen3.8_27b_server.ps1`.
+`check_artifacts.ps1` without `-Sample` skips its 25.8 GB of checkpoints; check
+them with `-Sample server-qwen3.8-27b`.
 
 `check_artifacts.ps1` reads `Samples\shared\SampleArtifacts.psd1`, checks
 whether the model is present under `Samples\Server\models`, and prints the

@@ -99,9 +99,11 @@ object that describes the limits the server checks requests against:
 | `lanes` | How many of the model's requests can run at the same time. |
 
 The clients ask for at most 256 output tokens, or the model's output limit if
-it is lower, and run the tool call only when the model supports tool calls. The
-OpenAI library for .NET doesn't expose the `winml` object, so the C# client
-reads the raw response.
+it is lower, and run the tool call only when the model supports tool calls.
+When `reasoning_effort_mask` has `none` and at least one thinking level, the
+model thinks unless told otherwise, so the clients send `reasoning_effort` as
+`none` to keep the reply within those tokens. The OpenAI library for .NET
+doesn't expose the `winml` object, so the C# client reads the raw response.
 
 ## Chat completion and streaming
 
@@ -120,18 +122,21 @@ of the tool call reuses most of the first.
 ## Tool calling
 
 A tool call takes two requests. The first offers a `multiply` function and sets
-`tool_choice` to `required`. The server constrains what the model generates, so
-the call's arguments always match the function's JSON schema. The client runs
-the function, then appends the model's message and a `tool` message with the
-result to the conversation. The second request sets `tool_choice` to `none`,
-and the model answers with the result.
+`tool_choice` to `required`. When the model's `capability_flags` has
+constrained generation (`0x10`), the server constrains what the model
+generates, so the call's arguments match the function's JSON schema. The client
+runs the function, then appends the model's message and a `tool` message with
+the result to the conversation. The second request sets `tool_choice` to
+`none`, and the model answers with the result.
 
-A model whose `capability_flags` has tool calls but not constrained generation
-(`0x10`), such as the [Qwen3.8-27B sample](../qwen3.8-27b/README.md), generates
-tool calls on its own: the chat template describes the tools and the server
-parses the calls the model writes. The server rejects a `required` or named
-`tool_choice` for it with HTTP 422, so the clients send `auto` instead, and the
-model decides whether to call the tool.
+Without `0x10`, the clients can't assume the server accepts `required`, so they
+send `auto` and the model decides whether to call the tool. A model such as the
+one in the [Qwen3.8-27B sample](../qwen3.8-27b/README.md) generates tool calls
+on its own: the chat template describes the tools and the server parses the
+calls the model writes. Generation isn't constrained, so a call's arguments
+can differ from the schema. The clients check the tool name and that both
+arguments are numbers before they run it, and exit with code 1 if the model
+answers without calling the tool.
 
 An agent sends `tool_choice` as `auto`, and repeats until the model answers
 without calling a tool. The server never runs a tool itself.

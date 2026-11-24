@@ -125,17 +125,30 @@ if ($usage -notmatch '--kv-cache-type' -or $usage -notmatch '--compiled-program-
 }
 
 $modelsDirectory = Join-Path $PSScriptRoot "models"
-# The catalog describes the default folders; checkpoints passed with -ModelPath
-# or -DraftModelPath are checked only for the files the server needs.
+$defaultModelPath = Join-Path $modelsDirectory "Qwen3.8-27B-NVFP4"
+$defaultDraftModelPath = Join-Path $modelsDirectory "Qwen3.8-27B-DFlash2"
+# Each start checks the default folders by file size only; hashing 25.8 GB would
+# add tens of seconds. check_artifacts.ps1 -Sample server-qwen3.8-27b checks the
+# SHA-256 of every file. Folders passed with -ModelPath or -DraftModelPath are
+# checked only for the files the server needs.
 if (-not $ModelPath -and -not $DraftModelPath) {
     Assert-SampleArtifactsReady `
         -Sample server-qwen3.8-27b `
         -ModelsDirectory $modelsDirectory `
         -Note "KV cache: $KvCache.", $(if ($Client) { "Client: $Client." } else { "Press Ctrl+C to stop the server." }) `
-        -NonInteractive:$NonInteractive
+        -NonInteractive:$NonInteractive `
+        -SkipHash
 }
-if (-not $ModelPath) { $ModelPath = Join-Path $modelsDirectory "Qwen3.8-27B-NVFP4" }
-if (-not $DraftModelPath) { $DraftModelPath = Join-Path $modelsDirectory "Qwen3.8-27B-DFlash2" }
+elseif (-not $ModelPath -or -not $DraftModelPath) {
+    $defaultFolder = if ($ModelPath) { $defaultDraftModelPath } else { $defaultModelPath }
+    $unready = @(Get-SampleArtifactStatus -Sample server-qwen3.8-27b -ModelsDirectory $modelsDirectory -SkipHash |
+        Where-Object { $_.Destination.StartsWith("$defaultFolder\", [System.StringComparison]::OrdinalIgnoreCase) -and $_.State -ne "Present" })
+    if ($unready.Count -gt 0) {
+        throw "$($unready.Count) file(s) in $defaultFolder are missing or have the wrong size. Run .\check_artifacts.ps1 -Sample server-qwen3.8-27b for the download commands."
+    }
+}
+if (-not $ModelPath) { $ModelPath = $defaultModelPath }
+if (-not $DraftModelPath) { $DraftModelPath = $defaultDraftModelPath }
 foreach ($required in @(
         @($ModelPath, "config.json", "model.safetensors.index.json", "tokenizer.json", "chat_template.jinja"),
         @($DraftModelPath, "config.json", "model.safetensors"))) {
@@ -191,7 +204,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "WinMLServer.exe could not resolve the options (exit code $LASTEXITCODE)."
 }
 $recipe = $printed | ConvertFrom-Json
-$recipe.models[0] | Add-Member -NotePropertyName naturalToolCalls -NotePropertyValue $true
+$recipe.models[0] | Add-Member -NotePropertyName naturalToolCalls -NotePropertyValue $true -Force
 $recipePath = Join-Path $modelsDirectory "qwen3.8-27b-$KvCache.recipe.json"
 [System.IO.File]::WriteAllText($recipePath, ($recipe | ConvertTo-Json -Depth 10), (New-Object System.Text.UTF8Encoding $false))
 
