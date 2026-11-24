@@ -74,9 +74,11 @@ not Windows ML.
 | [`build_calibration_prompts.py`](build_calibration_prompts.py) | Builds 9 calibration prompts, 304,930 tokens in all, from the public files in [`calibration_sources.json`](calibration_sources.json). |
 | [`calibrate_kv_scales.py`](calibrate_kv_scales.py) | Runs the prompts through the model and writes `kv_cache_scales.safetensors` into the model folder. |
 
-Each scale is the channel's largest absolute key or value over the prompts,
-divided by 127, with values given 1.5 times more range than keys. Keys are
-taken after their norm and rotary embedding, as the cache stores them.
+Each value scale is the channel's largest absolute value over the prompts,
+divided by 127, times a margin of 1.5. Each key scale uses a margin of 1.
+Keys are taken after their norm and rotary embedding, as the cache stores
+them, and the two channels of each rotary pair share one scale: the norm of the
+two channels' maxima, because the rotation moves magnitude between them.
 
 Install Python 3.10 or later, PyTorch with CUDA, and the other packages, in a
 virtual environment from `Samples\Server`:
@@ -132,8 +134,9 @@ their sources.
 
 We checked these scales on an NVIDIA GeForce RTX 5090 with
 `2.9.42-experimental`, against the `float16` cache, at temperature 0 with
-thinking off. The GSM8K and HumanEval+ problems are the last in each set, none
-of which are in the calibration prompts.
+thinking off (`reasoning_effort: "none"`). The GSM8K and HumanEval+ (EvalPlus
+`v0.1.10`) problems are the last in each set, none of which are in the
+calibration prompts. Each count is the problems that passed.
 
 | KV cache | GSM8K (100) | HumanEval+ (60) | Passcode found in 28k tokens | Passcode found in 222k tokens |
 | --- | --- | --- | --- | --- |
@@ -351,7 +354,8 @@ the prompt and the output.
 | --- | --- |
 | `WinMLServer.exe ... has no --kv-cache-type ...` | The sample was built with an older package. Rebuild with `2.9.42-experimental` or later. |
 | `ERROR_NOT_ENOUGH_MEMORY` at launch | The cache for `--context-tokens` doesn't fit in free dedicated GPU memory. Close other GPU applications or pass a smaller `-ContextTokens`. |
-| `ERROR_NOT_SUPPORTED` with `-KvCache int8` | `kv_cache_scales.safetensors` isn't in the model folder. Calibrate it; see [INT8 KV cache calibration](#int8-kv-cache-calibration). |
+| `An int8 cache needs kv_cache_scales.safetensors beside the model` | The run script didn't find the scales in the model folder. Calibrate them; see [INT8 KV cache calibration](#int8-kv-cache-calibration). |
+| `ERROR_NOT_SUPPORTED` with an `int8` cache | The GPU or the model can't hold the cache as `int8`, or a recipe run directly found no `kv_cache_scales.safetensors` in the model folder. |
 | `WINMLSERVER_MEMORY_SPILL` | Part of the model ended up in shared GPU memory. Lower `-ContextTokens`. |
 | HTTP 413 | The request body exceeds `--max-request-body-bytes`. |
-| HTTP 422 on a tool request | The request sent a `tool_choice` other than `auto` or `none`; see [Tool calls](#tool-calls). |
+| HTTP 422 on a tool request | The request sent a `tool_choice` other than `auto` or `none`, a strict tool, or a JSON `response_format`; see [Tool calls](#tool-calls). |
